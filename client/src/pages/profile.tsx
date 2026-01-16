@@ -20,38 +20,38 @@ export default function Profile() {
         </div>
 
         {/* Profile Info Grid */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+        <div className="flex flex-col gap-1.5 mb-6">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Name</div>
             <div className="text-right text-black">DOBSON ANDRE</div>
           </div>
           
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Client ID</div>
             <div className="text-right text-black">8503029996</div>
           </div>
           
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account UID</div>
             <div className="text-right text-black">RB1015</div>
           </div>
           
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Nano Installment</div>
             <div className="text-right text-black">MAX | NAD 2000.00</div>
           </div>
           
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Term Installment</div>
             <div className="text-right text-black">MAX | NAD 500.00</div>
           </div>
           
-          <div className="flex justify-between items-center py-1 border-b border-gray-50">
+          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Level</div>
             <div className="text-right text-black">NL5 / TLO</div>
           </div>
           
-          <div className="flex justify-between items-center py-1">
+          <div className="flex justify-between items-center py-0.5">
             <div className="label text-gray-900 font-bold">Credit Rating</div>
             <div className="flex justify-end gap-0.5 text-black">
                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -123,7 +123,7 @@ export default function Profile() {
 
           <Button 
             onClick={handleSignOut}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md mt-8"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
           >
             Sign Out
           </Button>

@@ -12,22 +12,22 @@ export default function InterestConfirmation() {
         <h1 className="text-center font-bold uppercase mb-6 tracking-tight">INTEREST CONFIRMATION</h1>
 
         {/* Green Info Card */}
-        <div className="bg-[#006f3c] text-white p-4 rounded-lg mb-6 shadow-md">
-          <div className="grid grid-cols-[140px_1fr] gap-y-2 text-sm">
-            <div className="font-bold">Referring Partner:</div>
-            <div>nashe peno</div>
-            <div className="font-bold">Lender:</div>
-            <div>Destiny Group Pty LTD</div>
-            <div className="font-bold">Lending Society:</div>
-            <div>kayla industries</div>
-            <div className="font-bold">Borrower:</div>
-            <div>DOBSON ANDRE</div>
+        <div className="bg-[#007074] text-white p-4 rounded-lg mb-6 shadow-md">
+          <div className="grid grid-cols-[140px_1fr] gap-y-2 text-sm leading-tight">
+            <div className="font-bold opacity-90">Referring Partner:</div>
+            <div className="font-medium">naatye peno</div>
+            <div className="font-bold opacity-90">Lender:</div>
+            <div className="font-medium">Destiny Group Pty LTD</div>
+            <div className="font-bold opacity-90">Lending Society:</div>
+            <div className="font-medium">kayla Industries</div>
+            <div className="font-bold opacity-90">Borrower:</div>
+            <div className="font-medium">DOBSON ANDRE</div>
           </div>
         </div>
 
         {/* Active Interest Mode Badge */}
         <div className="flex justify-center mb-6">
-          <div className="bg-[#eef2ff] text-[#3730a3] px-4 py-2 rounded-md text-xs font-bold border border-[#e0e7ff]">
+          <div className="bg-[#ebf5ff] text-[#3459c0] px-4 py-2 rounded-md text-xs font-bold border border-[#d6eaff] w-full text-center">
             Active Interest Mode: IIR (Rating-Based)
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function InterestConfirmation() {
         </div>
 
         {/* Buttons */}
-        <div className="space-y-4 pb-10">
+        <div className="space-y-4">
           <Button 
             className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
           >
