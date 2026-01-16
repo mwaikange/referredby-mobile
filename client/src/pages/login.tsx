@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import logoIcon from "@assets/2_801_(1)_1768527810027.png";
+import logoGroup from "@assets/Group_2475_(2)_1768529192322.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -24,21 +24,11 @@ export default function Login() {
       <div className="flex-1 flex flex-col px-8 pt-8 pb-4">
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <img 
-              src={logoIcon} 
-              alt="Logo" 
-              className="w-12 h-12 object-contain"
-            />
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold font-heading tracking-tight flex items-baseline gap-1">
-                ReferredBy <span className="text-sm font-normal align-top">TM</span>
-              </h1>
-            </div>
-          </div>
-          <p className="text-xs font-bold tracking-widest uppercase text-black">
-            Community Vetted Financing
-          </p>
+          <img 
+            src={logoGroup} 
+            alt="ReferredBy Community Vetted Financing" 
+            className="w-full h-auto object-contain max-w-[320px]"
+          />
           <div className="w-full h-px bg-gray-300 mt-6" />
         </div>
 
