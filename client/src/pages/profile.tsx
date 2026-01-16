@@ -81,11 +81,11 @@ export default function Profile() {
 
         {/* Update Button Row */}
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100">
-            <Settings className="w-6 h-6" />
-          </Button>
           <Button className="flex-1 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold uppercase tracking-wide h-12 shadow-md rounded-md">
             Update Documents
+          </Button>
+          <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100 shrink-0">
+            <Settings className="w-6 h-6" />
           </Button>
         </div>
 
