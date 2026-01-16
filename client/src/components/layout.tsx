@@ -10,11 +10,11 @@ export function Layout({ children, hidePattern = false }: LayoutProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col max-w-[430px] mx-auto shadow-2xl overflow-hidden relative border-x border-gray-100">
       {!hidePattern && (
-        <header className="shrink-0 z-20 w-full h-[100px] overflow-hidden">
+        <header className="shrink-0 z-20 w-full overflow-hidden">
           <img 
             src={headerFooterPattern} 
             alt="" 
-            className="w-full h-full object-fill block"
+            className="w-full h-auto block"
           />
         </header>
       )}
@@ -24,11 +24,11 @@ export function Layout({ children, hidePattern = false }: LayoutProps) {
       </main>
       
       {!hidePattern && (
-        <footer className="shrink-0 z-20 w-full h-[100px] overflow-hidden">
+        <footer className="shrink-0 z-20 w-full overflow-hidden mt-auto">
           <img 
             src={headerFooterPattern} 
             alt="" 
-            className="w-full h-full object-fill block rotate-180"
+            className="w-full h-auto block rotate-180"
           />
         </footer>
       )}
