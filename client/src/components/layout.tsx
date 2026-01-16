@@ -20,7 +20,9 @@ export function Layout({ children, hidePattern = false }: LayoutProps) {
       )}
       
       <main className="flex-1 flex flex-col relative z-10 overflow-y-auto bg-white">
-        {children}
+        <div className="responsive-container flex-1 flex flex-col py-6">
+          {children}
+        </div>
       </main>
       
       {!hidePattern && (

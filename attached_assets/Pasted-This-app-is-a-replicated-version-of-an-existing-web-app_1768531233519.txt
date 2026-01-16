@@ -1,0 +1,164 @@
+This app is a replicated version of an existing web app design.
+After publishing, the layout does not match the original, especially on mobile.
+
+Problems observed:
+
+Right-side spacing is too small or missing on mobile
+
+Layout feels squeezed
+
+Fonts look slightly different from the original
+
+UI does not adapt cleanly to different phone widths
+
+Your task is to fix the UI only so that the replicated app looks identical to the original design across all screen sizes.
+
+🔴 IMPORTANT RULES
+
+❌ Do NOT change backend logic
+
+❌ Do NOT change Supabase queries
+
+❌ Do NOT change routing or auth
+
+✅ UI, layout, spacing, typography ONLY
+
+✅ TASKS TO PERFORM
+1️⃣ CREATE A GLOBAL RESPONSIVE CONTAINER (MANDATORY)
+
+Create or update a reusable layout container and apply it to ALL pages, including /profile.
+
+Rules:
+
+Center content horizontally
+
+Add proper left & right padding on all devices
+
+Prevent UI from touching screen edges
+
+Implement:
+
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 480px) {
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 900px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+
+Wrap the entire page content inside this container.
+
+2️⃣ FIX MOBILE SPACING (CRITICAL)
+
+Ensure:
+
+Equal left and right padding on mobile
+
+No text or buttons touch the screen edges
+
+Sections have proper vertical breathing room
+
+Spacing rules:
+
+Profile rows: 12–16px
+
+Section gaps: 24–28px
+
+Before CTA buttons: 32px
+
+3️⃣ MATCH TYPOGRAPHY TO ORIGINAL DESIGN
+
+Fonts must scale responsively and visually match the original.
+
+Use responsive font sizing:
+
+h1 {
+  font-size: clamp(22px, 4vw, 28px);
+}
+
+.label, .field-title {
+  font-size: clamp(14px, 2.5vw, 16px);
+}
+
+body, p {
+  font-size: clamp(13px, 2.3vw, 15px);
+}
+
+
+Ensure:
+
+Font family matches original
+
+Font weights are preserved
+
+Line-height remains readable
+
+4️⃣ PROFILE PAGE — MOBILE FIXES (MANDATORY)
+
+Fix the following on /profile:
+
+Right-side padding missing on mobile
+
+Credit rating stars alignment
+
+Document status row spacing
+
+Button spacing consistency
+
+Buttons must:
+
+Be 100% width of container
+
+Have height 50–54px
+
+Be evenly spaced vertically
+
+5️⃣ RESPONSIVE BEHAVIOR (NON-NEGOTIABLE)
+
+The UI must look correct on:
+
+Small Android phones
+
+Large Android phones
+
+iPhones (small & large)
+
+Tablets
+
+Desktop
+
+No horizontal scrolling.
+No clipped content.
+No inconsistent margins.
+
+✅ ACCEPTANCE CRITERIA
+
+✔ Matches original web app visually
+✔ Proper spacing on left & right
+✔ Fonts scale correctly
+✔ Layout adapts cleanly to screen width
+✔ No UI elements touch edges
+✔ Mobile view looks intentional and neat

@@ -21,7 +21,7 @@ export default function Login() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col px-8 pt-8 pb-4">
+      <div className="flex-1 flex flex-col">
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-8">
           <img 
