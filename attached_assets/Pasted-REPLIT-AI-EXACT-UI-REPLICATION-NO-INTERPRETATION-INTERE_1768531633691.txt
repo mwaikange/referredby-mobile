@@ -1,0 +1,207 @@
+REPLIT AI — EXACT UI REPLICATION (NO INTERPRETATION)
+INTEREST CONFIRMATION PAGE — RECREATE EXACTLY AS SHOWN IN IMAGE
+
+(Zoom level in screenshot was only to show all content.
+Do NOT copy the zoomed proportions.)
+
+✅ GENERAL RULES
+
+The screenshot is the source of truth.
+
+Replicate exact layout, spacing, colors, fonts, borders, sections, labels, and order.
+
+Maintain a mobile-first layout (the screenshot is mobile).
+
+Do not redesign, do not reinterpret, do not change wording or colors.
+
+Use the same formatting for numbers, % symbols, NAD formatting, and bold text.
+
+🔻 REPRODUCE THE PAGE EXACTLY TOP → BOTTOM
+1️⃣ HEADER
+
+Title centered: INTEREST CONFIRMATION
+
+Same bold font style as original
+
+Same spacing above & below title
+
+2️⃣ GREEN INFO CARD (BORROWER DETAILS)
+
+Background: Dark Green (#006f3c roughly)
+
+Text color: White
+
+Rounded corners
+
+Vertical padding matches screenshot
+
+Fields (must appear EXACTLY as shown):
+
+Referring Partner: nashe peno
+
+Lender: Destiny Group Pty LTD
+
+Lending Society: kayla industries
+
+Borrower: DOBSON ANDRE
+
+Do NOT uppercase or change formatting.
+
+3️⃣ ACTIVE INTEREST MODE BADGE
+
+Pale blue badge with rounded corners
+
+Text: Active Interest Mode: IIR (Rating-Based)
+
+Centered horizontally
+
+Exact color and font size from screenshot
+
+4️⃣ PORTFOLIO INTEREST RATE (PIR) SECTION
+
+Title: Portfolio Interest Rate (PIR)
+
+Subtext: Base Rate: 28.00%
+
+Use exact spacing and typography hierarchy as screenshot
+
+Divider line appears after each major section
+
+5️⃣ INDIVIDUAL INTEREST RATE (IIR) SECTION
+
+Title: Individual Interest Rate (IIR)
+Under it, three rows:
+
+0–3 Stars (Fair): 17.20%
+
+4–6 Stars (Good): 11.99%
+
+7–10 Stars (Excellent): 7.74%
+
+Make sure alignment, percentages, column spacing, and font sizes match the screenshot.
+
+6️⃣ SUBSIDIZED INTEREST RATE (SIR) SECTION
+
+Background: light green
+Rounded corners
+
+Text inside card:
+
+Subsidy Enabled: 3.15%
+
+Policy: Applies After IIR
+
+Spacing must match screenshot.
+
+7️⃣ FEES SECTION
+
+Title: Fees
+
+Two rows:
+
+Processing Fee: N$ 40.00
+
+Late Fee (Accumulating Arrears): 5%
+
+Both rows must have the same alignment and right-side bold value styling as in screenshot.
+
+8️⃣ NANO LOAN LIMITS SECTION
+
+Title: Nano Loan Limits
+
+Three rows:
+
+Level 1: N$ 2000.00
+
+Level 2: N$ 4200.00
+
+Level 3: N$ 8700.00
+
+Follow identical spacing and typography.
+
+9️⃣ YOUR APPLICABLE RATE CARD (YELLOW BOX)
+
+Yellow background
+Rounded corners
+Padding matching screenshot
+
+Inside content:
+
+Your Applicable Rate
+
+Your Rating:
+
+Your Tier: Fair (0–3)
+
+Small divider inside the box
+
+Interest Basis: IIR
+
+Subsidy Status: Applied
+
+Final calculated rate:
+
+Text: Your Final Interest Rate:
+
+Value in big green text: 14.05%
+
+Ensure:
+
+The number is large
+
+Green color matches screenshot
+
+Aligned to the right
+
+Bold and readable
+
+🔟 BUTTONS AREA
+Proceed Button
+
+Full width
+
+Dark blue background
+
+White text: Proceed
+
+Rounded edges
+
+Same height as screenshot
+
+BACK Button
+
+Red background
+
+White text: BACK
+
+Full width
+
+Same height and spacing as screenshot
+
+📏 SPACING RULES (MANDATORY)
+
+Each major section separated by identical vertical spacing as shown
+
+Section titles bold, exactly same size relationship
+
+Values aligned to the right consistently
+
+Divider lines must match color and thickness in screenshot
+
+📱 RESPONSIVE REQUIREMENTS
+
+This is a mobile-first page, but it must:
+
+Maintain exact proportions
+
+Scale text appropriately using responsive units
+
+Keep all padding and margins visually identical on normal phone view
+
+🎯 ACCEPTANCE CRITERIA
+
+✔ The replicated page looks indistinguishable from the screenshot
+✔ All colors, spacing, font sizes, and rounded corners match
+✔ Button styles match exactly
+✔ No layout drift, no missing sections
+✔ No UX "improvements" — exact clone only

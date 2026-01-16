@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Splash from "@/pages/splash";
 import Login from "@/pages/login";
 import Profile from "@/pages/profile";
+import InterestConfirmation from "@/pages/interest-confirmation";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={Splash} />
       <Route path="/login" component={Login} />
       <Route path="/profile" component={Profile} />
+      <Route path="/interest-confirmation" component={InterestConfirmation} />
       <Route component={NotFound} />
     </Switch>
   );

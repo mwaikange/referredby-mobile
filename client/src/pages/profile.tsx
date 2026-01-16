@@ -105,7 +105,10 @@ export default function Profile() {
 
         {/* Action Buttons */}
         <div className="space-y-4 flex-1 pb-10">
-          <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+          <Button 
+            onClick={() => setLocation("/interest-confirmation")}
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+          >
             Request Nano Loan
           </Button>
           <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
