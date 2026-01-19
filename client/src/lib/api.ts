@@ -13,9 +13,17 @@ export type UserProfile = {
   mobile: string;
   id_number: string;
   account_uid: string;
+  
+  // Display fields (might be named differently in Supabase vs API)
   nano_installment: string;
   term_installment: string;
   account_level: string;
+  
+  // Supabase specific fields
+  nano_loan_limit?: number | string;
+  term_loan_limit?: number | string;
+  membership_status?: string;
+
   credit_rating: number;
   kyc_status: {
     id: boolean;

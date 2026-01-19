@@ -1,0 +1,124 @@
+The data is being fetched successfully, but the Profile page UI is not displaying all the fields correctly.
+
+Looking at the console, we have:
+- User: DOBSON ANDRE ✅
+- UID: RB1015 ✅
+- Mobile: +264836795150 ✅
+- Nano Limit: 2000 ✅
+- Term Limit: 500 ✅
+
+But some fields show as blank on the UI.
+
+Update the Profile page component to properly display all user data:
+
+const ProfilePage = ({ route }) => {
+  const { user, session } = route.params;
+  
+  console.log('📄 Profile Page - User Data:', user);
+  
+  // Format the data for display
+  const displayData = {
+    accountName: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A',
+    clientId: user.id_number || 'N/A',
+    accountUid: user.uid || 'N/A',
+    nanoInstallment: user.nano_loan_limit ? `MAX | NAD ${parseFloat(user.nano_loan_limit).toFixed(2)}` : 'N/A',
+    termInstallment: user.term_loan_limit ? `MAX | NAD ${parseFloat(user.term_loan_limit).toFixed(2)}` : 'N/A',
+    accountLevel: user.membership_status || 'N/A',
+    creditRating: user.credit_rating || 0,
+    mobile: user.mobile || 'N/A',
+  };
+  
+  console.log('📊 Formatted Display Data:', displayData);
+  
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>PROFILE</Text>
+        <TouchableOpacity>
+          <Text style={styles.notificationIcon}>🔔</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* User Info Card */}
+      <View style={styles.infoCard}>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Account Name</Text>
+          <Text style={styles.value}>{displayData.accountName}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Client ID</Text>
+          <Text style={styles.value}>{displayData.clientId}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Account UID</Text>
+          <Text style={styles.value}>{displayData.accountUid}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Nano Installment</Text>
+          <Text style={styles.value}>{displayData.nanoInstallment}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Term Installment</Text>
+          <Text style={styles.value}>{displayData.termInstallment}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Account Level</Text>
+          <Text style={styles.value}>{displayData.accountLevel}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Credit Rating</Text>
+          <Text style={styles.value}>{'⭐'.repeat(Math.floor(displayData.creditRating))}</Text>
+        </View>
+      </View>
+      
+      {/* Document Status */}
+      <View style={styles.documentSection}>
+        <Text style={styles.sectionTitle}>Documents Status</Text>
+        <View style={styles.documentRow}>
+          <Text>ID ✅</Text>
+          <Text>PROOF OF INCOME ✅</Text>
+          <Text>KYC ✅</Text>
+        </View>
+      </View>
+      
+      {/* Action Buttons */}
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>REQUEST NANO LOAN</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>APPLY FOR TERM LOAN</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>STATEMENT</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>CREDIT SCORE HISTORY</Text>
+      </TouchableOpacity>
+      
+      {/* Sign Out */}
+      <TouchableOpacity 
+        style={[styles.button, styles.signOutButton]}
+        onPress={async () => {
+          await supabase.auth.signOut();
+          navigation.navigate('Login');
+        }}
+      >
+        <Text style={styles.buttonText}>SIGN OUT</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+Make sure the Profile component properly extracts and displays all user data fields.
+
+Also add console logging to see what data is being passed to the Profile page.

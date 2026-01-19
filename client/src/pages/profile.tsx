@@ -17,6 +17,7 @@ export default function Profile() {
     const fetchProfile = async () => {
       try {
         const profile = await api.getProfile();
+        console.log('📄 Profile Page - User Data:', profile);
         setUser(profile);
       } catch (error: any) {
         toast({
@@ -66,32 +67,44 @@ export default function Profile() {
         <div className="flex flex-col gap-1.5 mb-6">
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Name</div>
-            <div className="text-right text-black">{user ? `${user.last_name} ${user.first_name}` : "..."}</div>
+            <div className="text-right text-black">
+              {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A' : "..."}
+            </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Client ID</div>
-            <div className="text-right text-black">{user?.id_number || "..."}</div>
+            <div className="text-right text-black">{user?.id_number || "N/A"}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account UID</div>
-            <div className="text-right text-black">{user?.uid || "..."}</div>
+            <div className="text-right text-black">{user?.uid || "N/A"}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Nano Installment</div>
-            <div className="text-right text-black">{user?.nano_installment || "..."}</div>
+            <div className="text-right text-black">
+              {user?.nano_loan_limit 
+                ? `MAX | NAD ${Number(user.nano_loan_limit).toFixed(2)}` 
+                : (user?.nano_installment || "N/A")}
+            </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Term Installment</div>
-            <div className="text-right text-black">{user?.term_installment || "..."}</div>
+            <div className="text-right text-black">
+              {user?.term_loan_limit 
+                ? `MAX | NAD ${Number(user.term_loan_limit).toFixed(2)}` 
+                : (user?.term_installment || "N/A")}
+            </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Level</div>
-            <div className="text-right text-black">{user?.account_level || "..."}</div>
+            <div className="text-right text-black">
+              {user?.membership_status || user?.account_level || "N/A"}
+            </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5">
