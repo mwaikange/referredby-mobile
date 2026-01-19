@@ -5,7 +5,7 @@ import { ENV } from './env';
 if (!ENV.SUPABASE_ANON_KEY) {
   console.error("CRITICAL: Supabase credentials are missing. Please check your Replit Secrets.");
 } else {
-  console.log('✅ Supabase initialized');
+  console.log('✅ Initializing Supabase with URL:', ENV.SUPABASE_URL);
 }
 
 // Create the client
@@ -13,8 +13,8 @@ if (!ENV.SUPABASE_ANON_KEY) {
 // AsyncStorage is for React Native and would break this web preview.
 export const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY, {
   auth: {
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
   },
 });
