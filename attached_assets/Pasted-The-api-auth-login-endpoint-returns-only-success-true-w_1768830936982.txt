@@ -1,0 +1,151 @@
+The /api/auth/login endpoint returns only { "success": true } without session data. It's using cookie-based authentication.
+
+For a mobile app, we need the access token in the response. Let me try a different approach:
+
+1. After successful login, call Supabase's getSession() to retrieve the session that was set via cookies
+2. Or try using Supabase's signInWithPassword directly but with credentials from our backend
+
+Update the login function:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('----------------------------------------');
+  console.log('🔐 ATTEMPTING LOGIN (via Backend API)');
+  console.log('----------------------------------------');
+  console.log('📧 Email:', email);
+  
+  try {
+    // Step 1: Call backend login (sets auth cookies)
+    const loginUrl = `${ENV.API_BASE_URL}/api/auth/login`;
+    console.log('🔗 Calling:', loginUrl);
+    
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Important: Include cookies
+      body: JSON.stringify({
+        email: email,
+        pin: pin,
+      }),
+    });
+
+    console.log('📡 Backend response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Login failed:', errorText);
+      alert('Login failed: Invalid credentials');
+      return;
+    }
+
+    const authData = await response.json();
+    console.log('📦 Backend response:', authData);
+
+    if (!authData.success) {
+      console.error('❌ Login not successful');
+      alert('Login failed');
+      return;
+    }
+
+    console.log('✅ Backend login successful (cookies set)');
+
+    // Step 2: Try to get the session from Supabase client (it should pick up the cookies)
+    console.log('🔄 Retrieving session from Supabase...');
+    
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('❌ Session retrieval error:', sessionError.message);
+    }
+    
+    console.log('Session data:', sessionData);
+    console.log('Session present:', !!sessionData.session);
+    
+    if (sessionData?.session?.access_token) {
+      console.log('✅ Session retrieved from Supabase');
+      console.log('🎫 Access token:', sessionData.session.access_token.substring(0, 20) + '...');
+      
+      // Step 3: Fetch user profile
+      console.log('🔗 Fetching user profile...');
+      const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
+      
+      const profileResponse = await fetch(profileUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      console.log('📡 Profile response status:', profileResponse.status);
+
+      if (!profileResponse.ok) {
+        const profileError = await profileResponse.text();
+        console.error('❌ Profile fetch failed:', profileError);
+        alert('Login successful but failed to load profile');
+        return;
+      }
+
+      const profileData = await profileResponse.json();
+      console.log('✅ Profile data received');
+      console.log('User:', profileData.user?.first_name, profileData.user?.last_name);
+
+      // Step 4: Navigate to profile page
+      console.log('🎯 Navigating to Profile page...');
+      navigation.navigate('Profile', { 
+        user: profileData.user || profileData,
+        session: sessionData.session,
+      });
+      
+    } else {
+      // Fallback: Try direct Supabase authentication
+      console.log('⚠️ No session from cookies, trying direct Supabase auth...');
+      
+      const { data: authResult, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: pin,
+      });
+      
+      if (authError) {
+        console.error('❌ Direct Supabase auth failed:', authError.message);
+        alert('Login failed: Could not establish session');
+        return;
+      }
+      
+      console.log('✅ Direct Supabase auth successful');
+      
+      // Fetch profile
+      const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
+      const profileResponse = await fetch(profileUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authResult.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const profileData = await profileResponse.json();
+      
+      navigation.navigate('Profile', { 
+        user: profileData.user || profileData,
+        session: authResult.session,
+      });
+    }
+    
+    console.log('----------------------------------------');
+
+  } catch (error) {
+    console.error('❌ LOGIN ERROR:', error);
+    console.error('Error message:', error.message);
+    alert(`Login failed: ${error.message}`);
+  }
+}
+
+This tries three approaches:
+1. Backend API login with cookie credentials
+2. Get session from Supabase (should pick up cookies)
+3. Fallback to direct Supabase auth if cookies don't work
+
+Make this change now.
