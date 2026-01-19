@@ -101,25 +101,53 @@ export default function Login() {
       }
 
       const authData = await response.json();
+      
+      // LOG THE ENTIRE RESPONSE TO SEE STRUCTURE
+      console.log('📦 FULL API RESPONSE:');
+      console.log(JSON.stringify(authData, null, 2));
+      
       console.log('✅ Authentication successful');
-      console.log('Session present:', !!authData.session);
-      console.log('User present:', !!authData.user);
+      console.log('Response keys:', Object.keys(authData));
 
-      if (!authData.session || !authData.session.access_token) {
-        console.error('❌ No session/token in response');
+      // Check different possible response structures
+      let accessToken = null;
+      let refreshToken = null;
+      
+      if (authData.session?.access_token) {
+        // Structure 1: { session: { access_token, refresh_token }, user: {...} }
+        accessToken = authData.session.access_token;
+        refreshToken = authData.session.refresh_token;
+        console.log('✅ Using structure 1: authData.session.access_token');
+      } else if (authData.data?.session?.access_token) {
+        // Structure 2: { data: { session: { access_token }, user: {...} } }
+        accessToken = authData.data.session.access_token;
+        refreshToken = authData.data.session.refresh_token;
+        console.log('✅ Using structure 2: authData.data.session.access_token');
+      } else if (authData.access_token) {
+        // Structure 3: { access_token, refresh_token, user: {...} }
+        accessToken = authData.access_token;
+        refreshToken = authData.refresh_token;
+        console.log('✅ Using structure 3: authData.access_token');
+      }
+
+      if (!accessToken) {
+        console.error('❌ Could not find access_token in response');
+        console.error('Response structure:', Object.keys(authData));
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: "No session returned from server",
+          description: "No access token in server response",
         });
         return;
       }
 
+      console.log('🎫 Access token found:', accessToken.substring(0, 20) + '...');
+
       // Store the session in Supabase client (for future API calls)
       try {
         await supabase.auth.setSession({
-          access_token: authData.session.access_token,
-          refresh_token: authData.session.refresh_token,
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
         });
         console.log('✅ Session stored in Supabase client');
       } catch (sessionError: any) {
@@ -135,7 +163,7 @@ export default function Login() {
       const profileResponse = await fetch(profileUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${authData.session.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -155,8 +183,11 @@ export default function Login() {
 
       const userData = await profileResponse.json();
       console.log('✅ Profile data received');
-      console.log('User name:', userData.user?.first_name, userData.user?.last_name);
-      console.log('User UID:', userData.user?.uid);
+      // Handle both { user: ... } and { data: { user: ... } } and direct object
+      const user = userData.user || userData.data?.user || userData;
+      
+      console.log('User name:', user?.first_name, user?.last_name);
+      console.log('User UID:', user?.uid);
 
       // Navigate to profile page
       console.log('🎯 Navigating to Profile page...');

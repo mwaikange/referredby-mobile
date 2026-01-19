@@ -1,0 +1,120 @@
+The login API returns 200 but no session data. Let me see what the API is actually returning.
+
+Update the login function to log the full response:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('----------------------------------------');
+  console.log('🔐 ATTEMPTING LOGIN (via Backend API)');
+  console.log('----------------------------------------');
+  console.log('📧 Email:', email);
+  
+  try {
+    const loginUrl = `${ENV.API_BASE_URL}/api/auth/login`;
+    console.log('🔗 Calling:', loginUrl);
+    
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        pin: pin,
+      }),
+    });
+
+    console.log('📡 Backend response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Login failed:', errorText);
+      alert('Login failed: Invalid credentials');
+      return;
+    }
+
+    const authData = await response.json();
+    
+    // LOG THE ENTIRE RESPONSE TO SEE STRUCTURE
+    console.log('📦 FULL API RESPONSE:');
+    console.log(JSON.stringify(authData, null, 2));
+    
+    console.log('✅ Authentication successful');
+    console.log('Response keys:', Object.keys(authData));
+    console.log('Session present:', !!authData.session);
+    console.log('User present:', !!authData.user);
+    console.log('Access token present:', !!authData.access_token);
+    console.log('Data present:', !!authData.data);
+
+    // Check different possible response structures
+    let accessToken = null;
+    let userData = null;
+    
+    if (authData.session?.access_token) {
+      // Structure 1: { session: { access_token, refresh_token }, user: {...} }
+      accessToken = authData.session.access_token;
+      userData = authData.user;
+      console.log('✅ Using structure 1: authData.session.access_token');
+    } else if (authData.data?.session?.access_token) {
+      // Structure 2: { data: { session: { access_token }, user: {...} } }
+      accessToken = authData.data.session.access_token;
+      userData = authData.data.user;
+      console.log('✅ Using structure 2: authData.data.session.access_token');
+    } else if (authData.access_token) {
+      // Structure 3: { access_token, refresh_token, user: {...} }
+      accessToken = authData.access_token;
+      userData = authData.user;
+      console.log('✅ Using structure 3: authData.access_token');
+    }
+
+    if (!accessToken) {
+      console.error('❌ Could not find access_token in response');
+      console.error('Response structure:', Object.keys(authData));
+      alert('Login failed: No access token in response');
+      return;
+    }
+
+    console.log('🎫 Access token found:', accessToken.substring(0, 20) + '...');
+
+    // Fetch user profile
+    console.log('🔗 Fetching user profile...');
+    const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
+    
+    const profileResponse = await fetch(profileUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Profile response status:', profileResponse.status);
+
+    if (!profileResponse.ok) {
+      const profileError = await profileResponse.text();
+      console.error('❌ Profile fetch failed:', profileError);
+      alert('Login successful but failed to load profile');
+      return;
+    }
+
+    const profileData = await profileResponse.json();
+    console.log('✅ Profile data received');
+    console.log('Profile structure:', Object.keys(profileData));
+    console.log('User data:', profileData.user || profileData);
+
+    // Navigate to profile page
+    console.log('🎯 Navigating to Profile page...');
+    navigation.navigate('Profile', { 
+      user: profileData.user || profileData,
+      accessToken: accessToken,
+    });
+    
+    console.log('----------------------------------------');
+
+  } catch (error) {
+    console.error('❌ LOGIN ERROR:', error);
+    console.error('Error message:', error.message);
+    alert(`Login failed: ${error.message}`);
+  }
+}
+
+Make this change now and try logging in again. The console will show the exact structure of the API response.
