@@ -99,7 +99,7 @@ export default function LoginScreen() {
             {pin.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => (pinRefs.current[index] = ref)}
+                ref={(ref) => { pinRefs.current[index] = ref; }}
                 style={styles.pinInput}
                 value={digit}
                 onChangeText={(value) => handlePinChange(value, index)}

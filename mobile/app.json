@@ -2,6 +2,7 @@
   "expo": {
     "name": "ReferredBy",
     "slug": "referredby-mobile",
+    "owner": "referredby",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -36,7 +37,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "referredby-mobile"
+        "projectId": "6efe1f9d-89da-454c-95b1-fd337beb7730"
       }
     }
   }
