@@ -1,0 +1,224 @@
+# FINAL APK BUILD PROMPT - Everything Working ✅
+
+## ✅ PRE-BUILD VERIFICATION COMPLETE
+
+All features confirmed working in web preview:
+- ✅ Login with Supabase authentication
+- ✅ Profile page displays all user data correctly
+- ✅ Interest Confirmation page loads with Bearer token auth
+- ✅ All API endpoints working (no 401 errors)
+- ✅ UI matches web app design (stars, colors, checkmarks)
+- ✅ Environment variables properly configured
+- ✅ Full user flow tested and working
+
+---
+
+## 🚀 APK BUILD PROMPT
+
+**Copy and paste this to Replit AI:**
+
+```
+Build an Android APK for production testing.
+
+PRE-BUILD VERIFICATION:
+✅ All features tested and working in web preview
+✅ All API endpoints returning 200 (Bearer token auth working)
+✅ Environment variables use EXPO_PUBLIC_ prefix for native builds
+✅ UI matches web app design specifications
+
+CONFIGURATION REQUIREMENTS:
+
+1. Verify app.json / app.config.js has these critical settings:
+
+{
+  "expo": {
+    "name": "ReferredBy",
+    "slug": "referredby-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "android": {
+      "package": "com.referredby.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e1548"
+      }
+    }
+  }
+}
+
+2. Verify environment variables are configured for EXPO (not VITE):
+   - Code must use process.env.EXPO_PUBLIC_SUPABASE_URL
+   - Code must use process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+   - Code must use process.env.EXPO_PUBLIC_API_BASE_URL
+
+3. Create or verify eas.json configuration:
+
+{
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
+
+4. Install EAS CLI if not already installed:
+   npm install -g eas-cli
+
+5. Login to Expo (if needed):
+   eas login
+
+6. Configure project for EAS (if needed):
+   eas build:configure
+
+7. Build the preview APK:
+   eas build --platform android --profile preview
+
+8. Monitor the build progress and provide the download link when complete.
+
+EXPECTED OUTPUT:
+- Build time: 15-30 minutes (first build), 10-15 minutes (subsequent builds)
+- APK file: ~50-100 MB
+- Download link: Direct URL to download APK
+- Installation: Can be installed on any Android device (enable "Unknown Sources")
+
+IMPORTANT NOTES:
+- This creates a development/preview APK for testing
+- Not yet signed for Play Store (that's the "production" profile)
+- Perfect for testing on real devices
+- Can be shared with beta testers
+
+Please start the build process and keep me updated on progress.
+```
+
+---
+
+## 📱 ALTERNATIVE: FASTER LOCAL BUILD (If EAS is slow/blocked)
+
+If EAS Build doesn't work or takes too long, use this simpler local build:
+
+```
+Create a local development APK for quick testing.
+
+Steps:
+
+1. Run Expo prebuild to generate native Android project:
+   npx expo prebuild --platform android --clean
+
+2. Navigate to android directory and build:
+   cd android
+   ./gradlew assembleRelease
+
+3. Locate the APK file:
+   android/app/build/outputs/apk/release/app-release.apk
+
+4. Copy APK to outputs directory so I can download it:
+   cp android/app/build/outputs/apk/release/app-release.apk /mnt/user-data/outputs/referredby-mobile.apk
+
+5. Provide download link
+
+Note: This is a development build. For production/Play Store, use EAS Build.
+Build time: 5-10 minutes
+```
+
+---
+
+## 🎯 WHICH BUILD METHOD TO USE?
+
+### Use EAS Build (First prompt) if:
+- ✅ You want production-quality APK
+- ✅ Planning to submit to Play Store eventually
+- ✅ Can wait 15-30 minutes
+- ✅ Want proper signing and optimization
+
+### Use Local Build (Second prompt) if:
+- ✅ Need APK quickly for immediate testing
+- ✅ Just want to see app on real device
+- ✅ Don't need Play Store submission yet
+- ✅ Want faster iteration (5-10 min builds)
+
+---
+
+## 📋 AFTER APK IS BUILT
+
+### Installation on Android Device:
+
+1. **Download APK** to your phone or computer
+2. **Transfer to Android device** (if downloaded on computer)
+3. **Enable "Unknown Sources"** in Android settings:
+   - Settings → Security → Unknown Sources (ON)
+   - Or: Settings → Apps → Special Access → Install Unknown Apps
+4. **Tap the APK file** to install
+5. **Open ReferredBy app** and test!
+
+### What to Test:
+
+1. [ ] App opens without crashing
+2. [ ] Login works with real credentials
+3. [ ] Profile page loads correctly
+4. [ ] Interest Confirmation loads
+5. [ ] All UI elements display properly
+6. [ ] Navigation between pages works
+7. [ ] Sign out works
+8. [ ] App can be closed and reopened (session persistence)
+
+---
+
+## 🔄 IF BUILD FAILS
+
+Common issues and solutions:
+
+### Error: "Missing app.json configuration"
+**Solution:** Ensure app.json has all required Android fields
+
+### Error: "Expo account required"
+**Solution:** Run `eas login` and create free Expo account
+
+### Error: "Gradle build failed"
+**Solution:** Use EAS Build instead of local build
+
+### Error: "Environment variables not found"
+**Solution:** Verify EXPO_PUBLIC_ prefix is used in code, not VITE_
+
+---
+
+## ✅ SUCCESS INDICATORS
+
+You'll know the build succeeded when:
+- ✅ Build process completes without errors
+- ✅ Download link is provided
+- ✅ APK file is ~50-100 MB
+- ✅ APK installs on Android device
+- ✅ App launches and login works
+
+---
+
+## 🎉 YOU'RE READY!
+
+Since everything is working 100% in web preview:
+
+**Recommended:** Use the **EAS Build prompt** (first one) for best quality
+
+**Alternative:** Use **Local Build prompt** (second one) if you want it faster
+
+Both will give you a working APK to test on real devices!
+
+**Choose one and give it to Replit AI now!** 🚀
