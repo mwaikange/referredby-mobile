@@ -15,7 +15,18 @@ export default function InterestConfirmation() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const confirmation = await api.getInterestConfirmation("nano");
+        // We need user profile first to get ID and Nano Limit
+        const profile = await api.getProfile();
+        
+        // Use user.id and nano_loan_limit (default to 2000 if missing)
+        const loanAmount = Number(profile.nano_loan_limit) || 2000;
+        
+        console.log('📥 Fetching interest confirmation...', { 
+          userId: profile.id, 
+          loanAmount 
+        });
+
+        const confirmation = await api.getInterestConfirmation(profile.id, loanAmount);
         setData(confirmation);
       } catch (error: any) {
         toast({

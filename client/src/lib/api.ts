@@ -25,6 +25,7 @@ export type UserProfile = {
   membership_status?: string;
 
   credit_rating: number;
+  borrower_rating?: number; // New field from API
   kyc_status: {
     id: boolean;
     proof_of_income: boolean;
@@ -84,28 +85,7 @@ export const api = {
       throw new Error("No active session");
     }
 
-    // Attempt to fetch from Supabase directly first (more reliable if API is down)
-    const { data: userData, error: supabaseError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('auth_user_id', sessionData.session.user.id)
-      .single();
-
-    if (!supabaseError && userData) {
-      // Ensure nested objects exist to avoid crashes (polyfill for missing joins)
-      const userWithDefaults = {
-        ...userData,
-        kyc_status: userData.kyc_status || {
-          id: false,
-          proof_of_income: false,
-          kyc: false
-        }
-      };
-      return userWithDefaults as unknown as UserProfile;
-    }
-
-    // Fallback to API if Supabase fetch fails (or if logic prefers API)
-    console.warn("Falling back to API for profile fetch...");
+    console.log('📥 Fetching profile from API...');
     
     const headers = await getHeaders();
     const response = await fetch(`${API_BASE_URL}/api/users/me`, {
@@ -113,35 +93,85 @@ export const api = {
       headers,
     });
 
+    console.log('📡 Profile response status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Profile fetch failed:', errorText);
       throw new Error(`Failed to fetch profile: ${response.statusText}`);
     }
 
     const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Failed to fetch profile");
+    
+    // The API might return { success: true, user: ... } or just the user object directly.
+    // Based on the prompt log: "Name:", profileData.first_name
+    // It seems to return the user object directly or as data.user if wrapped.
+    // Let's assume the API returns the user object directly based on "const profileData = await profileResponse.json();" in the prompt.
+    // Wait, the prompt code says:
+    // const profileData = await profileResponse.json();
+    // console.log('👤 Name:', profileData.first_name...);
+    // So it seems it returns the user object directly at the root level?
+    // Let's check the previous `getProfile` implementation which expected { success: true, user: ... }.
+    // The prompt shows: "const profileData = await profileResponse.json();" then accessing properties on profileData.
+    // I will try to handle both or assume standard API response. 
+    // If previous was wrapper, this might be wrapper too. But the prompt implies direct access.
+    // Safest bet: Check if 'user' property exists, else use data itself.
+    
+    const userProfile = data.user || data;
+
+    console.log('✅ Profile loaded from API!', userProfile);
+
+    // Ensure numeric values are numbers if they come as strings
+    if (userProfile.borrower_rating) {
+        userProfile.borrower_rating = Number(userProfile.borrower_rating);
+    }
+    
+    // Polyfill kyc_status if missing
+    if (!userProfile.kyc_status) {
+        userProfile.kyc_status = {
+          id: false,
+          proof_of_income: false,
+          kyc: false
+        };
     }
 
-    return data.user;
+    return userProfile as UserProfile;
   },
 
   // Get Interest Confirmation Details
-  getInterestConfirmation: async (type: "nano" | "term" = "nano"): Promise<InterestConfirmation> => {
+  getInterestConfirmation: async (userId: string, loanAmount: number = 2000): Promise<InterestConfirmation> => {
     const headers = await getHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/loans/interest-confirmation?type=${type}`, {
-      method: "GET",
+    console.log('📥 Fetching interest confirmation from API...', { userId, loanAmount });
+
+    const response = await fetch(`${API_BASE_URL}/api/mobile/interest-confirmation`, {
+      method: "POST",
       headers,
+      body: JSON.stringify({
+        user_id: userId,
+        loan_amount: loanAmount,
+      }),
     });
 
+    console.log('📡 Interest API Response Status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch interest confirmation: ${response.statusText}`);
+       const errorText = await response.text();
+       console.error('❌ Interest API Error:', errorText);
+       throw new Error(`API Error: ${response.status}`);
     }
 
     const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Failed to fetch interest confirmation");
-    }
-
-    return data.confirmation;
+    console.log('✅ Interest data received:', data);
+    
+    // Check if wrapped in success/confirmation or direct
+    // Previous code: return data.confirmation;
+    // Prompt code: setData(apiData); (direct?)
+    // Prompt log: console.log('✅ Interest data received:', apiData);
+    // Prompt usage: data.referring_partner
+    // So it seems direct or wrapped?
+    // Previous getInterestConfirmation returned data.confirmation.
+    // Prompt uses apiData.referring_partner.
+    // I will return data.confirmation || data;
+    return data.confirmation || data;
   }
 };

@@ -109,13 +109,31 @@ export default function Profile() {
           
           <div className="flex justify-between items-center py-0.5">
             <div className="label text-gray-900 font-bold">Credit Rating</div>
-            <div className="flex justify-end gap-0.5 text-black">
-               {Array.from({ length: 10 }).map((_, i) => (
-                 <Star 
-                   key={i} 
-                   className={`w-4 h-4 ${i < (user?.credit_rating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
-                 />
-               ))}
+            <div className="flex justify-end items-center gap-1 text-black">
+               {(() => {
+                 const rating = user?.borrower_rating || user?.credit_rating || 0;
+                 const fullStars = Math.floor(rating);
+                 const hasHalfStar = (rating % 1) >= 0.5;
+                 const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
+                 
+                 return (
+                   <div className="flex items-center gap-2">
+                     <div className="flex">
+                       {/* Full Stars */}
+                       {Array.from({ length: fullStars }).map((_, i) => (
+                         <span key={`full-${i}`} className="text-yellow-400">⭐</span>
+                       ))}
+                       {/* Half Star (using text char for simplicity matching prompt) */}
+                       {hasHalfStar && <span className="text-yellow-400">⭐</span>}
+                       {/* Empty Stars */}
+                       {Array.from({ length: emptyStars }).map((_, i) => (
+                         <span key={`empty-${i}`} className="text-gray-300">☆</span>
+                       ))}
+                     </div>
+                     <span className="text-sm font-medium">({Number(rating).toFixed(1)} / 10)</span>
+                   </div>
+                 );
+               })()}
             </div>
           </div>
         </div>

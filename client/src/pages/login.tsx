@@ -1,3 +1,4 @@
+import { api } from "@/lib/api";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
@@ -91,39 +92,36 @@ export default function Login() {
 
       console.log('✅ Authentication successful!');
       console.log('👤 User ID:', data.user.id);
-      console.log('📧 Email:', data.user.email);
 
-      // Fetch user profile directly from Supabase with simplified query
-      console.log('📥 Fetching profile from Supabase...');
+      // Step 2: Fetch user profile from backend API (UPDATED!)
+      console.log('📥 Fetching profile from API...');
       
-      const { data: userData, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_user_id', data.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('❌ Profile fetch error:', profileError.message);
+      try {
+        const userData = await api.getProfile();
         
-        // Even if profile fetch fails, use basic auth data
-        console.log('⚠️ Using basic user info from auth');
+        console.log('✅ Profile loaded from API!');
+        console.log('👤 Name:', userData.first_name, userData.last_name);
+        console.log('🆔 UID:', userData.uid);
+        console.log('📱 Mobile:', userData.mobile);
+        console.log('💰 Nano Limit:', userData.nano_loan_limit);
+        console.log('💰 Term Limit:', userData.term_loan_limit);
+        console.log('⭐ Rating:', userData.borrower_rating);
+
+        // Navigate to profile page
+        console.log('🎯 Navigating to Profile...');
         setLocation('/profile');
+        
+        console.log('✅ Login complete!');
+        console.log('----------------------------------------');
+      } catch (profileError: any) {
+        console.error('❌ Profile fetch failed:', profileError.message);
+        toast({
+          variant: "destructive",
+          title: "Profile Load Failed",
+          description: "Could not load profile data. Please try again.",
+        });
         return;
       }
-
-      console.log('✅ Profile loaded from Supabase!');
-      console.log('👤 User:', userData.first_name, userData.last_name);
-      console.log('🆔 UID:', userData.uid);
-      console.log('📱 Mobile:', userData.mobile);
-      console.log('💰 Nano Limit:', userData.nano_loan_limit);
-      console.log('💰 Term Limit:', userData.term_loan_limit);
-
-      // Navigate to profile page
-      console.log('🎯 Navigating to Profile...');
-      setLocation('/profile');
-      
-      console.log('✅ Login complete!');
-      console.log('----------------------------------------');
 
     } catch (error: any) {
       console.error('❌ ERROR:', error.message);
