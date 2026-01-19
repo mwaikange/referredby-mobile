@@ -21,18 +21,37 @@ export default function Login() {
     if (!email || !pin) return;
 
     setLoading(true);
+    
+    console.log("----------------------------------------");
+    console.log("🔐 ATTEMPTING LOGIN");
+    console.log("----------------------------------------");
+    console.log(`Email: ${email}`);
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // 1. Authenticate with Supabase
+      console.log("1. Authenticating with Supabase...");
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: pin,
       });
 
       if (error) {
+        console.error("❌ Supabase Auth Failed:", error.message);
         throw error;
       }
+      
+      console.log("✅ Supabase Auth Successful");
+      console.log("User ID:", data.user.id);
+      console.log("Session:", data.session ? "Active" : "Missing");
 
+      // 2. Fetch User Profile
+      // Ideally we should check if profile exists, but we'll redirect for now
       setLocation("/profile");
+      
     } catch (error: any) {
+      console.error("❌ LOGIN ERROR:", error);
+      console.log("----------------------------------------");
+      
       toast({
         variant: "destructive",
         title: "Login Failed",
