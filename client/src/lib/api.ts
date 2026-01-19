@@ -84,7 +84,16 @@ export const api = {
       .single();
 
     if (!supabaseError && userData) {
-      return userData as unknown as UserProfile;
+      // Ensure nested objects exist to avoid crashes (polyfill for missing joins)
+      const userWithDefaults = {
+        ...userData,
+        kyc_status: userData.kyc_status || {
+          id: false,
+          proof_of_income: false,
+          kyc: false
+        }
+      };
+      return userWithDefaults as unknown as UserProfile;
     }
 
     // Fallback to API if Supabase fetch fails (or if logic prefers API)

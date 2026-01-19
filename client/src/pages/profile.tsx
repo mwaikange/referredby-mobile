@@ -113,15 +113,15 @@ export default function Profile() {
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">ID</span>
-            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.id ? "bg-green-500" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status?.id ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase whitespace-nowrap">Proof of Income</span>
-            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.proof_of_income ? "bg-green-500" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status?.proof_of_income ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">KYC</span>
-            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.kyc ? "bg-green-500" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status?.kyc ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <Settings className="w-6 h-6 text-gray-500" />
         </div>
