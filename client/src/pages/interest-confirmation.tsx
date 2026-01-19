@@ -61,7 +61,7 @@ export default function InterestConfirmation() {
         </h1>
 
         {/* Green Info Card */}
-        <div className="bg-[#0D9488] text-white p-4 rounded-lg mb-6 shadow-md">
+        <div className="bg-[#00736e] text-white p-4 rounded-lg mb-4 shadow-md">
           <div className="grid grid-cols-[140px_1fr] gap-y-2 text-sm leading-tight">
             <div className="font-bold opacity-90">Referring Partner:</div>
             <div className="font-medium">{data?.referring_partner || "..."}</div>
@@ -75,8 +75,8 @@ export default function InterestConfirmation() {
         </div>
 
         {/* Active Interest Mode Badge */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-xs font-bold border border-gray-200 shadow-sm w-auto text-center">
+        <div className="mb-6">
+          <div className="bg-[#eff6ff] text-[#1e3a8a] px-4 py-3 rounded-lg text-sm font-bold border border-[#bfdbfe] w-full text-center shadow-sm">
             Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || "..."}
           </div>
         </div>
