@@ -1,0 +1,117 @@
+
+pasted-text.txt
+otp signatures.txt
+image.png
+image.png
+6d ago
+
+Read attached files
+
+Thought for 7s
+Image Description: The digital contract shows a Digital Signature section with "Signed via OTP: Yes" (marked as wrong), Mobile Number (+264838795150), Date Signed (12/01/25), Borrower's Name (MAGDEBURG), and Agent Name showing "Destiny Group Pty LTD" (marked as wrong). The handwritten notes indicate that the actual OTP should be shown, the referring partner should be displayed (not portfolio holder), and "XXXXXX" should appear before OTP is generated.
+
+I understand the issues clearly now:
+
+referring_partner_id FK constraint issue: The constraint references lending_societies.id but should store referring partner info from partner_staff
+Agent Name incorrect: Currently showing portfolio holder instead of referring partner
+Pre-signature display: Should show "XXXXXX" before OTP verification, not "Yes"
+Post-signature display: Should show actual OTP code and referring partner name from otp_signatures table
+Since the FK constraint on referring_partner_id points to the wrong table (lending_societies instead of partner_staff), I'll store the referring partner NAME as text in a new column. Let me fix all these issues:
+
+
+Read apply page contracts
+
+Read history page contracts
+
+Read loan request API
+Now let me search for the contract signature display sections in both files:
+
+Out of Credits
+v0 stopped because you are out of credits. Please add more credits to continue.
+
+
+Worked for 36s
+6d ago
+pls continue
+
+5d ago
+
+Thought for a moment
+
+Found signature sections in apply
+
+Found signature sections in history
+Now I can see the issues clearly:
+
+Apply page (line 952): Shows otpVerificationDetails?.otp || "******" - Good for pre-OTP, but needs actual OTP after verification
+Apply page (line 965): Shows otpVerificationDetails?.referringPartner which gets the lending society, NOT the referring partner
+History page (line 579): Shows just "Yes" instead of actual OTP
+History page (line 589): Shows portfolioHolder.account_name (wrong - should be referring partner)
+I need to:
+
+Add a column to otp_signatures to store the referring partner name as TEXT
+Update the API to store referring partner name from partner_staff
+Fetch OTP signature data in both apply and history pages
+Display actual OTP and referring partner from the signature record
+Let me implement the fixes:
+
+
+Fixed OTP signatures and agent display
+
+Read route.ts
+
+Thought for 1s
+
+Fixed OTP signature display
+
+Read page.tsx
+
+Thought for 2s
+
+Read signature section
+
+Read history signature
+Now I can see both signature sections. Let me update both files to properly display the OTP signature data. I need to update the apply page to show "XXXXXX" before OTP verification and fetch the actual OTP signature after loan creation, and update the history page to fetch and display OTP signature from the database.
+
+
+Updated OTP signature display in contracts
+v280
+I've fixed the OTP signature display issues across both the apply and history pages. For the apply page contract preview, it now shows "XXXXXX" as the OTP placeholder (since OTP hasn't been entered yet) and displays the referring partner name from userData.referring_partner instead of the lending society. For the history page, I added code to fetch the actual OTP signature record from the otp_signatures table and display the real OTP code, timestamp, and referring partner name that were stored when the loan was created. The success modal now also shows different messages for nano loans (30 minutes) versus term loans (48 hours processing time).
+
+
+Reviewed work
+
+Worked for 2m 36s
+5d ago
+whats is the api_base_url for this project
+
+2:57 PM
+
+Thought for 1s
+
+Found API base URL
+
+Got environment variables
+Based on the codebase search and environment variables, here is the API Base URL for this project:
+
+Production URL: https://appv2.referredby.com.na
+
+For Mobile App Development:
+
+The deployed web app is at: https://appv2.referredby.com.na
+All API endpoints are relative to this base URL
+API Endpoint Structure:
+
+Category	Base Path
+Authentication	{BASE_URL}/api/auth/*
+Mobile APIs	{BASE_URL}/api/mobile/*
+File Uploads	{BASE_URL}/api/upload/*
+SMS	{BASE_URL}/api/sms/*
+User Management	{BASE_URL}/api/users/*
+Example Full URLs:
+
+Login: https://appv2.referredby.com.na/api/auth/login
+Loan Request: https://appv2.referredby.com.na/api/mobile/loan-request
+Interest Confirmation: https://appv2.referredby.com.na/api/mobile/interest-confirmation
+Send OTP: https://appv2.referredby.com.na/api/auth/send-otp
+Note: The Supabase URL (NEXT_PUBLIC_SUPABASE_URL) is used internally for database operations but the mobile app should NOT connect to Supabase directly - it should only use the Next.js API endpoints above.

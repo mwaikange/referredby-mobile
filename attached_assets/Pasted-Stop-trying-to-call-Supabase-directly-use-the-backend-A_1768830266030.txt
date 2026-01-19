@@ -1,0 +1,155 @@
+Stop trying to call Supabase directly - use the backend API for authentication instead.
+
+The CORS issue persists, so we need to use the proper architecture: mobile app → backend API → Supabase.
+
+Replace the entire login function with this:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('----------------------------------------');
+  console.log('🔐 ATTEMPTING LOGIN (via Backend API)');
+  console.log('----------------------------------------');
+  console.log('📧 Email:', email);
+  
+  try {
+    // Call the backend API login endpoint
+    const loginUrl = `${ENV.API_BASE_URL}/api/auth/login`;
+    console.log('🔗 Calling:', loginUrl);
+    
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        pin: pin,
+      }),
+    });
+
+    console.log('📡 Backend response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Login failed:', errorText);
+      
+      let errorMessage = 'Invalid credentials';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch (e) {
+        // If response is not JSON, use the text
+        errorMessage = errorText || errorMessage;
+      }
+      
+      alert(`Login failed: ${errorMessage}`);
+      return;
+    }
+
+    const authData = await response.json();
+    console.log('✅ Authentication successful');
+    console.log('Session present:', !!authData.session);
+    console.log('User present:', !!authData.user);
+
+    if (!authData.session || !authData.session.access_token) {
+      console.error('❌ No session/token in response');
+      alert('Login failed: No session returned from server');
+      return;
+    }
+
+    // Store the session in Supabase client (for future API calls)
+    try {
+      await supabase.auth.setSession({
+        access_token: authData.session.access_token,
+        refresh_token: authData.session.refresh_token,
+      });
+      console.log('✅ Session stored in Supabase client');
+    } catch (sessionError) {
+      console.warn('⚠️ Could not store session in Supabase client:', sessionError.message);
+      // Continue anyway - we have the token
+    }
+
+    // Fetch user profile
+    console.log('🔗 Fetching user profile...');
+    const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
+    console.log('Profile URL:', profileUrl);
+    
+    const profileResponse = await fetch(profileUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authData.session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Profile response status:', profileResponse.status);
+
+    if (!profileResponse.ok) {
+      const profileError = await profileResponse.text();
+      console.error('❌ Profile fetch failed:', profileError);
+      alert('Authentication successful but failed to load profile');
+      return;
+    }
+
+    const userData = await profileResponse.json();
+    console.log('✅ Profile data received');
+    console.log('User name:', userData.user?.first_name, userData.user?.last_name);
+    console.log('User UID:', userData.user?.uid);
+
+    // Navigate to profile page
+    console.log('🎯 Navigating to Profile page...');
+    navigation.navigate('Profile', { 
+      user: userData.user,
+      session: authData.session 
+    });
+    
+    console.log('----------------------------------------');
+
+  } catch (error) {
+    console.error('❌ LOGIN ERROR:', error);
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Full error:', error);
+    console.log('----------------------------------------');
+    
+    alert(`Login failed: ${error.message || 'Network error. Please check your connection.'}`);
+  }
+}
+
+Also remove the Supabase connectivity test (step 0) since we're not calling Supabase directly anymore.
+
+Update the test button to only test the backend:
+
+async function testConnection() {
+  console.log('🧪 TESTING BACKEND CONNECTION');
+  console.log('----------------------------------------');
+  
+  console.log('Environment Variables:');
+  console.log('API_BASE_URL:', ENV.API_BASE_URL);
+  console.log('SUPABASE_URL:', ENV.SUPABASE_URL);
+  console.log('SUPABASE_ANON_KEY present:', !!ENV.SUPABASE_ANON_KEY);
+  
+  console.log('\nTesting Backend API Health:');
+  try {
+    // Test if backend is reachable
+    const testUrl = `${ENV.API_BASE_URL}/api/auth/login`;
+    console.log('Testing URL:', testUrl);
+    
+    const response = await fetch(testUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'test@test.com', pin: '0000' }),
+    });
+    
+    console.log('✅ Backend is reachable');
+    console.log('Status:', response.status);
+    console.log('(401/400 is expected for wrong credentials)');
+    
+  } catch (error) {
+    console.error('❌ Backend connection failed:', error.message);
+  }
+  
+  console.log('----------------------------------------');
+  alert('Check console for test results');
+}
+
+Make these changes now. This will use the proper architecture: Mobile App → Backend API → Supabase.

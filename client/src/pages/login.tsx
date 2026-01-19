@@ -18,46 +18,32 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const testConnection = async () => {
-    console.log('🧪 TESTING CONNECTIONS');
+    console.log('🧪 TESTING BACKEND CONNECTION');
     console.log('----------------------------------------');
     
-    // Test 1: Check environment variables
-    console.log('1. Environment Variables:');
+    console.log('Environment Variables:');
+    console.log('API_BASE_URL:', ENV.API_BASE_URL);
     console.log('SUPABASE_URL:', ENV.SUPABASE_URL);
     console.log('SUPABASE_ANON_KEY present:', !!ENV.SUPABASE_ANON_KEY);
-    console.log('API_BASE_URL:', ENV.API_BASE_URL);
     
-    // Test 2: Test Supabase connection
-    console.log('\n2. Testing Supabase REST API directly:');
+    console.log('\nTesting Backend API Health:');
     try {
-      const testUrl = `${ENV.SUPABASE_URL}/rest/v1/`;
+      // Test if backend is reachable
+      const testUrl = `${ENV.API_BASE_URL}/api/auth/login`;
       console.log('Testing URL:', testUrl);
       
       const response = await fetch(testUrl, {
-        method: 'GET',
-        headers: {
-          'apikey': ENV.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
-        },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@test.com', pin: '0000' }),
       });
       
-      console.log('✅ Supabase REST API Status:', response.status);
+      console.log('✅ Backend is reachable');
+      console.log('Status:', response.status);
+      console.log('(401/400 is expected for wrong credentials)');
       
     } catch (error: any) {
-      console.error('❌ Supabase REST API Test Failed:', error.message);
-    }
-    
-    // Test 3: Test backend API
-    console.log('\n3. Testing Backend API:');
-    try {
-      const backendUrl = `${ENV.API_BASE_URL}/api/health`;
-      console.log('Testing URL:', backendUrl);
-      
-      const response = await fetch(backendUrl);
-      console.log('✅ Backend API Status:', response.status);
-      
-    } catch (error: any) {
-      console.error('❌ Backend API Test Failed:', error.message);
+      console.error('❌ Backend connection failed:', error.message);
     }
     
     console.log('----------------------------------------');
@@ -69,55 +55,124 @@ export default function Login() {
     if (!email || !pin) return;
 
     setLoading(true);
-    
-    console.log("----------------------------------------");
-    console.log("🔐 ATTEMPTING LOGIN");
-    console.log("----------------------------------------");
-    console.log(`Email: ${email}`);
-    
-    // First, test if we can reach Supabase at all
-    console.log('0. Testing Supabase connectivity...');
-    try {
-      const testResponse = await fetch(`${ENV.SUPABASE_URL}/rest/v1/`, {
-        headers: { 'apikey': ENV.SUPABASE_ANON_KEY },
-      });
-      console.log('✅ Supabase is reachable, status:', testResponse.status);
-    } catch (testError: any) {
-      console.error('❌ Cannot reach Supabase:', testError.message);
-      alert('Network error: Cannot connect to authentication server. Please check your internet connection.');
-      setLoading(false);
-      return;
-    }
 
+    console.log('----------------------------------------');
+    console.log('🔐 ATTEMPTING LOGIN (via Backend API)');
+    console.log('----------------------------------------');
+    console.log('📧 Email:', email);
+    
     try {
-      // 1. Authenticate with Supabase
-      console.log("1. Authenticating with Supabase...");
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: pin,
-      });
-
-      if (error) {
-        console.error("❌ Supabase Auth Failed:", error.message);
-        throw error;
-      }
+      // Call the backend API login endpoint
+      const loginUrl = `${ENV.API_BASE_URL}/api/auth/login`;
+      console.log('🔗 Calling:', loginUrl);
       
-      console.log("✅ Supabase Auth Successful");
-      console.log("User ID:", data.user.id);
-      console.log("Session:", data.session ? "Active" : "Missing");
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          pin: pin,
+        }),
+      });
 
-      // 2. Fetch User Profile
-      // Ideally we should check if profile exists, but we'll redirect for now
+      console.log('📡 Backend response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Login failed:', errorText);
+        
+        let errorMessage = 'Invalid credentials';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use the text
+          errorMessage = errorText || errorMessage;
+        }
+        
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: errorMessage,
+        });
+        return;
+      }
+
+      const authData = await response.json();
+      console.log('✅ Authentication successful');
+      console.log('Session present:', !!authData.session);
+      console.log('User present:', !!authData.user);
+
+      if (!authData.session || !authData.session.access_token) {
+        console.error('❌ No session/token in response');
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "No session returned from server",
+        });
+        return;
+      }
+
+      // Store the session in Supabase client (for future API calls)
+      try {
+        await supabase.auth.setSession({
+          access_token: authData.session.access_token,
+          refresh_token: authData.session.refresh_token,
+        });
+        console.log('✅ Session stored in Supabase client');
+      } catch (sessionError: any) {
+        console.warn('⚠️ Could not store session in Supabase client:', sessionError.message);
+        // Continue anyway - we have the token
+      }
+
+      // Fetch user profile
+      console.log('🔗 Fetching user profile...');
+      const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
+      console.log('Profile URL:', profileUrl);
+      
+      const profileResponse = await fetch(profileUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 Profile response status:', profileResponse.status);
+
+      if (!profileResponse.ok) {
+        const profileError = await profileResponse.text();
+        console.error('❌ Profile fetch failed:', profileError);
+        toast({
+          variant: "destructive",
+          title: "Profile Error",
+          description: "Authentication successful but failed to load profile",
+        });
+        return;
+      }
+
+      const userData = await profileResponse.json();
+      console.log('✅ Profile data received');
+      console.log('User name:', userData.user?.first_name, userData.user?.last_name);
+      console.log('User UID:', userData.user?.uid);
+
+      // Navigate to profile page
+      console.log('🎯 Navigating to Profile page...');
       setLocation("/profile");
       
+      console.log('----------------------------------------');
+
     } catch (error: any) {
-      console.error("❌ LOGIN ERROR:", error);
-      console.log("----------------------------------------");
+      console.error('❌ LOGIN ERROR:', error);
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
       
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid credentials",
+        title: "Login Error",
+        description: error.message || 'Network error. Please check your connection.',
       });
     } finally {
       setLoading(false);
