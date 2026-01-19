@@ -36,25 +36,53 @@ export type UserProfile = {
 
 export type InterestConfirmation = {
   referring_partner: string;
-  lender: string;
+  lender: string; // This seems to be mapped to 'portfolio_holder' or 'lender' in response? The log shows 'lender' as the user name, and 'portfolio_holder' as the company.
+  // Log: "lender": "DOBSON ANDRE " (User), "portfolio_holder": "Destiny Group Pty LTD"
+  // Previous UI showed Lender: data?.portfolio?.full_name.
+  // Let's match the JSON response structure exactly.
+
+  portfolio_holder?: string; // "Destiny Group Pty LTD"
   lending_society: string;
-  borrower: string;
-  rate_mode: string;
-  portfolio_interest_rate: string;
-  individual_interest_rate: {
-    "0-3_stars_fair": string;
-    "4-6_stars_good": string;
-    "7-10_stars_excellent": string;
+  borrower?: string; // The API returns "lender" as the borrower name? "lender": "DOBSON ANDRE" (User is Dobson Andre)
+  // Wait, "lender" in the JSON seems to be the borrower's name if Dobson Andre is the user.
+  // The log shows: "first_name":"DOBSON ","last_name":"ANDRE " for the user.
+  // So "lender" in the JSON is actually the borrower?? That's confusing naming from backend.
+  // But let's trust the keys in the JSON for now.
+
+  rate_basis?: string; // "IIR + SIR"
+  pir_percent?: number; // 28
+
+  iir_rates?: {
+    fair: number;
+    good: number;
+    excellent: number;
   };
-  subsidized_interest_rate: {
-    subsidy_enabled: boolean;
-    rate: string;
-    policy: string;
+
+  sir_enabled?: boolean;
+  sir_percent?: number;
+  sir_policy?: string;
+
+  fees?: {
+    processing: number;
+    late_fee: number;
   };
-  fees: {
-    processing_fee: string;
-    late_fee: string;
+  
+  progression_levels?: {
+    nano: {
+      L1: number;
+      L2: number;
+      L3: number;
+    };
+    term: {
+      L1: number;
+      L2: number;
+      L3: number;
+    };
   };
+
+  user_star_rating?: number;
+  user_tier_label?: string;
+  user_effective_rate?: number;
 };
 
 // Helper to get headers with auth token

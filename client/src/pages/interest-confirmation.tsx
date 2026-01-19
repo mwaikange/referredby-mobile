@@ -64,25 +64,25 @@ export default function InterestConfirmation() {
             <div className="font-bold opacity-90">Referring Partner:</div>
             <div className="font-medium">{data?.referring_partner || "..."}</div>
             <div className="font-bold opacity-90">Lender:</div>
-            <div className="font-medium">{data?.lender || "..."}</div>
+            <div className="font-medium">{data?.portfolio_holder || "..."}</div>
             <div className="font-bold opacity-90">Lending Society:</div>
             <div className="font-medium">{data?.lending_society || "..."}</div>
             <div className="font-bold opacity-90">Borrower:</div>
-            <div className="font-medium">{data?.borrower || "..."}</div>
+            <div className="font-medium">{data?.lender || "..."}</div> 
           </div>
         </div>
 
         {/* Active Interest Mode Badge */}
         <div className="flex justify-center mb-6">
           <div className="bg-[#ebf5ff] text-[#3459c0] px-4 py-2 rounded-md text-xs font-bold border border-[#d6eaff] w-full text-center">
-            Active Interest Mode: {data?.rate_mode || "..."}
+            Active Interest Mode: {data?.rate_basis || "..."}
           </div>
         </div>
 
         {/* PIR Section */}
         <div className="mb-6">
           <h2 className="text-sm font-bold mb-1">Portfolio Interest Rate (PIR)</h2>
-          <p className="text-sm">Base Rate: <span className="font-bold">{data?.portfolio_interest_rate || "..."}</span></p>
+          <p className="text-sm">Base Rate: <span className="font-bold">{data?.pir_percent ? `${data.pir_percent}%` : "..."}</span></p>
         </div>
 
         {/* IIR Section */}
@@ -91,15 +91,15 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>0–3 Stars (Fair):</span>
-              <span className="font-bold">{data?.individual_interest_rate["0-3_stars_fair"] || "..."}</span>
+              <span className="font-bold">{data?.iir_rates?.fair ? `${data.iir_rates.fair}%` : "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>4–6 Stars (Good):</span>
-              <span className="font-bold">{data?.individual_interest_rate["4-6_stars_good"] || "..."}</span>
+              <span className="font-bold">{data?.iir_rates?.good ? `${data.iir_rates.good}%` : "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>7–10 Stars (Excellent):</span>
-              <span className="font-bold">{data?.individual_interest_rate["7-10_stars_excellent"] || "..."}</span>
+              <span className="font-bold">{data?.iir_rates?.excellent ? `${data.iir_rates.excellent}%` : "..."}</span>
             </div>
           </div>
         </div>
@@ -110,9 +110,9 @@ export default function InterestConfirmation() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Subsidy Enabled:</span>
-              <span className="font-bold">{data?.subsidized_interest_rate.rate || "..."}</span>
+              <span className="font-bold">{data?.sir_enabled ? "Yes" : "No"} ({data?.sir_percent ? `${data.sir_percent}%` : "0%"})</span>
             </div>
-            <p className="text-xs">Policy: <span className="font-bold">{data?.subsidized_interest_rate.policy || "..."}</span></p>
+            <p className="text-xs">Policy: <span className="font-bold">{data?.sir_policy ? data.sir_policy.replace('_', ' ').toUpperCase() : "..."}</span></p>
           </div>
         </div>
 
@@ -122,11 +122,11 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Processing Fee:</span>
-              <span className="font-bold">{data?.fees.processing_fee || "..."}</span>
+              <span className="font-bold">N$ {data?.fees?.processing || "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>Late Fee (Accumulating Arrears):</span>
-              <span className="font-bold">{data?.fees.late_fee || "..."}</span>
+              <span className="font-bold">{data?.fees?.late_fee ? `${data.fees.late_fee}%` : "..."}</span>
             </div>
           </div>
         </div>
@@ -137,15 +137,15 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Level 1:</span>
-              <span className="font-bold">N$ 2000.00</span>
+              <span className="font-bold">N$ {data?.progression_levels?.nano?.L1?.toFixed(2) || "2000.00"}</span>
             </div>
             <div className="flex justify-between">
               <span>Level 2:</span>
-              <span className="font-bold">N$ 4200.00</span>
+              <span className="font-bold">N$ {data?.progression_levels?.nano?.L2?.toFixed(2) || "4200.00"}</span>
             </div>
             <div className="flex justify-between">
               <span>Level 3:</span>
-              <span className="font-bold">N$ 8700.00</span>
+              <span className="font-bold">N$ {data?.progression_levels?.nano?.L3?.toFixed(2) || "8700.00"}</span>
             </div>
           </div>
         </div>
@@ -156,11 +156,11 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
               <span>Your Rating:</span>
-              <span className="font-bold">0</span>
+              <span className="font-bold">{data?.user_star_rating || 0}</span>
             </div>
             <div className="flex justify-between">
               <span>Your Tier:</span>
-              <span className="font-bold">Fair (0–3)</span>
+              <span className="font-bold">{data?.user_tier_label || "Fair (0-3)"}</span>
             </div>
           </div>
           
@@ -173,7 +173,7 @@ export default function InterestConfirmation() {
             </div>
             <div className="flex justify-between">
               <span>Subsidy Status:</span>
-              <span className="font-bold">Applied</span>
+              <span className="font-bold">{data?.sir_enabled ? "Applied" : "Not Applied"}</span>
             </div>
           </div>
           
@@ -184,7 +184,7 @@ export default function InterestConfirmation() {
               <span className="font-bold block">Your Final Interest Rate:</span>
               <span className="text-[10px] text-gray-400 font-medium">(IIR - SIR)</span>
             </div>
-            <div className="text-3xl font-bold text-[#006f3c]">14.05%</div>
+            <div className="text-3xl font-bold text-[#006f3c]">{data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : "..."}</div>
           </div>
         </div>
 
