@@ -79,11 +79,7 @@ export const api = {
     // Attempt to fetch from Supabase directly first (more reliable if API is down)
     const { data: userData, error: supabaseError } = await supabase
       .from('users')
-      .select(`
-        *,
-        user_documents(*),
-        lending_societies(name)
-      `)
+      .select('*')
       .eq('auth_user_id', sessionData.session.user.id)
       .single();
 

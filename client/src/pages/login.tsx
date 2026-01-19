@@ -93,16 +93,12 @@ export default function Login() {
       console.log('👤 User ID:', data.user.id);
       console.log('📧 Email:', data.user.email);
 
-      // Fetch user profile directly from Supabase
+      // Fetch user profile directly from Supabase with simplified query
       console.log('📥 Fetching profile from Supabase...');
       
       const { data: userData, error: profileError } = await supabase
         .from('users')
-        .select(`
-          *,
-          user_documents(*),
-          lending_societies(name)
-        `)
+        .select('*')
         .eq('auth_user_id', data.user.id)
         .single();
 
@@ -119,6 +115,8 @@ export default function Login() {
       console.log('👤 User:', userData.first_name, userData.last_name);
       console.log('🆔 UID:', userData.uid);
       console.log('📱 Mobile:', userData.mobile);
+      console.log('💰 Nano Limit:', userData.nano_loan_limit);
+      console.log('💰 Term Limit:', userData.term_loan_limit);
 
       // Navigate to profile page
       console.log('🎯 Navigating to Profile...');
