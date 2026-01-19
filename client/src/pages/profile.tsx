@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
@@ -68,13 +69,13 @@ export default function Profile() {
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Name</div>
             <div className="text-right text-black">
-              {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A' : "..."}
+              {user?.account_name || (user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : "...")}
             </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Client ID</div>
-            <div className="text-right text-black">{user?.id_number || "N/A"}</div>
+            <div className="text-right text-black">{user?.client_id || user?.id_number || "N/A"}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
@@ -85,25 +86,25 @@ export default function Profile() {
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Nano Installment</div>
             <div className="text-right text-black">
-              {user?.nano_loan_limit 
+              {user?.nano_installment || (user?.nano_loan_limit 
                 ? `MAX | NAD ${Number(user.nano_loan_limit).toFixed(2)}` 
-                : (user?.nano_installment || "N/A")}
+                : "N/A")}
             </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Term Installment</div>
             <div className="text-right text-black">
-              {user?.term_loan_limit 
+              {user?.term_installment || (user?.term_loan_limit 
                 ? `MAX | NAD ${Number(user.term_loan_limit).toFixed(2)}` 
-                : (user?.term_installment || "N/A")}
+                : "N/A")}
             </div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Level</div>
             <div className="text-right text-black">
-              {user?.membership_status || user?.account_level || "N/A"}
+              {user?.account_level || user?.membership_status || "N/A"}
             </div>
           </div>
           
@@ -157,28 +158,36 @@ export default function Profile() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 px-1">
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">ID</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.kyc_status?.id ? "bg-[#00c853]" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.national_id || user?.kyc_status?.id ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase whitespace-nowrap">Proof of Income</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.kyc_status?.proof_of_income ? "bg-[#00c853]" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.payslip || user?.kyc_status?.proof_of_income ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">KYC</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.kyc_status?.kyc ? "bg-[#00c853]" : "bg-gray-300"}`}></div>
+            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.kyc || user?.kyc_status?.kyc ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
           </div>
           <Settings className="w-5 h-5 text-gray-500 cursor-pointer" />
         </div>
 
         <div className="text-center text-[11px] text-gray-500 mb-8 pb-1 px-4">
-          Documents need to update on: {user?.documents_update_due || "..."}
+          Documents need to update on: {
+            user?.document_deadline 
+              ? format(new Date(user.document_deadline), "d MMMM yyyy") 
+              : (user?.documents_update_due || "...")
+          }
         </div>
 
         {/* Update Button */}
         <div className="mb-10">
           <Button 
-            disabled
-            className="w-full bg-gray-200 text-gray-400 font-bold uppercase tracking-wide h-[54px] rounded-md cursor-not-allowed"
+            disabled={!user?.is_doc_update_needed}
+            className={`w-full font-bold uppercase tracking-wide h-[54px] rounded-md transition-colors ${
+              user?.is_doc_update_needed 
+                ? "bg-[#0B0B3B] hover:bg-[#151555] text-white shadow-lg cursor-pointer" 
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
           >
             Update Documents
           </Button>

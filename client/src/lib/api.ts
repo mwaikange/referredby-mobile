@@ -19,7 +19,18 @@ export type UserProfile = {
   term_installment: string;
   account_level: string;
   
-  // Supabase specific fields
+  // New API fields
+  account_name?: string;
+  client_id?: string;
+  is_doc_update_needed?: boolean;
+  document_deadline?: string;
+  documents?: {
+    national_id: boolean;
+    payslip: boolean;
+    kyc: boolean;
+  };
+  
+  // Supabase specific fields (keeping for compatibility)
   nano_loan_limit?: number | string;
   term_loan_limit?: number | string;
   membership_status?: string;
