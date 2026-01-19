@@ -57,12 +57,11 @@ export default function Login() {
     setLoading(true);
 
     console.log('----------------------------------------');
-    console.log('🔐 ATTEMPTING LOGIN (Direct Supabase Auth)');
+    console.log('🔐 ATTEMPTING LOGIN');
     console.log('----------------------------------------');
     console.log('📧 Email:', email);
     
     try {
-      // Authenticate directly with Supabase
       console.log('🔑 Signing in with Supabase...');
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -91,40 +90,38 @@ export default function Login() {
       }
 
       console.log('✅ Authentication successful!');
-      console.log('🎫 Access token received');
       console.log('👤 User ID:', data.user.id);
+      console.log('📧 Email:', data.user.email);
 
-      // Fetch profile from backend API
-      console.log('📥 Fetching profile data...');
+      // Fetch user profile directly from Supabase
+      console.log('📥 Fetching profile from Supabase...');
       
-      const profileResponse = await fetch(`${ENV.API_BASE_URL}/api/users/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${data.session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const { data: userData, error: profileError } = await supabase
+        .from('users')
+        .select(`
+          *,
+          user_documents(*),
+          lending_societies(name)
+        `)
+        .eq('auth_user_id', data.user.id)
+        .single();
 
-      console.log('📡 Profile response:', profileResponse.status);
-
-      if (!profileResponse.ok) {
-        console.error('❌ Profile fetch failed');
-        toast({
-          variant: "destructive",
-          title: "Profile Error",
-          description: "Logged in but could not load profile",
-        });
+      if (profileError) {
+        console.error('❌ Profile fetch error:', profileError.message);
+        
+        // Even if profile fetch fails, use basic auth data
+        console.log('⚠️ Using basic user info from auth');
+        setLocation('/profile');
         return;
       }
 
-      const profileData = await profileResponse.json();
-      const userData = profileData.user || profileData;
-      
-      console.log('✅ Profile loaded');
-      console.log('👤 Name:', userData.first_name, userData.last_name);
-      console.log('🎯 Navigating to Profile...');
+      console.log('✅ Profile loaded from Supabase!');
+      console.log('👤 User:', userData.first_name, userData.last_name);
+      console.log('🆔 UID:', userData.uid);
+      console.log('📱 Mobile:', userData.mobile);
 
       // Navigate to profile page
+      console.log('🎯 Navigating to Profile...');
       setLocation('/profile');
       
       console.log('✅ Login complete!');

@@ -1,0 +1,84 @@
+Login is working! But the /api/users/me endpoint returns 404.
+
+Instead of calling the backend API for profile data, let's fetch it directly from Supabase:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('----------------------------------------');
+  console.log('🔐 ATTEMPTING LOGIN');
+  console.log('----------------------------------------');
+  console.log('📧 Email:', email);
+  
+  try {
+    console.log('🔑 Signing in with Supabase...');
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: pin,
+    });
+
+    if (error) {
+      console.error('❌ Authentication failed:', error.message);
+      alert(`Login failed: ${error.message}`);
+      return;
+    }
+
+    if (!data.session) {
+      console.error('❌ No session created');
+      alert('Login failed');
+      return;
+    }
+
+    console.log('✅ Authentication successful!');
+    console.log('👤 User ID:', data.user.id);
+    console.log('📧 Email:', data.user.email);
+
+    // Fetch user profile directly from Supabase
+    console.log('📥 Fetching profile from Supabase...');
+    
+    const { data: userData, error: profileError } = await supabase
+      .from('users')
+      .select(`
+        *,
+        user_documents(*),
+        lending_societies(name)
+      `)
+      .eq('auth_user_id', data.user.id)
+      .single();
+
+    if (profileError) {
+      console.error('❌ Profile fetch error:', profileError.message);
+      
+      // Even if profile fetch fails, use basic auth data
+      console.log('⚠️ Using basic user info from auth');
+      navigation.navigate('Profile', { 
+        user: {
+          email: data.user.email,
+          id: data.user.id,
+        },
+        session: data.session,
+      });
+      return;
+    }
+
+    console.log('✅ Profile loaded from Supabase!');
+    console.log('👤 User:', userData.first_name, userData.last_name);
+    console.log('🆔 UID:', userData.uid);
+    console.log('📱 Mobile:', userData.mobile);
+
+    // Navigate to profile page
+    console.log('🎯 Navigating to Profile...');
+    navigation.navigate('Profile', { 
+      user: userData,
+      session: data.session,
+    });
+    
+    console.log('✅ Login complete!');
+    console.log('----------------------------------------');
+
+  } catch (error) {
+    console.error('❌ ERROR:', error.message);
+    alert(`Login failed: ${error.message}`);
+  }
+}
+
+This fetches user data directly from the Supabase users table using the auth_user_id.

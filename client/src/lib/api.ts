@@ -69,6 +69,31 @@ export const api = {
 
   // Get Logged-in User Profile
   getProfile: async (): Promise<UserProfile> => {
+    // Check local session first
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error("No active session");
+    }
+
+    // Attempt to fetch from Supabase directly first (more reliable if API is down)
+    const { data: userData, error: supabaseError } = await supabase
+      .from('users')
+      .select(`
+        *,
+        user_documents(*),
+        lending_societies(name)
+      `)
+      .eq('auth_user_id', sessionData.session.user.id)
+      .single();
+
+    if (!supabaseError && userData) {
+      return userData as unknown as UserProfile;
+    }
+
+    // Fallback to API if Supabase fetch fails (or if logic prefers API)
+    console.warn("Falling back to API for profile fetch...");
+    
     const headers = await getHeaders();
     const response = await fetch(`${API_BASE_URL}/api/users/me`, {
       method: "GET",
