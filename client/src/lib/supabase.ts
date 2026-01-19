@@ -1,14 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These should ideally be in environment variables
-// VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://fxfhfnpexqzcohowfyvn.supabase.co";
-// Use a fallback empty string or dummy key to prevent crash if env var is missing
-// The auth calls will fail, but the app won't crash on startup
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy.key"; 
+// This is a Vite project, so we use import.meta.env.VITE_*
+// We also check NEXT_PUBLIC_* just in case, though standard Vite requires VITE_ prefix.
 
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn("Supabase Anon Key is missing. Please add VITE_SUPABASE_ANON_KEY to your environment variables or Secrets. Using dummy key to prevent crash.");
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || "https://fxfhfnpexqzcohowfyvn.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+if (!SUPABASE_ANON_KEY) {
+  console.error("CRITICAL: VITE_SUPABASE_ANON_KEY is missing. Authentication will fail. Please add this key to your Replit Secrets.");
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
