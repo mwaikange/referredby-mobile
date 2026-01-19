@@ -57,151 +57,85 @@ export default function Login() {
     setLoading(true);
 
     console.log('----------------------------------------');
-    console.log('🔐 ATTEMPTING LOGIN (via Backend API)');
+    console.log('🔐 ATTEMPTING LOGIN (Direct Supabase Auth)');
     console.log('----------------------------------------');
     console.log('📧 Email:', email);
     
     try {
-      // Step 1: Call backend login (sets auth cookies)
-      const loginUrl = `${ENV.API_BASE_URL}/api/auth/login`;
-      console.log('🔗 Calling:', loginUrl);
+      // Authenticate directly with Supabase
+      console.log('🔑 Signing in with Supabase...');
       
-      const response = await fetch(loginUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important: Include cookies
-        body: JSON.stringify({
-          email: email,
-          pin: pin,
-        }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: pin,
       });
 
-      console.log('📡 Backend response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Login failed:', errorText);
+      if (error) {
+        console.error('❌ Authentication failed:', error.message);
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: "Invalid credentials",
+          description: error.message,
         });
         return;
       }
 
-      const authData = await response.json();
-      console.log('📦 Backend response:', authData);
-
-      if (!authData.success) {
-        console.error('❌ Login not successful');
+      if (!data.session) {
+        console.error('❌ No session created');
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: "Login failed",
+          description: "No session returned",
         });
         return;
       }
 
-      console.log('✅ Backend login successful (cookies set)');
+      console.log('✅ Authentication successful!');
+      console.log('🎫 Access token received');
+      console.log('👤 User ID:', data.user.id);
 
-      // Step 2: Try to get the session from Supabase client (it should pick up the cookies)
-      console.log('🔄 Retrieving session from Supabase...');
+      // Fetch profile from backend API
+      console.log('📥 Fetching profile data...');
       
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ Session retrieval error:', sessionError.message);
+      const profileResponse = await fetch(`${ENV.API_BASE_URL}/api/users/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${data.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 Profile response:', profileResponse.status);
+
+      if (!profileResponse.ok) {
+        console.error('❌ Profile fetch failed');
+        toast({
+          variant: "destructive",
+          title: "Profile Error",
+          description: "Logged in but could not load profile",
+        });
+        return;
       }
+
+      const profileData = await profileResponse.json();
+      const userData = profileData.user || profileData;
       
-      console.log('Session data:', sessionData);
-      console.log('Session present:', !!sessionData.session);
+      console.log('✅ Profile loaded');
+      console.log('👤 Name:', userData.first_name, userData.last_name);
+      console.log('🎯 Navigating to Profile...');
+
+      // Navigate to profile page
+      setLocation('/profile');
       
-      if (sessionData?.session?.access_token) {
-        console.log('✅ Session retrieved from Supabase');
-        console.log('🎫 Access token:', sessionData.session.access_token.substring(0, 20) + '...');
-        
-        // Step 3: Fetch user profile
-        console.log('🔗 Fetching user profile...');
-        const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
-        
-        const profileResponse = await fetch(profileUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${sessionData.session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        console.log('📡 Profile response status:', profileResponse.status);
-
-        if (!profileResponse.ok) {
-          const profileError = await profileResponse.text();
-          console.error('❌ Profile fetch failed:', profileError);
-          toast({
-            variant: "destructive",
-            title: "Profile Error",
-            description: "Login successful but failed to load profile",
-          });
-          return;
-        }
-
-        const profileData = await profileResponse.json();
-        console.log('✅ Profile data received');
-        const user = profileData.user || profileData.data?.user || profileData;
-        console.log('User:', user?.first_name, user?.last_name);
-
-        // Step 4: Navigate to profile page
-        console.log('🎯 Navigating to Profile page...');
-        setLocation("/profile");
-        
-      } else {
-        // Fallback: Try direct Supabase authentication
-        console.log('⚠️ No session from cookies, trying direct Supabase auth...');
-        
-        const { data: authResult, error: authError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: pin,
-        });
-        
-        if (authError) {
-          console.error('❌ Direct Supabase auth failed:', authError.message);
-          toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Could not establish session",
-          });
-          return;
-        }
-        
-        console.log('✅ Direct Supabase auth successful');
-        
-        // Fetch profile
-        const profileUrl = `${ENV.API_BASE_URL}/api/users/me`;
-        const profileResponse = await fetch(profileUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${authResult.session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const profileData = await profileResponse.json();
-        
-        setLocation("/profile");
-      }
-      
+      console.log('✅ Login complete!');
       console.log('----------------------------------------');
 
     } catch (error: any) {
-      console.error('❌ LOGIN ERROR:', error);
-      console.error('Error message:', error.message);
+      console.error('❌ ERROR:', error.message);
       toast({
         variant: "destructive",
         title: "Login Error",
-        description: error.message || 'Network error',
+        description: error.message,
       });
     } finally {
       setLoading(false);

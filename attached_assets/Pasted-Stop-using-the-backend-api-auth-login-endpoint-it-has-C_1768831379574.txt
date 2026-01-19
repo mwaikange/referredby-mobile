@@ -1,0 +1,81 @@
+Stop using the backend /api/auth/login endpoint - it has CORS issues.
+
+Use Supabase authentication directly instead.
+
+Replace the entire handleLogin function with this:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('----------------------------------------');
+  console.log('🔐 ATTEMPTING LOGIN (Direct Supabase Auth)');
+  console.log('----------------------------------------');
+  console.log('📧 Email:', email);
+  
+  try {
+    // Authenticate directly with Supabase
+    console.log('🔑 Signing in with Supabase...');
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: pin,
+    });
+
+    if (error) {
+      console.error('❌ Authentication failed:', error.message);
+      alert(`Login failed: ${error.message}`);
+      return;
+    }
+
+    if (!data.session) {
+      console.error('❌ No session created');
+      alert('Login failed: No session returned');
+      return;
+    }
+
+    console.log('✅ Authentication successful!');
+    console.log('🎫 Access token received');
+    console.log('👤 User ID:', data.user.id);
+
+    // Fetch profile from backend API
+    console.log('📥 Fetching profile data...');
+    
+    const profileResponse = await fetch(`${ENV.API_BASE_URL}/api/users/me`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${data.session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Profile response:', profileResponse.status);
+
+    if (!profileResponse.ok) {
+      console.error('❌ Profile fetch failed');
+      alert('Logged in but could not load profile');
+      return;
+    }
+
+    const profileData = await profileResponse.json();
+    const userData = profileData.user || profileData;
+    
+    console.log('✅ Profile loaded');
+    console.log('👤 Name:', userData.first_name, userData.last_name);
+    console.log('🎯 Navigating to Profile...');
+
+    // Navigate to profile page
+    navigation.navigate('Profile', { 
+      user: userData,
+      session: data.session,
+    });
+    
+    console.log('✅ Login complete!');
+    console.log('----------------------------------------');
+
+  } catch (error) {
+    console.error('❌ ERROR:', error.message);
+    alert(`Login failed: ${error.message}`);
+  }
+}
+
+This uses direct Supabase authentication which works (we saw it in analytics), then fetches profile from your backend.
+
+Make this change immediately.
