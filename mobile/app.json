@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "ReferredBy",
+    "slug": "referredby-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e1548"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.referredby.mobile"
+    },
+    "android": {
+      "package": "com.referredby.mobile",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e1548"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "referredby-mobile"
+      }
+    }
+  }
+}
