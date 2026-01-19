@@ -1,10 +1,46 @@
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { Star, Loader2 } from "lucide-react";
+import { api, type InterestConfirmation } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function InterestConfirmation() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [data, setData] = useState<InterestConfirmation | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const confirmation = await api.getInterestConfirmation("nano");
+        setData(confirmation);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to load interest details",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex-1 flex flex-col items-center justify-center font-sans min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-blue" />
+          <p className="mt-4 text-sm text-gray-500">Loading details...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -15,30 +51,28 @@ export default function InterestConfirmation() {
         <div className="bg-[#007074] text-white p-4 rounded-lg mb-6 shadow-md">
           <div className="grid grid-cols-[140px_1fr] gap-y-2 text-sm leading-tight">
             <div className="font-bold opacity-90">Referring Partner:</div>
-            <div className="font-medium">naatye peno</div>
+            <div className="font-medium">{data?.referring_partner || "..."}</div>
             <div className="font-bold opacity-90">Lender:</div>
-            <div className="font-medium">Destiny Group Pty LTD</div>
+            <div className="font-medium">{data?.lender || "..."}</div>
             <div className="font-bold opacity-90">Lending Society:</div>
-            <div className="font-medium">kayla Industries</div>
+            <div className="font-medium">{data?.lending_society || "..."}</div>
             <div className="font-bold opacity-90">Borrower:</div>
-            <div className="font-medium">DOBSON ANDRE</div>
+            <div className="font-medium">{data?.borrower || "..."}</div>
           </div>
         </div>
 
         {/* Active Interest Mode Badge */}
         <div className="flex justify-center mb-6">
           <div className="bg-[#ebf5ff] text-[#3459c0] px-4 py-2 rounded-md text-xs font-bold border border-[#d6eaff] w-full text-center">
-            Active Interest Mode: IIR (Rating-Based)
+            Active Interest Mode: {data?.rate_mode || "..."}
           </div>
         </div>
 
         {/* PIR Section */}
         <div className="mb-6">
           <h2 className="text-sm font-bold mb-1">Portfolio Interest Rate (PIR)</h2>
-          <p className="text-sm">Base Rate: <span className="font-bold">28.00%</span></p>
+          <p className="text-sm">Base Rate: <span className="font-bold">{data?.portfolio_interest_rate || "..."}</span></p>
         </div>
-
-        <div className="h-px bg-gray-100 w-full mb-6" />
 
         {/* IIR Section */}
         <div className="mb-6">
@@ -46,20 +80,18 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>0–3 Stars (Fair):</span>
-              <span className="font-bold">17.20%</span>
+              <span className="font-bold">{data?.individual_interest_rate["0-3_stars_fair"] || "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>4–6 Stars (Good):</span>
-              <span className="font-bold">11.99%</span>
+              <span className="font-bold">{data?.individual_interest_rate["4-6_stars_good"] || "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>7–10 Stars (Excellent):</span>
-              <span className="font-bold">7.74%</span>
+              <span className="font-bold">{data?.individual_interest_rate["7-10_stars_excellent"] || "..."}</span>
             </div>
           </div>
         </div>
-
-        <div className="h-px bg-gray-100 w-full mb-6" />
 
         {/* SIR Section */}
         <div className="bg-[#f0fdf4] p-4 rounded-lg border border-[#dcfce7] mb-6">
@@ -67,13 +99,11 @@ export default function InterestConfirmation() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Subsidy Enabled:</span>
-              <span className="font-bold">3.15%</span>
+              <span className="font-bold">{data?.subsidized_interest_rate.rate || "..."}</span>
             </div>
-            <p className="text-xs">Policy: <span className="font-bold">Applies After IIR</span></p>
+            <p className="text-xs">Policy: <span className="font-bold">{data?.subsidized_interest_rate.policy || "..."}</span></p>
           </div>
         </div>
-
-        <div className="h-px bg-gray-100 w-full mb-6" />
 
         {/* Fees Section */}
         <div className="mb-6">
@@ -81,16 +111,14 @@ export default function InterestConfirmation() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Processing Fee:</span>
-              <span className="font-bold">N$ 40.00</span>
+              <span className="font-bold">{data?.fees.processing_fee || "..."}</span>
             </div>
             <div className="flex justify-between">
               <span>Late Fee (Accumulating Arrears):</span>
-              <span className="font-bold">5%</span>
+              <span className="font-bold">{data?.fees.late_fee || "..."}</span>
             </div>
           </div>
         </div>
-
-        <div className="h-px bg-gray-100 w-full mb-6" />
 
         {/* Nano Loan Limits */}
         <div className="mb-8">
