@@ -1,6 +1,23 @@
 import { supabase } from "./supabase";
 
-const API_BASE_URL = "https://appv2.referredby.com.na";
+// Use a centralized config to handle env vars consistently
+// In Vite, process.env is usually empty in the browser, so we use import.meta.env
+// The user wants to use EXPO_PUBLIC_* keys, but those are only exposed if configured in vite.config.ts
+// Since we can't edit vite.config.ts, we fallback to VITE_* or NEXT_PUBLIC_*
+
+const getEnvVar = (key: string) => {
+  // Check standard Vite env vars
+  if (import.meta.env[`VITE_${key}`]) return import.meta.env[`VITE_${key}`];
+  // Check typical React/Next env vars
+  if (import.meta.env[`NEXT_PUBLIC_${key}`]) return import.meta.env[`NEXT_PUBLIC_${key}`];
+  // Check if they were somehow exposed as EXPO_PUBLIC (unlikely in default Vite but good for compatibility)
+  // @ts-ignore
+  if (import.meta.env[`EXPO_PUBLIC_${key}`]) return import.meta.env[`EXPO_PUBLIC_${key}`];
+  
+  return "";
+};
+
+const API_BASE_URL = getEnvVar("API_BASE_URL") || "https://appv2.referredby.com.na";
 
 export type UserProfile = {
   id: string;
