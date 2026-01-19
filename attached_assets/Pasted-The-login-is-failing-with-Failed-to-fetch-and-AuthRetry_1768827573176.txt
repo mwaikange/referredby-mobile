@@ -1,0 +1,101 @@
+The login is failing with "Failed to fetch" and AuthRetryableFetchError status 0. This means the Supabase client can't connect to Supabase servers.
+
+Add diagnostic checks BEFORE attempting login:
+
+1. Add a test button to the login screen that runs this:
+
+async function testConnection() {
+  console.log('🧪 TESTING CONNECTIONS');
+  console.log('----------------------------------------');
+  
+  // Test 1: Check environment variables
+  console.log('1. Environment Variables:');
+  console.log('SUPABASE_URL:', ENV.SUPABASE_URL);
+  console.log('SUPABASE_ANON_KEY present:', !!ENV.SUPABASE_ANON_KEY);
+  console.log('API_BASE_URL:', ENV.API_BASE_URL);
+  
+  // Test 2: Test Supabase connection
+  console.log('\n2. Testing Supabase REST API directly:');
+  try {
+    const testUrl = `${ENV.SUPABASE_URL}/rest/v1/`;
+    console.log('Testing URL:', testUrl);
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': ENV.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
+      },
+    });
+    
+    console.log('✅ Supabase REST API Status:', response.status);
+    
+  } catch (error) {
+    console.error('❌ Supabase REST API Test Failed:', error.message);
+  }
+  
+  // Test 3: Test backend API
+  console.log('\n3. Testing Backend API:');
+  try {
+    const backendUrl = `${ENV.API_BASE_URL}/api/health`;
+    console.log('Testing URL:', backendUrl);
+    
+    const response = await fetch(backendUrl);
+    console.log('✅ Backend API Status:', response.status);
+    
+  } catch (error) {
+    console.error('❌ Backend API Test Failed:', error.message);
+  }
+  
+  console.log('----------------------------------------');
+  alert('Check console for test results');
+}
+
+2. Add this test button to the login screen UI (below the login form):
+
+<button 
+  onClick={testConnection}
+  style={{
+    marginTop: '20px',
+    padding: '10px',
+    backgroundColor: '#666',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+  }}
+>
+  🧪 Test Connections
+</button>
+
+3. Also update the login function to try a direct fetch to Supabase before using the client:
+
+async function handleLogin(email: string, pin: string) {
+  console.log('🔐 ATTEMPTING LOGIN');
+  console.log('----------------------------------------');
+  console.log('Email:', email);
+  
+  // First, test if we can reach Supabase at all
+  console.log('0. Testing Supabase connectivity...');
+  try {
+    const testResponse = await fetch(`${ENV.SUPABASE_URL}/rest/v1/`, {
+      headers: { 'apikey': ENV.SUPABASE_ANON_KEY },
+    });
+    console.log('✅ Supabase is reachable, status:', testResponse.status);
+  } catch (testError) {
+    console.error('❌ Cannot reach Supabase:', testError.message);
+    alert('Network error: Cannot connect to authentication server. Please check your internet connection.');
+    return;
+  }
+  
+  // Now try actual authentication
+  console.log('1. Authenticating with Supabase...');
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: pin,
+  });
+  
+  // ... rest of login code
+}
+
+Make these changes now.

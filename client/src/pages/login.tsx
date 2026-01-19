@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { ENV } from "@/lib/env";
 import logoGroup from "@assets/Group_2475_(2)_1768529192322.png";
 
 export default function Login() {
@@ -15,6 +16,53 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const testConnection = async () => {
+    console.log('🧪 TESTING CONNECTIONS');
+    console.log('----------------------------------------');
+    
+    // Test 1: Check environment variables
+    console.log('1. Environment Variables:');
+    console.log('SUPABASE_URL:', ENV.SUPABASE_URL);
+    console.log('SUPABASE_ANON_KEY present:', !!ENV.SUPABASE_ANON_KEY);
+    console.log('API_BASE_URL:', ENV.API_BASE_URL);
+    
+    // Test 2: Test Supabase connection
+    console.log('\n2. Testing Supabase REST API directly:');
+    try {
+      const testUrl = `${ENV.SUPABASE_URL}/rest/v1/`;
+      console.log('Testing URL:', testUrl);
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'apikey': ENV.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
+        },
+      });
+      
+      console.log('✅ Supabase REST API Status:', response.status);
+      
+    } catch (error: any) {
+      console.error('❌ Supabase REST API Test Failed:', error.message);
+    }
+    
+    // Test 3: Test backend API
+    console.log('\n3. Testing Backend API:');
+    try {
+      const backendUrl = `${ENV.API_BASE_URL}/api/health`;
+      console.log('Testing URL:', backendUrl);
+      
+      const response = await fetch(backendUrl);
+      console.log('✅ Backend API Status:', response.status);
+      
+    } catch (error: any) {
+      console.error('❌ Backend API Test Failed:', error.message);
+    }
+    
+    console.log('----------------------------------------');
+    alert('Check console for test results');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +75,20 @@ export default function Login() {
     console.log("----------------------------------------");
     console.log(`Email: ${email}`);
     
+    // First, test if we can reach Supabase at all
+    console.log('0. Testing Supabase connectivity...');
+    try {
+      const testResponse = await fetch(`${ENV.SUPABASE_URL}/rest/v1/`, {
+        headers: { 'apikey': ENV.SUPABASE_ANON_KEY },
+      });
+      console.log('✅ Supabase is reachable, status:', testResponse.status);
+    } catch (testError: any) {
+      console.error('❌ Cannot reach Supabase:', testError.message);
+      alert('Network error: Cannot connect to authentication server. Please check your internet connection.');
+      setLoading(false);
+      return;
+    }
+
     try {
       // 1. Authenticate with Supabase
       console.log("1. Authenticating with Supabase...");
@@ -122,6 +184,14 @@ export default function Login() {
           </Button>
 
           <div className="flex flex-col items-center gap-3 mt-8 text-sm text-center">
+            <button 
+              type="button"
+              onClick={testConnection}
+              className="mt-5 p-2.5 bg-gray-600 text-white border-none rounded-md"
+            >
+              🧪 Test Connections
+            </button>
+
             <p className="text-gray-900">
               Not Yet Registered - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
             </p>
