@@ -3,19 +3,43 @@ import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import logoGroup from "@assets/Group_2475_(2)_1768529192322.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [showPin, setShowPin] = useState(false);
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && pin) {
+    if (!email || !pin) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: pin,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setLocation("/profile");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "Invalid credentials",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,9 +95,11 @@ export default function Login() {
 
           <Button 
             type="submit" 
-            className="w-full h-12 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold uppercase tracking-wide mt-2 rounded-md shadow-lg"
+            disabled={loading}
+            className="w-full h-12 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold uppercase tracking-wide mt-2 rounded-md shadow-lg flex items-center justify-center gap-2"
           >
-            Login
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Logging in..." : "Login"}
           </Button>
 
           <div className="flex flex-col items-center gap-3 mt-8 text-sm text-center">

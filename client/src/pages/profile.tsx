@@ -1,14 +1,57 @@
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, Star } from "lucide-react";
+import { Bell, Settings, Star, Loader2 } from "lucide-react";
+import { api, type UserProfile } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSignOut = () => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await api.getProfile();
+        setUser(profile);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to load profile",
+        });
+        // If unauthenticated, redirect to login
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          setLocation("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [setLocation, toast]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     setLocation("/login");
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex-1 flex flex-col items-center justify-center font-sans min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-blue" />
+          <p className="mt-4 text-sm text-gray-500">Loading profile...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -23,47 +66,43 @@ export default function Profile() {
         <div className="flex flex-col gap-1.5 mb-6">
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Name</div>
-            <div className="text-right text-black">DOBSON ANDRE</div>
+            <div className="text-right text-black">{user ? `${user.last_name} ${user.first_name}` : "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Client ID</div>
-            <div className="text-right text-black">8503029996</div>
+            <div className="text-right text-black">{user?.id_number || "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account UID</div>
-            <div className="text-right text-black">RB1015</div>
+            <div className="text-right text-black">{user?.uid || "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Nano Installment</div>
-            <div className="text-right text-black">MAX | NAD 2000.00</div>
+            <div className="text-right text-black">{user?.nano_installment || "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Term Installment</div>
-            <div className="text-right text-black">MAX | NAD 500.00</div>
+            <div className="text-right text-black">{user?.term_installment || "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
             <div className="label text-gray-900 font-bold">Account Level</div>
-            <div className="text-right text-black">NL5 / TLO</div>
+            <div className="text-right text-black">{user?.account_level || "..."}</div>
           </div>
           
           <div className="flex justify-between items-center py-0.5">
             <div className="label text-gray-900 font-bold">Credit Rating</div>
             <div className="flex justify-end gap-0.5 text-black">
-               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
-               <Star className="w-4 h-4 text-gray-300" />
+               {Array.from({ length: 10 }).map((_, i) => (
+                 <Star 
+                   key={i} 
+                   className={`w-4 h-4 ${i < (user?.credit_rating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
+                 />
+               ))}
             </div>
           </div>
         </div>
@@ -74,21 +113,21 @@ export default function Profile() {
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">ID</span>
-            <div className="w-6 h-6 bg-green-500 rounded-sm"></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.id ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase whitespace-nowrap">Proof of Income</span>
-            <div className="w-6 h-6 bg-green-500 rounded-sm"></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.proof_of_income ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold text-xs uppercase">KYC</span>
-            <div className="w-6 h-6 bg-green-500 rounded-sm"></div>
+            <div className={`w-6 h-6 rounded-sm ${user?.kyc_status.kyc ? "bg-green-500" : "bg-gray-300"}`}></div>
           </div>
           <Settings className="w-6 h-6 text-gray-500" />
         </div>
 
         <div className="text-center text-[11px] text-gray-500 mb-8">
-          Documents need to update on: 11 June 2026
+          Documents need to update on: {user?.documents_update_due || "..."}
         </div>
 
         {/* Update Button */}
