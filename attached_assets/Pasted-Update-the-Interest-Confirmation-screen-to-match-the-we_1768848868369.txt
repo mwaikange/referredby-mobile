@@ -1,0 +1,82 @@
+Update the Interest Confirmation screen to match the web app design. The API endpoint is:
+GET /api/mobile/interest-confirmation?type=nano (or type=term)
+
+CRITICAL: The header "INTEREST CONFIRMATION" must be on ONE LINE. Reduce font size to 18-20px if needed.
+
+API Response Structure:
+{
+  // HEADER BOX (teal/green background)
+  "referring_partner": "nastya peno",      // Label: "Referring Partner:"
+  "lender": "Destiny Group Pty LTD",       // Label: "Lender:"
+  "lending_society": "kayla Industries",   // Label: "Lending Society:"
+  "borrower": "DOBSON ANDRE",              // Label: "Borrower:"
+  
+  // ACTIVE INTEREST MODE (grey pill/badge)
+  "active_interest_mode": "IIR (Rating-Based)",  // Display as badge below header box
+  
+  // PORTFOLIO INTEREST RATE (PIR) SECTION
+  "pir_percent": 28,                       // Display as "Base Rate: 28.00%"
+  
+  // INDIVIDUAL INTEREST RATE (IIR) SECTION  
+  "iir_enabled": true,
+  "iir_rates": {
+    "fair": 17.2,                          // Display: "0-3 Stars (Fair): 17.20%"
+    "good": 11.99,                         // Display: "4-6 Stars (Good): 11.99%"
+    "excellent": 7.74                      // Display: "7-10 Stars (Excellent): 7.74%"
+  },
+  
+  // SUBSIDIZED INTEREST RATE (SIR) SECTION
+  "sir_enabled": true,
+  "sir_percent": 3.15,                     // Display: "Subsidy Enabled: 3.15%" or "Yes (3.15%)"
+  "sir_policy": "after_iir",               // Display: "Policy: Applies After IIR" or "AFTER IIR"
+  
+  // FEES SECTION
+  "fees": {
+    "processing": 40,                      // Display: "Processing Fee: N$ 40"
+    "late_fee": 5                          // Display: "Late Fee (Accumulating Arrears): 5%"
+  },
+  
+  // NANO LOAN LIMITS SECTION (show only for nano loans)
+  "progression_levels": {
+    "nano": { "L1": 2000, "L2": 4200, "L3": 8700 },  // Format as N$ values
+    "term": { "L1": 5000, "L2": 10000, "L3": 20000 }
+  },
+  
+  // YOUR APPLICABLE RATE SECTION (yellow/highlight box)
+  "user_star_rating": 0,                   // Display: "Your Rating: 0"
+  "user_tier_label": "Fair (0-3)",         // Display: "Your Tier: Fair (0-3)"
+  "rate_basis": "IIR",                     // Display: "Interest Basis: IIR"
+  "sir_enabled": true,                     // If true: "Subsidy Status: Applied"
+  "user_effective_rate": 14.05             // Display: "Your Final Interest Rate: 14.05%"
+}
+
+LAYOUT STRUCTURE:
+1. Header: "INTEREST CONFIRMATION" (single line, 18-20px font, bold, centered)
+2. Info Box (teal background #0D9488):
+   - Referring Partner: [value]
+   - Lender: [value]
+   - Lending Society: [value]
+   - Borrower: [value]
+3. Active Interest Mode Badge (grey background, centered)
+4. "Portfolio Interest Rate (PIR)" section header
+   - Base Rate: [pir_percent]%
+5. "Individual Interest Rate (IIR)" section header
+   - 0-3 Stars (Fair): [iir_rates.fair]%
+   - 4-6 Stars (Good): [iir_rates.good]%
+   - 7-10 Stars (Excellent): [iir_rates.excellent]%
+6. "Subsidized Interest Rate (SIR)" section header
+   - Subsidy Enabled: [sir_percent]%
+   - Policy: [sir_policy formatted]
+7. "Fees" section header
+   - Processing Fee: N$ [fees.processing]
+   - Late Fee (Accumulating Arrears): [fees.late_fee]%
+8. "Nano Loan Limits" section header (or "Term Loan Limits")
+   - Level 1: N$ [progression_levels.nano.L1]
+   - Level 2: N$ [progression_levels.nano.L2]
+   - Level 3: N$ [progression_levels.nano.L3]
+9. "Your Applicable Rate" box (yellow background #FEF3C7):
+   - Your Rating: [user_star_rating]
+   - Your Tier: [user_tier_label]
+   - Interest Basis: [rate_basis]
+   - Subsidy Status: Applied/Not Applied
+   - Your Final Interest Rate: [user_effective_rate]% (large, bold)

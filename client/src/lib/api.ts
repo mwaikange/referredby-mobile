@@ -60,9 +60,11 @@ export type InterestConfirmation = {
   // So "lender" in the JSON is actually the borrower?? That's confusing naming from backend.
   // But let's trust the keys in the JSON for now.
 
+  active_interest_mode?: string; // "IIR (Rating-Based)"
   rate_basis?: string; // "IIR + SIR"
   pir_percent?: number; // 28
 
+  iir_enabled?: boolean;
   iir_rates?: {
     fair: number;
     good: number;

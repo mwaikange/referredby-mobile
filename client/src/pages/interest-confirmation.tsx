@@ -56,26 +56,28 @@ export default function InterestConfirmation() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col font-sans">
-        <h1 className="text-center font-bold uppercase mb-6 tracking-tight">INTEREST CONFIRMATION</h1>
+        <h1 className="text-center font-bold uppercase mb-6 tracking-tight text-[20px] whitespace-nowrap overflow-hidden text-ellipsis">
+          INTEREST CONFIRMATION
+        </h1>
 
         {/* Green Info Card */}
-        <div className="bg-[#007074] text-white p-4 rounded-lg mb-6 shadow-md">
+        <div className="bg-[#0D9488] text-white p-4 rounded-lg mb-6 shadow-md">
           <div className="grid grid-cols-[140px_1fr] gap-y-2 text-sm leading-tight">
             <div className="font-bold opacity-90">Referring Partner:</div>
             <div className="font-medium">{data?.referring_partner || "..."}</div>
             <div className="font-bold opacity-90">Lender:</div>
-            <div className="font-medium">{data?.portfolio_holder || "..."}</div>
+            <div className="font-medium">{data?.lender || "..."}</div>
             <div className="font-bold opacity-90">Lending Society:</div>
             <div className="font-medium">{data?.lending_society || "..."}</div>
             <div className="font-bold opacity-90">Borrower:</div>
-            <div className="font-medium">{data?.lender || "..."}</div> 
+            <div className="font-medium">{data?.borrower || "..."}</div> 
           </div>
         </div>
 
         {/* Active Interest Mode Badge */}
         <div className="flex justify-center mb-6">
-          <div className="bg-[#ebf5ff] text-[#3459c0] px-4 py-2 rounded-md text-xs font-bold border border-[#d6eaff] w-full text-center">
-            Active Interest Mode: {data?.rate_basis || "..."}
+          <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-xs font-bold border border-gray-200 shadow-sm w-auto text-center">
+            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || "..."}
           </div>
         </div>
 
@@ -110,9 +112,13 @@ export default function InterestConfirmation() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Subsidy Enabled:</span>
-              <span className="font-bold">{data?.sir_enabled ? "Yes" : "No"} ({data?.sir_percent ? `${data.sir_percent}%` : "0%"})</span>
+              <span className="font-bold">
+                {data?.sir_enabled ? `Yes (${data?.sir_percent || 0}%)` : "No"}
+              </span>
             </div>
-            <p className="text-xs">Policy: <span className="font-bold">{data?.sir_policy ? data.sir_policy.replace('_', ' ').toUpperCase() : "..."}</span></p>
+            <p className="text-xs">
+              Policy: <span className="font-bold">{data?.sir_policy ? data.sir_policy.replace('_', ' ').toUpperCase() : "..."}</span>
+            </p>
           </div>
         </div>
 
@@ -151,7 +157,7 @@ export default function InterestConfirmation() {
         </div>
 
         {/* Applicable Rate Card (Yellow) */}
-        <div className="bg-[#fffbeb] p-5 rounded-lg border border-[#fef3c7] mb-10 shadow-sm">
+        <div className="bg-[#FEF3C7] p-5 rounded-lg border border-[#fef3c7] mb-10 shadow-sm">
           <h2 className="text-base font-bold mb-4">Your Applicable Rate</h2>
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
@@ -164,12 +170,12 @@ export default function InterestConfirmation() {
             </div>
           </div>
           
-          <div className="h-px bg-[#fef3c7] w-full mb-4" />
+          <div className="h-px bg-[#fcd34d] w-full mb-4 opacity-50" />
           
           <div className="space-y-2 text-sm mb-6">
             <div className="flex justify-between">
               <span>Interest Basis:</span>
-              <span className="font-bold uppercase text-xs">IIR</span>
+              <span className="font-bold uppercase text-xs">{data?.rate_basis || "IIR"}</span>
             </div>
             <div className="flex justify-between">
               <span>Subsidy Status:</span>
@@ -177,12 +183,12 @@ export default function InterestConfirmation() {
             </div>
           </div>
           
-          <div className="h-px bg-[#fef3c7] w-full mb-4" />
+          <div className="h-px bg-[#fcd34d] w-full mb-4 opacity-50" />
           
           <div className="flex justify-between items-end">
             <div className="text-sm leading-tight">
               <span className="font-bold block">Your Final Interest Rate:</span>
-              <span className="text-[10px] text-gray-400 font-medium">(IIR - SIR)</span>
+              <span className="text-[10px] text-gray-500 font-medium">(IIR - SIR)</span>
             </div>
             <div className="text-3xl font-bold text-[#006f3c]">{data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : "..."}</div>
           </div>
