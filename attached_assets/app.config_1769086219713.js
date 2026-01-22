@@ -1,3 +1,6 @@
+// ========================================
+// 🔧 DIAGNOSTIC LOGGING (Check EAS build logs for these)
+// ========================================
 console.log("🚀 app.config.js IS EXECUTING");
 console.log("📍 Build-time environment check:", {
   url: process.env.EXPO_PUBLIC_SUPABASE_URL ? "✅ Present" : "❌ Missing",
@@ -25,7 +28,7 @@ export default {
     },
     android: {
       package: "com.referredby.mobile",
-      versionCode: 7,
+      versionCode: 7, // Incremented for new build
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"
@@ -42,10 +45,15 @@ export default {
       "expo-secure-store"
     ],
     extra: {
+      // ✅ CRITICAL: These get injected at BUILD TIME from EAS secrets
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "MISSING_AT_BUILD_TIME",
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "MISSING_AT_BUILD_TIME",
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "https://appv2.referredby.com.na",
+      
+      // Add timestamp to verify config is fresh
       buildTimestamp: new Date().toISOString(),
+      
+      // Correct project ID
       eas: {
         projectId: "6efe1f9d-89da-454c-95b1-fd337beb7730"
       }

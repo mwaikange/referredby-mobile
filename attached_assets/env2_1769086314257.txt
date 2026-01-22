@@ -1,5 +1,8 @@
 import Constants from 'expo-constants';
 
+// ========================================
+// 🔍 RUNTIME DIAGNOSTIC LOGGING
+// ========================================
 console.log("========================================");
 console.log("🔍 RUNTIME ENV DIAGNOSTIC");
 console.log("========================================");
@@ -9,6 +12,7 @@ console.log("========================================");
 
 const extra = Constants.expoConfig?.extra || {};
 
+// Check for values with both key formats (camelCase and SCREAMING_CASE)
 const SUPABASE_URL = 
   extra.supabaseUrl || 
   extra.SUPABASE_URL || 
@@ -36,6 +40,9 @@ export const ENV = {
                        SUPABASE_ANON_KEY !== 'MISSING_AT_BUILD_TIME'),
 };
 
+// ========================================
+// 🔧 DETAILED ENV STATUS
+// ========================================
 console.log("🔧 ENV Configuration Status:");
 console.log({
   SUPABASE_URL: ENV.SUPABASE_URL ? `✅ Set (${ENV.SUPABASE_URL.substring(0, 30)}...)` : '❌ Missing',
@@ -46,6 +53,7 @@ console.log({
 });
 console.log("========================================");
 
+// More detailed error if configuration fails
 if (!ENV.isConfigured) {
   console.error("❌ CONFIGURATION ERROR DETAILS:");
   console.error("Available extra keys:", Object.keys(extra));
