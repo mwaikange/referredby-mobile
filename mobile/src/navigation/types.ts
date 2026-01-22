@@ -2,5 +2,5 @@ export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   Profile: undefined;
-  InterestConfirmation: { userId: string };
+  InterestConfirmation: { userId: string; loanType?: 'nano' | 'term' };
 };

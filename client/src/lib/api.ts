@@ -14,12 +14,12 @@ export type UserProfile = {
   id_number: string;
   account_uid: string;
   
-  // Display fields (might be named differently in Supabase vs API)
+  // Display fields
   nano_installment: string;
   term_installment: string;
   account_level: string;
   
-  // New API fields
+  // API fields
   account_name?: string;
   client_id?: string;
   is_doc_update_needed?: boolean;
@@ -30,13 +30,26 @@ export type UserProfile = {
     kyc: boolean;
   };
   
-  // Supabase specific fields (keeping for compatibility)
+  // Loan limits
   nano_loan_limit?: number | string;
   term_loan_limit?: number | string;
   membership_status?: string;
 
+  // Credit rating (0-10 scale)
   credit_rating: number;
-  borrower_rating?: number; // New field from API
+  borrower_rating?: number;
+  
+  // Loan access control (NEW)
+  loan_access?: {
+    nano: boolean;
+    term: boolean;
+    term_max_months?: number;
+    term_min_months?: number;
+  };
+  nano_loan_enabled?: boolean;
+  term_loan_enabled?: boolean;
+  
+  // Legacy fields
   kyc_status: {
     id: boolean;
     proof_of_income: boolean;
@@ -46,56 +59,54 @@ export type UserProfile = {
 };
 
 export type InterestConfirmation = {
+  // Header info
   referring_partner: string;
-  lender: string; // This seems to be mapped to 'portfolio_holder' or 'lender' in response? The log shows 'lender' as the user name, and 'portfolio_holder' as the company.
-  // Log: "lender": "DOBSON ANDRE " (User), "portfolio_holder": "Destiny Group Pty LTD"
-  // Previous UI showed Lender: data?.portfolio?.full_name.
-  // Let's match the JSON response structure exactly.
-
-  portfolio_holder?: string; // "Destiny Group Pty LTD"
+  lender: string;
+  portfolio_holder?: string;
   lending_society: string;
-  borrower?: string; // The API returns "lender" as the borrower name? "lender": "DOBSON ANDRE" (User is Dobson Andre)
-  // Wait, "lender" in the JSON seems to be the borrower's name if Dobson Andre is the user.
-  // The log shows: "first_name":"DOBSON ","last_name":"ANDRE " for the user.
-  // So "lender" in the JSON is actually the borrower?? That's confusing naming from backend.
-  // But let's trust the keys in the JSON for now.
+  borrower?: string;
 
-  active_interest_mode?: string; // "IIR (Rating-Based)"
-  rate_basis?: string; // "IIR + SIR"
-  pir_percent?: number; // 28
+  // Mode info
+  active_interest_mode?: string;
+  rate_basis?: string; // 'PIR+SIR' for nano, 'IIR' for term
 
+  // PIR (for nano loans)
+  pir_percent?: number;
+
+  // IIR (for term loans)
   iir_enabled?: boolean;
+  iir_base?: number; // Term Loan Base Rate
   iir_rates?: {
     fair: number;
     good: number;
     excellent: number;
   };
 
+  // SIR (for nano loans)
   sir_enabled?: boolean;
   sir_percent?: number;
   sir_policy?: string;
 
+  // Fees
   fees?: {
     processing: number;
     late_fee: number;
   };
   
+  // Progression levels
   progression_levels?: {
-    nano: {
-      L1: number;
-      L2: number;
-      L3: number;
-    };
-    term: {
-      L1: number;
-      L2: number;
-      L3: number;
-    };
+    nano: { L1: number; L2: number; L3: number };
+    term: { L1: number; L2: number; L3: number };
   };
 
+  // User's applicable rate
   user_star_rating?: number;
   user_tier_label?: string;
   user_effective_rate?: number;
+  
+  // Proceed button control (NEW)
+  can_proceed?: boolean;
+  has_active_loan?: boolean;
 };
 
 // Helper to get headers with auth token
@@ -180,18 +191,34 @@ export const api = {
   },
 
   // Get Interest Confirmation Details
-  getInterestConfirmation: async (userId: string, loanAmount: number = 2000): Promise<InterestConfirmation> => {
+  // Updated: Now uses GET with type parameter, fallback to POST for legacy
+  getInterestConfirmation: async (
+    userId: string,
+    loanType: 'nano' | 'term' = 'nano',
+    loanAmount: number = 2000
+  ): Promise<InterestConfirmation> => {
     const headers = await getHeaders();
-    console.log('📥 Fetching interest confirmation from API...', { userId, loanAmount });
+    console.log('📥 Fetching interest confirmation from API...', { userId, loanType, loanAmount });
 
-    const response = await fetch(`${API_BASE_URL}/api/mobile/interest-confirmation`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        user_id: userId,
-        loan_amount: loanAmount,
-      }),
-    });
+    // Try GET first (new API), fallback to POST (legacy)
+    let response = await fetch(
+      `${API_BASE_URL}/api/mobile/interest-confirmation?type=${loanType}`,
+      { method: "GET", headers }
+    );
+
+    // Fallback to POST if GET returns 404 or 405
+    if (response.status === 404 || response.status === 405) {
+      console.log('📡 GET not supported, falling back to POST...');
+      response = await fetch(`${API_BASE_URL}/api/mobile/interest-confirmation`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_id: userId,
+          loan_amount: loanAmount,
+          type: loanType,
+        }),
+      });
+    }
 
     console.log('📡 Interest API Response Status:', response.status);
 
@@ -204,15 +231,6 @@ export const api = {
     const data = await response.json();
     console.log('✅ Interest data received:', data);
     
-    // Check if wrapped in success/confirmation or direct
-    // Previous code: return data.confirmation;
-    // Prompt code: setData(apiData); (direct?)
-    // Prompt log: console.log('✅ Interest data received:', apiData);
-    // Prompt usage: data.referring_partner
-    // So it seems direct or wrapped?
-    // Previous getInterestConfirmation returned data.confirmation.
-    // Prompt uses apiData.referring_partner.
-    // I will return data.confirmation || data;
     return data.confirmation || data;
   }
 };
