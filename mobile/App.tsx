@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -8,27 +9,119 @@ import LoginScreen from './src/screens/LoginScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import InterestConfirmationScreen from './src/screens/InterestConfirmationScreen';
 import type { RootStackParamList } from './src/navigation/types';
+import { isSupabaseConfigured } from './src/lib/supabase';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export default function App() {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('App Error:', error, errorInfo);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorMessage}>{this.state.error?.message || 'Unknown error'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={this.handleRetry}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function ConfigurationError() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <Stack.Navigator
-          initialRouteName="Splash"
-          screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="InterestConfirmation" component={InterestConfirmationScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <View style={styles.errorContainer}>
+      <Text style={styles.errorTitle}>Configuration Error</Text>
+      <Text style={styles.errorMessage}>
+        The app is not properly configured. Please ensure environment variables are set.
+      </Text>
+    </View>
   );
 }
+
+function AppContent() {
+  if (!isSupabaseConfigured) {
+    return <ConfigurationError />;
+  }
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <Stack.Navigator
+        initialRouteName="Splash"
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="InterestConfirmation" component={InterestConfirmationScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
+    </ErrorBoundary>
+  );
+}
+
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ef4444',
+    marginBottom: 12,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#00736e',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+});
