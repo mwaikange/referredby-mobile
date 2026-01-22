@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,30 +17,23 @@ import type { RootStackParamList } from '../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
-// Rating is 0-10 scale, display as stars (each star = 2 points)
 const StarRating = ({ rating }: { rating: number }) => {
-  const stars = [];
-  const normalizedRating = rating / 2; // Convert 0-10 to 0-5 for display
-  for (let i = 1; i <= 5; i++) {
-    const filled = normalizedRating >= i;
-    const half = normalizedRating >= i - 0.5 && normalizedRating < i;
-    stars.push(
-      <Text key={i} style={[styles.star, filled || half ? styles.starFilled : styles.starEmpty]}>
-        {filled ? '★' : half ? '★' : '☆'}
-      </Text>
-    );
-  }
-  return <View style={styles.starContainer}>{stars}</View>;
-};
-
-const DocumentStatus = ({ label, status }: { label: string; status: boolean }) => (
-  <View style={styles.docRow}>
-    <Text style={styles.docLabel}>{label}</Text>
-    <View style={[styles.docBadge, status ? styles.docSuccess : styles.docPending]}>
-      <Text style={styles.docBadgeText}>{status ? '✓' : '○'}</Text>
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = (rating % 1) >= 0.5;
+  const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
+  
+  return (
+    <View style={styles.starContainer}>
+      {Array.from({ length: fullStars }).map((_, i) => (
+        <Text key={`full-${i}`} style={styles.starFilled}>★</Text>
+      ))}
+      {hasHalfStar && <Text style={styles.starHalf}>★</Text>}
+      {Array.from({ length: emptyStars }).map((_, i) => (
+        <Text key={`empty-${i}`} style={styles.starEmpty}>★</Text>
+      ))}
     </View>
-  </View>
-);
+  );
+};
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -76,18 +70,15 @@ export default function ProfileScreen() {
   };
 
   const formatDeadline = (dateString?: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return '...';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // Check if user is approved (AP2, AA, or AP)
-  const isApproved = ['AP2', 'AA', 'AP'].includes(profile?.membership_status || '');
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00736e" />
+        <ActivityIndicator size="large" color="#3b82f6" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
@@ -106,195 +97,397 @@ export default function ProfileScreen() {
 
   const rating = profile?.borrower_rating ?? profile?.credit_rating ?? 0;
   const documents = profile?.documents || { national_id: false, payslip: false, kyc: false };
-  
-  // Loan access control
-  const nanoLoanEnabled = profile?.nano_loan_enabled ?? profile?.loan_access?.nano ?? true;
-  const termLoanEnabled = profile?.term_loan_enabled ?? profile?.loan_access?.term ?? true;
-  const canRequestNanoLoan = isApproved && nanoLoanEnabled;
-  const canApplyTermLoan = isApproved && termLoanEnabled;
+  const kycStatus = profile?.kyc_status || { id: false, proof_of_income: false, kyc: false };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>PROFILE</Text>
+    <View style={styles.container}>
+      <View style={styles.headerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={styles.patternImage}
+          resizeMode="cover"
+        />
       </View>
 
-      {/* Account Details Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Account Details</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.bellIcon}>🔔</Text>
         </View>
-        <View style={styles.cardContent}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Account Name:</Text>
-            <Text style={styles.value}>
-              {profile?.account_name || `${profile?.first_name?.trim()} ${profile?.last_name?.trim()}`}
+
+        <View style={styles.infoGrid}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Account Name</Text>
+            <Text style={styles.infoValue}>
+              {profile?.account_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || '...'}
             </Text>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Account No:</Text>
-            <Text style={styles.value}>{profile?.uid || 'N/A'}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Client ID:</Text>
-            <Text style={styles.value}>{profile?.client_id || profile?.id_number || 'N/A'}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Account Level:</Text>
-            <Text style={styles.value}>{profile?.account_level || profile?.membership_status || 'Standard'}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Loan Limits Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Loan Limits</Text>
-        </View>
-        <View style={styles.cardContent}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Nano Limit:</Text>
-            <Text style={styles.valueHighlight}>
-              {profile?.nano_installment || `N$ ${Number(profile?.nano_loan_limit || 0).toLocaleString()}`}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Term Limit:</Text>
-            <Text style={styles.valueHighlight}>
-              {profile?.term_installment || `N$ ${Number(profile?.term_loan_limit || 0).toLocaleString()}`}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Credit Rating Card (0-10 scale displayed as stars) */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Credit Rating</Text>
-        </View>
-        <View style={styles.ratingContainer}>
-          <StarRating rating={rating} />
-          <Text style={styles.ratingText}>{rating.toFixed(1)} / 10</Text>
-        </View>
-      </View>
-
-      {/* Document Status Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Document Status</Text>
-        </View>
-        <View style={styles.cardContent}>
-          <DocumentStatus label="National ID" status={documents.national_id} />
-          <DocumentStatus label="Payslip" status={documents.payslip} />
-          <DocumentStatus label="KYC Form" status={documents.kyc} />
           
-          {profile?.document_deadline && (
-            <Text style={styles.deadlineText}>
-              Documents need to update on: {formatDeadline(profile.document_deadline)}
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Client ID</Text>
+            <Text style={styles.infoValue}>{profile?.client_id || profile?.id_number || 'N/A'}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Account UID</Text>
+            <Text style={styles.infoValue}>{profile?.uid || 'N/A'}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Nano Installment</Text>
+            <Text style={styles.infoValue}>
+              {profile?.nano_installment || (profile?.nano_loan_limit 
+                ? `MAX | NAD ${Number(profile.nano_loan_limit).toFixed(2)}` 
+                : 'N/A')}
             </Text>
-          )}
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Term Installment</Text>
+            <Text style={styles.infoValue}>
+              {profile?.term_installment || (profile?.term_loan_limit 
+                ? `MAX | NAD ${Number(profile.term_loan_limit).toFixed(2)}` 
+                : 'N/A')}
+            </Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Account Level</Text>
+            <Text style={styles.infoValue}>
+              {profile?.account_level || profile?.membership_status || 'N/A'}
+            </Text>
+          </View>
+          
+          <View style={[styles.infoRow, styles.infoRowNoBorder]}>
+            <Text style={styles.infoLabel}>Credit Rating</Text>
+            <StarRating rating={rating} />
+          </View>
         </View>
-        
-        {/* Update Documents Button - enabled only if is_doc_update_needed is true */}
+
+        <View style={styles.sectionDivider} />
+
+        <View style={styles.docStatusRow}>
+          <View style={styles.docItem}>
+            <Text style={styles.docLabel}>ID</Text>
+            <View style={[
+              styles.docBadge, 
+              (documents.national_id || kycStatus.id) ? styles.docBadgeGreen : styles.docBadgeGray
+            ]} />
+          </View>
+          <View style={styles.docItem}>
+            <Text style={styles.docLabel}>Proof of Income</Text>
+            <View style={[
+              styles.docBadge, 
+              (documents.payslip || kycStatus.proof_of_income) ? styles.docBadgeGreen : styles.docBadgeGray
+            ]} />
+          </View>
+          <View style={styles.docItem}>
+            <Text style={styles.docLabel}>KYC</Text>
+            <View style={[
+              styles.docBadge, 
+              (documents.kyc || kycStatus.kyc) ? styles.docBadgeGreen : styles.docBadgeGray
+            ]} />
+          </View>
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </View>
+
+        <Text style={styles.deadlineText}>
+          Documents need to update on: {formatDeadline(profile?.document_deadline) || profile?.documents_update_due || '...'}
+        </Text>
+
         <TouchableOpacity 
-          style={[styles.updateButton, !profile?.is_doc_update_needed && styles.updateButtonDisabled]}
+          style={[
+            styles.updateButton, 
+            !profile?.is_doc_update_needed && styles.updateButtonDisabled
+          ]}
           disabled={!profile?.is_doc_update_needed}
         >
-          <Text style={[styles.updateButtonText, !profile?.is_doc_update_needed && styles.updateButtonTextDisabled]}>
+          <Text style={[
+            styles.updateButtonText,
+            !profile?.is_doc_update_needed && styles.updateButtonTextDisabled
+          ]}>
             Update Documents
           </Text>
         </TouchableOpacity>
+
+        <View style={styles.sectionDivider} />
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('InterestConfirmation', { userId: profile?.id || '', loanType: 'nano' })}
+          >
+            <Text style={styles.darkButtonText}>REQUEST NANO LOAN</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.darkButton}>
+            <Text style={styles.darkButtonText}>APPLY FOR TERM LOAN</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.darkButton}>
+            <Text style={styles.darkButtonText}>STATEMENT</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.darkButton}>
+            <Text style={styles.darkButtonText}>CREDIT SCORE HISTORY</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.signOutButton} onPress={handleLogout}>
+            <Text style={styles.signOutButtonText}>SIGN OUT</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <View style={styles.footerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={[styles.patternImage, styles.patternRotated]}
+          resizeMode="cover"
+        />
       </View>
-
-      {/* Request Nano Loan Button - enabled only if approved AND nano_loan_enabled */}
-      <TouchableOpacity
-        style={[styles.loanButton, !canRequestNanoLoan && styles.loanButtonDisabled]}
-        disabled={!canRequestNanoLoan}
-        onPress={() => navigation.navigate('InterestConfirmation', { userId: profile?.id || '', loanType: 'nano' })}
-      >
-        <Text style={[styles.loanButtonText, !canRequestNanoLoan && styles.loanButtonTextDisabled]}>
-          Request Nano Loan
-        </Text>
-      </TouchableOpacity>
-
-      {/* Apply for Term Loan Button - enabled only if approved AND term_loan_enabled */}
-      <TouchableOpacity
-        style={[styles.termButton, !canApplyTermLoan && styles.termButtonDisabled]}
-        disabled={!canApplyTermLoan}
-        onPress={() => navigation.navigate('InterestConfirmation', { userId: profile?.id || '', loanType: 'term' })}
-      >
-        <Text style={[styles.termButtonText, !canApplyTermLoan && styles.termButtonTextDisabled]}>
-          Apply for Term Loan
-        </Text>
-      </TouchableOpacity>
-
-      {/* View Interest Confirmation */}
-      <TouchableOpacity
-        style={styles.interestButton}
-        onPress={() => navigation.navigate('InterestConfirmation', { userId: profile?.id || '', loanType: 'nano' })}
-      >
-        <Text style={styles.interestButtonText}>View Interest Confirmation</Text>
-      </TouchableOpacity>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
-
-      <View style={styles.footer} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  loadingText: { marginTop: 16, color: '#6b7280', fontSize: 16 },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5', padding: 24 },
-  errorText: { color: '#ef4444', fontSize: 16, textAlign: 'center', marginBottom: 16 },
-  retryButton: { backgroundColor: '#00736e', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  retryButtonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
-  header: { backgroundColor: '#ffffff', padding: 20, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#111827' },
-  card: { backgroundColor: '#ffffff', marginHorizontal: 16, marginTop: 16, borderRadius: 12, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-  cardHeader: { backgroundColor: '#00736e', padding: 12 },
-  cardTitle: { color: '#ffffff', fontSize: 14, fontWeight: 'bold' },
-  cardContent: { padding: 16 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  label: { fontSize: 14, color: '#6b7280' },
-  value: { fontSize: 14, color: '#111827', fontWeight: '500', flex: 1, textAlign: 'right' },
-  valueHighlight: { fontSize: 16, color: '#00736e', fontWeight: 'bold' },
-  ratingContainer: { padding: 20, alignItems: 'center' },
-  starContainer: { flexDirection: 'row', marginBottom: 8 },
-  star: { fontSize: 28, marginHorizontal: 2 },
-  starFilled: { color: '#fbbf24' },
-  starEmpty: { color: '#d1d5db' },
-  ratingText: { fontSize: 14, color: '#6b7280' },
-  docRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  docLabel: { fontSize: 14, color: '#374151' },
-  docBadge: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  docSuccess: { backgroundColor: '#22c55e' },
-  docPending: { backgroundColor: '#d1d5db' },
-  docBadgeText: { color: '#ffffff', fontWeight: 'bold', fontSize: 14 },
-  deadlineText: { marginTop: 12, fontSize: 12, color: '#6b7280', fontStyle: 'italic' },
-  updateButton: { backgroundColor: '#fef3c7', margin: 16, marginTop: 8, padding: 14, borderRadius: 8, alignItems: 'center' },
-  updateButtonDisabled: { backgroundColor: '#e5e7eb' },
-  updateButtonText: { color: '#92400e', fontSize: 14, fontWeight: '600' },
-  updateButtonTextDisabled: { color: '#9ca3af' },
-  loanButton: { backgroundColor: '#00736e', marginHorizontal: 16, marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
-  loanButtonDisabled: { backgroundColor: '#d1d5db' },
-  loanButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  loanButtonTextDisabled: { color: '#9ca3af' },
-  termButton: { backgroundColor: '#1e3a8a', marginHorizontal: 16, marginTop: 12, padding: 16, borderRadius: 12, alignItems: 'center' },
-  termButtonDisabled: { backgroundColor: '#d1d5db' },
-  termButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  termButtonTextDisabled: { color: '#9ca3af' },
-  interestButton: { backgroundColor: '#0B0B3B', marginHorizontal: 16, marginTop: 12, padding: 16, borderRadius: 12, alignItems: 'center' },
-  interestButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  logoutButton: { marginHorizontal: 16, marginTop: 12, padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#ef4444' },
-  logoutButtonText: { color: '#ef4444', fontSize: 16, fontWeight: '600' },
-  footer: { height: 40 },
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  headerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  footerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  patternImage: {
+    width: '100%',
+    height: 60,
+  },
+  patternRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 16,
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 24,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  bellIcon: {
+    fontSize: 28,
+    color: '#ef4444',
+  },
+  infoGrid: {
+    marginBottom: 24,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(249, 250, 251, 1)',
+  },
+  infoRowNoBorder: {
+    borderBottomWidth: 0,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#000000',
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: 16,
+  },
+  starContainer: {
+    flexDirection: 'row',
+    gap: 1,
+  },
+  starFilled: {
+    fontSize: 14,
+    color: '#fbbf24',
+  },
+  starHalf: {
+    fontSize: 14,
+    color: '#fbbf24',
+    opacity: 0.6,
+  },
+  starEmpty: {
+    fontSize: 14,
+    color: '#d1d5db',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 24,
+  },
+  docStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  docItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  docLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+  },
+  docBadge: {
+    width: 24,
+    height: 16,
+    borderRadius: 2,
+  },
+  docBadgeGreen: {
+    backgroundColor: '#22c55e',
+  },
+  docBadgeGray: {
+    backgroundColor: '#d1d5db',
+  },
+  settingsIcon: {
+    fontSize: 20,
+    color: '#6b7280',
+  },
+  deadlineText: {
+    fontSize: 11,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  updateButton: {
+    backgroundColor: '#0B0B3B',
+    height: 54,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  updateButtonDisabled: {
+    backgroundColor: '#e5e7eb',
+  },
+  updateButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  updateButtonTextDisabled: {
+    color: '#9ca3af',
+  },
+  actionButtons: {
+    gap: 16,
+    paddingBottom: 24,
+  },
+  darkButton: {
+    backgroundColor: '#0B0B3B',
+    height: 54,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  darkButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  signOutButton: {
+    backgroundColor: '#dc2626',
+    height: 54,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  signOutButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
 });

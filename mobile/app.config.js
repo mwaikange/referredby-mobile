@@ -10,7 +10,7 @@ export default {
     name: "ReferredBy",
     slug: "referredby-mobile",
     owner: "referredby",
-    version: "1.0.5",
+    version: "1.0.6",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -25,7 +25,7 @@ export default {
     },
     android: {
       package: "com.referredby.mobile",
-      versionCode: 7,
+      versionCode: 8,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"

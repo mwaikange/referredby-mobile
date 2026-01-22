@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { api, InterestConfirmation } from '../lib/api';
@@ -48,15 +49,17 @@ export default function InterestConfirmationScreen() {
       );
       return;
     }
-    // Navigate to loan application
     Alert.alert('Proceed', 'Proceeding to loan application...');
   };
+
+  const isNano = selectedType === 'nano';
+  const isTerm = selectedType === 'term';
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00736e" />
-        <Text style={styles.loadingText}>Loading interest details...</Text>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={styles.loadingText}>Loading details...</Text>
       </View>
     );
   }
@@ -72,264 +75,560 @@ export default function InterestConfirmationScreen() {
     );
   }
 
-  const isNano = selectedType === 'nano';
-  const isTerm = selectedType === 'term';
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.headerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={styles.patternImage}
+          resizeMode="cover"
+        />
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>INTEREST CONFIRMATION</Text>
-      </View>
 
-      {/* Loan Type Toggle */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[styles.toggleButton, isNano && styles.toggleButtonActive]}
-          onPress={() => setSelectedType('nano')}
-        >
-          <Text style={[styles.toggleText, isNano && styles.toggleTextActive]}>Nano Loan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleButton, isTerm && styles.toggleButtonActive]}
-          onPress={() => setSelectedType('term')}
-        >
-          <Text style={[styles.toggleText, isTerm && styles.toggleTextActive]}>Term Loan</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Header Info Card */}
-      <View style={styles.infoCard}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Referring Partner:</Text>
-          <Text style={styles.infoValue}>{data?.referring_partner || '...'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Lender:</Text>
-          <Text style={styles.infoValue}>{data?.lender || '...'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Lending Society:</Text>
-          <Text style={styles.infoValue}>{data?.lending_society || '...'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Borrower:</Text>
-          <Text style={styles.infoValue}>{data?.borrower || '...'}</Text>
-        </View>
-      </View>
-
-      {/* Active Interest Mode Badge */}
-      <View style={styles.modeBadge}>
-        <Text style={styles.modeBadgeText}>
-          Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || '...'}
-        </Text>
-      </View>
-
-      {/* NANO LOAN: Show PIR + SIR */}
-      {isNano && (
-        <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Portfolio Interest Rate (PIR)</Text>
-            <Text style={styles.sectionText}>
-              Base Rate: <Text style={styles.bold}>{data?.pir_percent ? `${data.pir_percent}%` : '...'}</Text>
-            </Text>
+        <View style={styles.greenCard}>
+          <View style={styles.greenRow}>
+            <Text style={styles.greenLabel}>Referring Partner:</Text>
+            <Text style={styles.greenValue}>{data?.referring_partner || '...'}</Text>
           </View>
+          <View style={styles.greenRow}>
+            <Text style={styles.greenLabel}>Lender:</Text>
+            <Text style={styles.greenValue}>{data?.lender || '...'}</Text>
+          </View>
+          <View style={styles.greenRow}>
+            <Text style={styles.greenLabel}>Lending Society:</Text>
+            <Text style={styles.greenValue}>{data?.lending_society || '...'}</Text>
+          </View>
+          <View style={styles.greenRow}>
+            <Text style={styles.greenLabel}>Borrower:</Text>
+            <Text style={styles.greenValue}>{data?.borrower || '...'}</Text>
+          </View>
+        </View>
 
-          {data?.sir_enabled && (
-            <View style={[styles.section, styles.sirSection]}>
-              <Text style={styles.sectionTitle}>Subsidized Interest Rate (SIR)</Text>
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, isNano && styles.toggleButtonActive]}
+            onPress={() => setSelectedType('nano')}
+          >
+            <Text style={[styles.toggleText, isNano && styles.toggleTextActive]}>Nano Loan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleButton, isTerm && styles.toggleButtonActive]}
+            onPress={() => setSelectedType('term')}
+          >
+            <Text style={[styles.toggleText, isTerm && styles.toggleTextActive]}>Term Loan</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.modeBadge}>
+          <Text style={styles.modeBadgeText}>
+            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || '...'}
+          </Text>
+        </View>
+
+        {isNano && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Portfolio Interest Rate (PIR)</Text>
               <Text style={styles.sectionText}>
-                Subsidy Enabled: <Text style={styles.bold}>{data?.sir_percent}%</Text>
+                Base Rate: <Text style={styles.bold}>{data?.pir_percent ? `${data.pir_percent}%` : '...'}</Text>
               </Text>
-              {data?.sir_policy && (
-                <Text style={styles.sectionText}>
+            </View>
+
+            {data?.sir_enabled && (
+              <View style={[styles.section, styles.sirSection]}>
+                <Text style={styles.sectionTitle}>Subsidized Interest Rate (SIR)</Text>
+                <View style={styles.sirRow}>
+                  <Text style={styles.sectionText}>Subsidy Enabled:</Text>
+                  <Text style={styles.bold}>Yes ({data?.sir_percent || 0}%)</Text>
+                </View>
+                <Text style={styles.sectionTextSmall}>
                   Policy: <Text style={styles.bold}>
-                    {data.sir_policy === 'after_pir' ? 'Applies After PIR' : data.sir_policy}
+                    {data?.sir_policy === 'after_pir' ? 'Applies After PIR' : data?.sir_policy?.replace('_', ' ').toUpperCase() || '...'}
                   </Text>
                 </Text>
-              )}
-            </View>
-          )}
-        </>
-      )}
+              </View>
+            )}
+          </>
+        )}
 
-      {/* TERM LOAN: Show IIR with tiers */}
-      {isTerm && (
-        <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Term Loan Base Rate</Text>
-            <Text style={styles.sectionText}>
-              Base Rate: <Text style={styles.bold}>{data?.iir_base ? `${data.iir_base}%` : '...'}</Text>
-            </Text>
-          </View>
-
-          {data?.iir_enabled && (
+        {isTerm && (
+          <>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Individual Interest Rate (IIR)</Text>
-              <Text style={styles.sectionText}>Rating-based rates:</Text>
-              <View style={styles.rateTable}>
-                <View style={styles.rateRow}>
-                  <Text style={styles.rateLabel}>0-3 Stars (Fair)</Text>
-                  <Text style={styles.rateValue}>{data?.iir_rates?.fair}%</Text>
-                </View>
-                <View style={styles.rateRow}>
-                  <Text style={styles.rateLabel}>4-6 Stars (Good)</Text>
-                  <Text style={styles.rateValue}>{data?.iir_rates?.good}%</Text>
-                </View>
-                <View style={styles.rateRow}>
-                  <Text style={styles.rateLabel}>7-10 Stars (Excellent)</Text>
-                  <Text style={styles.rateValue}>{data?.iir_rates?.excellent}%</Text>
+              <Text style={styles.sectionTitle}>Term Loan Base Rate</Text>
+              <Text style={styles.sectionText}>
+                Base Rate: <Text style={styles.bold}>{data?.iir_base ? `${data.iir_base}%` : '...'}</Text>
+              </Text>
+            </View>
+
+            {data?.iir_enabled && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Individual Interest Rate (IIR)</Text>
+                <Text style={styles.sectionTextSmall}>Rating-based rates:</Text>
+                <View style={styles.rateTable}>
+                  <View style={styles.rateRow}>
+                    <Text style={styles.rateLabel}>0–3 Stars (Fair):</Text>
+                    <Text style={styles.rateValue}>{data?.iir_rates?.fair ? `${data.iir_rates.fair}%` : '...'}</Text>
+                  </View>
+                  <View style={styles.rateRow}>
+                    <Text style={styles.rateLabel}>4–6 Stars (Good):</Text>
+                    <Text style={styles.rateValue}>{data?.iir_rates?.good ? `${data.iir_rates.good}%` : '...'}</Text>
+                  </View>
+                  <View style={styles.rateRow}>
+                    <Text style={styles.rateLabel}>7–10 Stars (Excellent):</Text>
+                    <Text style={styles.rateValue}>{data?.iir_rates?.excellent ? `${data.iir_rates.excellent}%` : '...'}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            )}
+          </>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Fees</Text>
+          <View style={styles.feeRow}>
+            <Text style={styles.feeLabel}>Processing Fee:</Text>
+            <Text style={styles.feeValue}>N$ {data?.fees?.processing || '...'}</Text>
+          </View>
+          <View style={styles.feeRow}>
+            <Text style={styles.feeLabel}>Late Fee (Accumulating Arrears):</Text>
+            <Text style={styles.feeValue}>{data?.fees?.late_fee ? `${data.fees.late_fee}%` : '...'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{isNano ? 'Nano' : 'Term'} Loan Limits</Text>
+          {isNano && data?.progression_levels?.nano && (
+            <>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 1:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L1?.toLocaleString() || '2,000'}</Text>
+              </View>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 2:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L2?.toLocaleString() || '4,200'}</Text>
+              </View>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 3:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L3?.toLocaleString() || '8,700'}</Text>
+              </View>
+            </>
           )}
-        </>
-      )}
+          {isTerm && data?.progression_levels?.term && (
+            <>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 1:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L1?.toLocaleString() || '13,000'}</Text>
+              </View>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 2:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L2?.toLocaleString() || '15,000'}</Text>
+              </View>
+              <View style={styles.levelRow}>
+                <Text style={styles.levelLabel}>Level 3:</Text>
+                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L3?.toLocaleString() || '20,000'}</Text>
+              </View>
+            </>
+          )}
+        </View>
 
-      {/* Your Applicable Rate (Yellow Card) */}
-      <View style={styles.yellowCard}>
-        <Text style={styles.yellowTitle}>Your Applicable Rate</Text>
-        <View style={styles.yellowDivider} />
-        <View style={styles.yellowRow}>
-          <Text style={styles.yellowLabel}>Your Rating:</Text>
-          <Text style={styles.yellowValue}>{data?.user_star_rating || 0} ⭐</Text>
+        <View style={styles.yellowCard}>
+          <Text style={styles.yellowTitle}>Your Applicable Rate</Text>
+          <View style={styles.yellowRow}>
+            <Text style={styles.yellowLabel}>Your Rating:</Text>
+            <Text style={styles.yellowValue}>{data?.user_star_rating || 0}</Text>
+          </View>
+          <View style={styles.yellowRow}>
+            <Text style={styles.yellowLabel}>Your Tier:</Text>
+            <Text style={styles.yellowValue}>{data?.user_tier_label || 'Fair (0-3)'}</Text>
+          </View>
+          <View style={styles.yellowDivider} />
+          <View style={styles.yellowRow}>
+            <Text style={styles.yellowLabel}>Interest Basis:</Text>
+            <Text style={styles.yellowValueSmall}>{data?.rate_basis || 'IIR'}</Text>
+          </View>
+          <View style={styles.yellowRow}>
+            <Text style={styles.yellowLabel}>Subsidy Status:</Text>
+            <Text style={styles.yellowValue}>{data?.sir_enabled ? 'Applied' : 'Not Applied'}</Text>
+          </View>
+          <View style={styles.yellowDivider} />
+          <View style={styles.yellowFinalRow}>
+            <View>
+              <Text style={styles.yellowFinalLabel}>Your Final Interest Rate:</Text>
+              <Text style={styles.yellowFinalSubLabel}>(IIR - SIR)</Text>
+            </View>
+            <Text style={styles.yellowFinalValue}>
+              {data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : '...'}
+            </Text>
+          </View>
         </View>
-        <View style={styles.yellowRow}>
-          <Text style={styles.yellowLabel}>Your Tier:</Text>
-          <Text style={styles.yellowValue}>{data?.user_tier_label || 'N/A'}</Text>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.proceedButton,
+              (data?.can_proceed === false || data?.has_active_loan) && styles.proceedButtonDisabled
+            ]}
+            onPress={handleProceed}
+            disabled={data?.can_proceed === false || data?.has_active_loan}
+          >
+            <Text style={styles.proceedButtonText}>
+              {data?.has_active_loan ? 'ACTIVE LOAN EXISTS' : 'PROCEED'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>BACK</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.yellowRow}>
-          <Text style={styles.yellowLabel}>Interest Basis:</Text>
-          <Text style={styles.yellowValue}>{data?.rate_basis || 'N/A'}</Text>
-        </View>
-        <View style={styles.yellowDivider} />
-        <View style={styles.yellowRow}>
-          <Text style={styles.yellowLabelBold}>Your Final Interest Rate:</Text>
-          <Text style={styles.yellowValueBold}>{data?.user_effective_rate?.toFixed(2) || '0'}%</Text>
-        </View>
+      </ScrollView>
+
+      <View style={styles.footerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={[styles.patternImage, styles.patternRotated]}
+          resizeMode="cover"
+        />
       </View>
-
-      {/* Fees Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Fees</Text>
-        <View style={styles.feeRow}>
-          <Text style={styles.feeLabel}>Processing Fee:</Text>
-          <Text style={styles.feeValue}>N$ {data?.fees?.processing || 0}</Text>
-        </View>
-        <View style={styles.feeRow}>
-          <Text style={styles.feeLabel}>Late Fee (Accumulating Arrears):</Text>
-          <Text style={styles.feeValue}>{data?.fees?.late_fee || 0}%</Text>
-        </View>
-      </View>
-
-      {/* Loan Progression Levels */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Loan Progression Levels</Text>
-        
-        {isNano && data?.progression_levels?.nano && (
-          <>
-            <Text style={styles.subTitle}>Nano Loans:</Text>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 1:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L1?.toLocaleString()}</Text>
-            </View>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 2:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L2?.toLocaleString()}</Text>
-            </View>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 3:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L3?.toLocaleString()}</Text>
-            </View>
-          </>
-        )}
-        
-        {isTerm && data?.progression_levels?.term && (
-          <>
-            <Text style={styles.subTitle}>Term Loans:</Text>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 1:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.term.L1?.toLocaleString()}</Text>
-            </View>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 2:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.term.L2?.toLocaleString()}</Text>
-            </View>
-            <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Level 3:</Text>
-              <Text style={styles.levelValue}>N$ {data.progression_levels.term.L3?.toLocaleString()}</Text>
-            </View>
-          </>
-        )}
-      </View>
-
-      {/* Proceed Button */}
-      <TouchableOpacity
-        style={[styles.proceedButton, !data?.can_proceed && styles.proceedButtonDisabled]}
-        onPress={handleProceed}
-        disabled={!data?.can_proceed}
-      >
-        <Text style={styles.proceedButtonText}>
-          {data?.has_active_loan ? 'Active Loan Exists' : 'Proceed'}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.footer} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 16, color: '#6b7280' },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  errorText: { color: '#ef4444', marginBottom: 16, textAlign: 'center' },
-  retryButton: { backgroundColor: '#00736e', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  retryButtonText: { color: '#ffffff', fontWeight: '600' },
-  header: { backgroundColor: '#ffffff', padding: 16, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  backButton: { marginBottom: 8 },
-  backText: { color: '#00736e', fontSize: 16 },
-  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#111827' },
-  toggleContainer: { flexDirection: 'row', marginHorizontal: 16, marginTop: 16, backgroundColor: '#e5e7eb', borderRadius: 8, padding: 4 },
-  toggleButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
-  toggleButtonActive: { backgroundColor: '#00736e' },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
-  toggleTextActive: { color: '#ffffff' },
-  infoCard: { backgroundColor: '#00736e', margin: 16, padding: 16, borderRadius: 12 },
-  infoRow: { flexDirection: 'row', marginBottom: 8 },
-  infoLabel: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', width: 130, fontSize: 13 },
-  infoValue: { color: '#ffffff', flex: 1, fontSize: 13 },
-  modeBadge: { backgroundColor: '#eff6ff', marginHorizontal: 16, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#bfdbfe' },
-  modeBadgeText: { color: '#1e3a8a', fontWeight: 'bold', textAlign: 'center', fontSize: 14 },
-  section: { backgroundColor: '#ffffff', marginHorizontal: 16, marginTop: 16, padding: 16, borderRadius: 12 },
-  sirSection: { backgroundColor: '#dcfce7' },
-  sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#111827', marginBottom: 8 },
-  sectionText: { fontSize: 14, color: '#374151', marginBottom: 4 },
-  bold: { fontWeight: 'bold' },
-  rateTable: { marginTop: 12 },
-  rateRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  rateLabel: { fontSize: 13, color: '#374151' },
-  rateValue: { fontSize: 13, fontWeight: 'bold', color: '#111827' },
-  yellowCard: { backgroundColor: '#fef3c7', marginHorizontal: 16, marginTop: 16, padding: 16, borderRadius: 12 },
-  yellowTitle: { fontSize: 16, fontWeight: 'bold', color: '#92400e', textAlign: 'center', marginBottom: 12 },
-  yellowDivider: { height: 1, backgroundColor: '#fcd34d', marginVertical: 8 },
-  yellowRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  yellowLabel: { fontSize: 14, color: '#92400e' },
-  yellowValue: { fontSize: 14, color: '#92400e', fontWeight: '500' },
-  yellowLabelBold: { fontSize: 14, color: '#92400e', fontWeight: 'bold' },
-  yellowValueBold: { fontSize: 18, color: '#92400e', fontWeight: 'bold' },
-  feeRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-  feeLabel: { fontSize: 14, color: '#374151', flex: 1 },
-  feeValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  subTitle: { fontSize: 13, fontWeight: '600', color: '#6b7280', marginBottom: 8, marginTop: 4 },
-  levelRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  levelLabel: { fontSize: 14, color: '#374151' },
-  levelValue: { fontSize: 14, fontWeight: '500', color: '#111827' },
-  proceedButton: { backgroundColor: '#0B0B3B', marginHorizontal: 16, marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
-  proceedButtonDisabled: { backgroundColor: '#9ca3af' },
-  proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  footer: { height: 40 },
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  headerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  footerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  patternImage: {
+    width: '100%',
+    height: 60,
+  },
+  patternRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 16,
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 24,
+  },
+  errorText: {
+    color: '#ef4444',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 24,
+    letterSpacing: 0.5,
+    color: '#000000',
+  },
+  greenCard: {
+    backgroundColor: '#00736e',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  greenRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  greenLabel: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: 'bold',
+    fontSize: 13,
+    width: 130,
+  },
+  greenValue: {
+    color: '#ffffff',
+    fontSize: 13,
+    flex: 1,
+    fontWeight: '500',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#00736e',
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  toggleTextActive: {
+    color: '#ffffff',
+  },
+  modeBadge: {
+    backgroundColor: '#eff6ff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  modeBadgeText: {
+    color: '#1e3a8a',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sirSection: {
+    backgroundColor: '#f0fdf4',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dcfce7',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#000000',
+  },
+  sectionText: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  sectionTextSmall: {
+    fontSize: 12,
+    color: '#000000',
+  },
+  sirRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  rateTable: {
+    marginTop: 8,
+  },
+  rateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  rateLabel: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  rateValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  feeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  feeLabel: {
+    fontSize: 14,
+    color: '#000000',
+    flex: 1,
+  },
+  feeValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  levelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  levelLabel: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  levelValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  yellowCard: {
+    backgroundColor: '#FEF3C7',
+    padding: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fef3c7',
+    marginBottom: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  yellowTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#000000',
+  },
+  yellowRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  yellowLabel: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  yellowValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  yellowValueSmall: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+  },
+  yellowDivider: {
+    height: 1,
+    backgroundColor: '#fcd34d',
+    marginVertical: 16,
+    opacity: 0.5,
+  },
+  yellowFinalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  yellowFinalLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  yellowFinalSubLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  yellowFinalValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#006f3c',
+  },
+  buttonContainer: {
+    gap: 16,
+    paddingBottom: 24,
+  },
+  proceedButton: {
+    backgroundColor: '#0B0B3B',
+    height: 54,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  proceedButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  proceedButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  backButton: {
+    backgroundColor: '#dc2626',
+    height: 54,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  backButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
 });

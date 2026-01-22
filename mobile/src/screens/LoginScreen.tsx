@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,30 +22,13 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [email, setEmail] = useState('');
-  const [pin, setPin] = useState(['', '', '', '', '', '']);
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const pinRefs = useRef<(TextInput | null)[]>([]);
-
-  const handlePinChange = (value: string, index: number) => {
-    if (value.length > 1) return;
-    const newPin = [...pin];
-    newPin[index] = value;
-    setPin(newPin);
-    if (value && index < 5) {
-      pinRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePinKeyPress = (key: string, index: number) => {
-    if (key === 'Backspace' && !pin[index] && index > 0) {
-      pinRefs.current[index - 1]?.focus();
-    }
-  };
 
   const handleLogin = async () => {
-    const pinString = pin.join('');
-    if (!email || pinString.length !== 6) {
-      Alert.alert('Error', 'Please enter email and 6-digit PIN');
+    if (!email || !pin) {
+      Alert.alert('Error', 'Please enter email and PIN');
       return;
     }
 
@@ -52,7 +36,7 @@ export default function LoginScreen() {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: pinString,
+        password: pin,
       });
 
       if (error) {
@@ -68,63 +52,107 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>RB</Text>
+    <View style={styles.container}>
+      <View style={styles.headerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={styles.patternImage}
+          resizeMode="cover"
+        />
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoSection}>
+            <Image 
+              source={require('../../assets/logo-group.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <View style={styles.divider} />
           </View>
-          <Text style={styles.title}>ReferredBy</Text>
-          <Text style={styles.subtitle}>Community Vetted Financing</Text>
-        </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#9ca3af"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-          />
+          <View style={styles.form}>
+            <Text style={styles.label}>EMAIL ADDRESS</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              placeholderTextColor="#9ca3af"
+            />
 
-          <Text style={styles.label}>PIN (6 digits)</Text>
-          <View style={styles.pinContainer}>
-            {pin.map((digit, index) => (
+            <Text style={styles.label}>ENTER PIN</Text>
+            <View style={styles.pinInputContainer}>
               <TextInput
-                key={index}
-                ref={(ref) => { pinRefs.current[index] = ref; }}
                 style={styles.pinInput}
-                value={digit}
-                onChangeText={(value) => handlePinChange(value, index)}
-                onKeyPress={({ nativeEvent }) => handlePinKeyPress(nativeEvent.key, index)}
+                value={pin}
+                onChangeText={setPin}
+                secureTextEntry={!showPin}
                 keyboardType="number-pad"
-                maxLength={1}
-                secureTextEntry
+                maxLength={6}
+                placeholderTextColor="#9ca3af"
               />
-            ))}
+              <TouchableOpacity 
+                onPress={() => setShowPin(!showPin)}
+                style={styles.eyeButton}
+              >
+                <Text style={styles.eyeIcon}>{showPin ? '👁️' : '👁️‍🗨️'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.loginButtonText}>LOGIN</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.linksSection}>
+              <Text style={styles.linkText}>
+                Not Yet Registered - <Text style={styles.linkBlue}>Click Here</Text>
+              </Text>
+              <Text style={styles.linkText}>
+                Forgot Password - <Text style={styles.linkBlue}>Click Here</Text>
+              </Text>
+              <Text style={styles.linkText}>
+                Talk to an Agent - <Text style={styles.linkBlue}>Click Here</Text>
+              </Text>
+            </View>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.footer}>
+            <View style={styles.footerLinks}>
+              <Text style={styles.footerLink}>Terms of Service</Text>
+              <Text style={styles.footerDivider}>|</Text>
+              <Text style={styles.footerLink}>Privacy Policy</Text>
+            </View>
+            <Text style={styles.version}>Version 2.0.0.1</Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <View style={styles.footerPattern}>
+        <Image 
+          source={require('../../assets/header-pattern.png')} 
+          style={[styles.patternImage, styles.patternRotated]}
+          resizeMode="cover"
+        />
+      </View>
+    </View>
   );
 }
 
@@ -133,83 +161,147 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  headerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  footerPattern: {
+    height: 60,
+    overflow: 'hidden',
+  },
+  patternImage: {
+    width: '100%',
+    height: 60,
+  },
+  patternRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
-  header: {
+  logoSection: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
+    marginBottom: 32,
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#fef3c7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+  logoImage: {
+    width: 280,
+    height: 100,
   },
-  logoText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e1548',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e1548',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#d1d5db',
+    marginTop: 24,
   },
   form: {
     flex: 1,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 1,
     marginBottom: 8,
+    paddingLeft: 4,
   },
   input: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: 'rgba(243, 244, 246, 0.5)',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 6,
+    height: 48,
+    paddingHorizontal: 16,
     fontSize: 16,
     color: '#111827',
     marginBottom: 24,
   },
-  pinContainer: {
+  pinInputContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
+    alignItems: 'center',
+    backgroundColor: 'rgba(243, 244, 246, 0.5)',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 6,
+    height: 48,
+    marginBottom: 24,
   },
   pinInput: {
-    width: 48,
-    height: 56,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: 'bold',
+    flex: 1,
+    height: 48,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: '#111827',
   },
-  button: {
-    backgroundColor: '#0B0B3B',
-    borderRadius: 12,
-    padding: 18,
-    alignItems: 'center',
+  eyeButton: {
+    paddingHorizontal: 12,
+    height: 48,
+    justifyContent: 'center',
   },
-  buttonDisabled: {
+  eyeIcon: {
+    fontSize: 20,
+    color: '#9ca3af',
+  },
+  loginButton: {
+    backgroundColor: '#3b82f6',
+    height: 48,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loginButtonDisabled: {
     opacity: 0.7,
   },
-  buttonText: {
+  loginButtonText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  linksSection: {
+    alignItems: 'center',
+    marginTop: 32,
+    gap: 12,
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#111827',
+  },
+  linkBlue: {
+    color: '#2563eb',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingTop: 24,
+    paddingBottom: 8,
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: 'rgba(59, 130, 246, 0.8)',
+    fontWeight: '500',
+  },
+  footerDivider: {
+    fontSize: 12,
+    color: 'rgba(59, 130, 246, 0.8)',
+  },
+  version: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginTop: 8,
   },
 });

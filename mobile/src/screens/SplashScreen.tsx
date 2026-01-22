@@ -12,7 +12,7 @@ export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Login');
-    }, 2500);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [navigation]);
 
@@ -20,7 +20,6 @@ export default function SplashScreen() {
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.welcomeText}>Welcome to Simplicity!</Text>
-        <View style={styles.divider} />
         <Image 
           source={require('../../assets/icon.png')} 
           style={styles.logo}
@@ -37,7 +36,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   content: {
     alignItems: 'center',
@@ -45,18 +43,12 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a2e',
-    marginBottom: 16,
-    fontFamily: 'System',
-  },
-  divider: {
-    width: 120,
-    height: 2,
-    backgroundColor: '#1a1a2e',
-    marginBottom: 24,
+    color: '#000000',
+    marginBottom: 48,
+    letterSpacing: 1,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 96,
+    height: 96,
   },
 });
