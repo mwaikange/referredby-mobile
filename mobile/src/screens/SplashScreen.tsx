@@ -19,13 +19,14 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>RB</Text>
-        </View>
-        <Text style={styles.title}>ReferredBy</Text>
-        <Text style={styles.subtitle}>Community Vetted Financing</Text>
+        <Text style={styles.welcomeText}>Welcome to Simplicity!</Text>
+        <View style={styles.divider} />
+        <Image 
+          source={require('../../assets/icon.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
-      <Text style={styles.footer}>Your trusted lending partner</Text>
     </View>
   );
 }
@@ -33,7 +34,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e1548',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -41,35 +42,21 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
   },
-  logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#fef3c7',
-    justifyContent: 'center',
-    alignItems: 'center',
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a2e',
+    marginBottom: 16,
+    fontFamily: 'System',
+  },
+  divider: {
+    width: 120,
+    height: 2,
+    backgroundColor: '#1a1a2e',
     marginBottom: 24,
   },
-  logoText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#1e1548',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#d1d5db',
-    textAlign: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
-    fontSize: 14,
-    color: '#9ca3af',
+  logo: {
+    width: 80,
+    height: 80,
   },
 });
