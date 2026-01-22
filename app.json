@@ -1,0 +1,13 @@
+{
+  "android": {
+    "package": "com.anonymous.restexpress"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.restexpress"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "9a70940d-d564-4bbf-9f02-9ff1e536f968"
+    }
+  }
+}

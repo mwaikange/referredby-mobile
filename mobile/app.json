@@ -3,7 +3,8 @@
     "name": "ReferredBy",
     "slug": "referredby-mobile",
     "owner": "referredby",
-    "version": "1.0.1",
+    "version": "1.0.2",
+    "entryPoint": "./index.ts",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,7 +20,7 @@
     },
     "android": {
       "package": "com.referredby.mobile",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

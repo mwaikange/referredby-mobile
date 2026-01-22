@@ -1,0 +1,144 @@
+PROMPT TO REPLIT AI DEV — ANDROID BUILD FAILING (MUST FIX)
+
+You are working on an Expo (React Native) app on Replit that builds Android APKs using EAS Build.
+
+The Android build is FAILING with the following error:
+
+Error: Unable to resolve module ../App from node_modules/expo/AppEntry.js
+
+
+This means Expo cannot find the required App entry file.
+
+🚨 ROOT CAUSE (CONFIRMED)
+
+There is NO App.js / App.tsx at the project root.
+
+Expo REQUIRES one of these files at the root:
+
+App.js
+
+App.tsx
+
+App.jsx
+
+App.native.tsx
+
+Without it:
+
+Android bundling fails
+
+APK build fails
+
+App crashes on launch
+
+This is not a Replit issue and not an Expo bug — it is a project structure error.
+
+✅ YOUR TASK (NON-NEGOTIABLE)
+1️⃣ Create a valid root App entry file
+
+At the project root (same level as package.json), create:
+
+App.tsx (or App.js)
+
+Minimum valid example:
+import { View, Text } from 'react-native';
+
+export default function App() {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>App Loaded</Text>
+    </View>
+  );
+}
+
+2️⃣ If the real app lives elsewhere
+
+If the app logic currently lives in:
+
+src/App.tsx
+
+src/index.tsx
+
+app/ (Expo Router)
+
+Then App.tsx must import and render it, e.g.:
+
+import MainApp from './src/App';
+
+export default function App() {
+  return <MainApp />;
+}
+
+3️⃣ If using Expo Router
+
+If this is an Expo Router project, App.tsx MUST look like this:
+
+import { ExpoRoot } from 'expo-router';
+import { registerRootComponent } from 'expo';
+
+function App() {
+  const ctx = require.context('./app');
+  return <ExpoRoot context={ctx} />;
+}
+
+export default registerRootComponent(App);
+
+
+Without this, Android builds will always fail.
+
+4️⃣ Fix environment variable usage
+
+Use ONLY EXPO_PUBLIC_* variables
+
+Remove or ignore all VITE_* usage
+
+Supabase must initialize with:
+
+process.env.EXPO_PUBLIC_SUPABASE_URL
+process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+
+Add guards so missing env vars do not crash the app.
+
+5️⃣ Rebuild correctly (MANDATORY)
+
+After fixing the App entry:
+
+Run exactly:
+
+npx expo prebuild --clean
+npx eas build -p android --profile preview --clear-cache
+
+
+Old builds must NOT be reused.
+
+📦 FINAL DELIVERABLE
+
+You must provide:
+
+Confirmation that App.tsx exists at project root
+
+A new successful Android build
+
+APK download link
+
+Short summary of what was fixed
+
+❌ DO NOT
+
+Do NOT explain the error without fixing it
+
+Do NOT reuse old builds
+
+Do NOT leave the project without a root App entry
+
+Do NOT claim “build works” unless APK opens without crashing
+
+✅ SUCCESS CRITERIA
+
+✔ Android build succeeds
+✔ APK installs
+✔ App opens (no crash)
+✔ Supabase initializes safely
+
+This is a blocking issue. Fix it before doing anything else.
