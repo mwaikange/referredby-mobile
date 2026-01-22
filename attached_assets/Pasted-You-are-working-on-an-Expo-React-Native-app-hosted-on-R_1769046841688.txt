@@ -1,0 +1,137 @@
+You are working on an Expo (React Native) app hosted on Replit that builds Android APKs using EAS Build.
+The current APK installs but crashes immediately on launch.
+
+Your task is to produce a fresh, working Android build and remove all causes of startup crashes.
+
+🔴 CURRENT PROBLEM
+
+APK installs but app does not open / crashes on launch
+
+Existing Expo build is outdated and broken
+
+Project runs on Replit and uses:
+
+Expo
+
+Supabase
+
+EAS Build
+
+Environment variables exist but are mixed (VITE_* and EXPO_PUBLIC_*)
+
+✅ OBJECTIVE (NON-NEGOTIABLE)
+
+Deliver a new, working Android APK that:
+
+Opens successfully
+
+Initializes Supabase correctly
+
+Uses correct Expo environment variables
+
+Is built fresh (no cache)
+
+Does NOT crash on startup
+
+🧩 REQUIRED ACTIONS (DO ALL)
+1️⃣ Fix Environment Variables (CRITICAL)
+
+Expo MUST use only EXPO_PUBLIC_* variables
+
+Remove or ignore all VITE_* usage
+
+Update code so Supabase is initialized ONLY with:
+
+process.env.EXPO_PUBLIC_SUPABASE_URL
+process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+
+Add a guard so the app fails gracefully if env vars are missing (no hard crash).
+
+2️⃣ Audit App Startup (CRITICAL)
+
+Review the initial app mount
+
+Ensure nothing crashes during:
+
+Supabase client creation
+
+Auth initialization
+
+Navigation container setup
+
+Add safe checks before rendering the main app.
+
+3️⃣ Clean Native Android Build
+
+Run the following in Replit Shell:
+
+npx expo prebuild --clean
+
+
+This is mandatory to:
+
+Regenerate Android native files
+
+Fix splash / icon / config mismatches
+
+Remove stale native references
+
+4️⃣ Rebuild APK with NO CACHE
+
+Trigger a new build using:
+
+npx eas build -p android --profile preview --clear-cache
+
+
+This must generate a new build entry in Expo
+
+Old builds must be ignored
+
+5️⃣ Validate Before Delivering
+
+Before handing over the APK:
+
+Run:
+
+npx expo start
+
+
+Confirm app opens without crashing
+
+Confirm Supabase initializes without throwing
+
+📦 FINAL DELIVERABLE
+
+Provide:
+
+Confirmation of the new Expo build ID
+
+APK download link
+
+Summary of:
+
+What caused the crash
+
+What was fixed
+
+What env vars are now used
+
+❌ DO NOT
+
+Do NOT reuse old builds
+
+Do NOT leave VITE_* env usage in code
+
+Do NOT say “works locally” without testing Expo build
+
+Do NOT skip prebuild --clean
+
+🧠 SUCCESS CRITERIA
+
+✔ App opens
+✔ No immediate crash
+✔ Supabase connects
+✔ APK installs & runs on real device
+
+You are expected to fix, rebuild, and deliver — not advise.
