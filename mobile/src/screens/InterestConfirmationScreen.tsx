@@ -18,21 +18,20 @@ type RouteProps = RouteProp<RootStackParamList, 'InterestConfirmation'>;
 export default function InterestConfirmationScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProps>();
-  const { userId, loanType = 'nano' } = route.params;
+  const { userId } = route.params;
   const [data, setData] = useState<InterestConfirmation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState<'nano' | 'term'>(loanType as 'nano' | 'term');
 
   useEffect(() => {
     loadData();
-  }, [userId, selectedType]);
+  }, [userId]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await api.getInterestConfirmation(userId, selectedType);
+      const result = await api.getInterestConfirmation(userId, 'nano');
       setData(result);
     } catch (err: any) {
       setError(err.message);
@@ -49,21 +48,13 @@ export default function InterestConfirmationScreen() {
       );
       return;
     }
-    // Navigate to loan application based on type
-    if (selectedType === 'nano') {
-      navigation.navigate('NanoLoanApply' as never);
-    } else {
-      navigation.navigate('TermLoans' as never);
-    }
+    navigation.navigate('NanoLoanApply' as never);
   };
-
-  const isNano = selectedType === 'nano';
-  const isTerm = selectedType === 'term';
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#00736e" />
         <Text style={styles.loadingText}>Loading details...</Text>
       </View>
     );
@@ -116,160 +107,81 @@ export default function InterestConfirmationScreen() {
           </View>
         </View>
 
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[styles.toggleButton, isNano && styles.toggleButtonActive]}
-            onPress={() => setSelectedType('nano')}
-          >
-            <Text style={[styles.toggleText, isNano && styles.toggleTextActive]}>Nano Loan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleButton, isTerm && styles.toggleButtonActive]}
-            onPress={() => setSelectedType('term')}
-          >
-            <Text style={[styles.toggleText, isTerm && styles.toggleTextActive]}>Term Loan</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.modeBadge}>
           <Text style={styles.modeBadgeText}>
-            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || '...'}
+            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || 'PIR (Base Rate)'}
           </Text>
         </View>
 
-        {isNano && (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Portfolio Interest Rate (PIR)</Text>
-              <Text style={styles.sectionText}>
-                Base Rate: <Text style={styles.bold}>{data?.pir_percent ? `${data.pir_percent}%` : '...'}</Text>
-              </Text>
-            </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Portfolio Interest Rate (PIR)</Text>
+          <Text style={styles.sectionText}>
+            Base Rate: <Text style={styles.bold}>{data?.pir_percent ? `${data.pir_percent}%` : '28.00%'}</Text>
+          </Text>
+        </View>
 
-            {data?.sir_enabled && (
-              <View style={[styles.section, styles.sirSection]}>
-                <Text style={styles.sectionTitle}>Subsidized Interest Rate (SIR)</Text>
-                <View style={styles.sirRow}>
-                  <Text style={styles.sectionText}>Subsidy Enabled:</Text>
-                  <Text style={styles.bold}>Yes ({data?.sir_percent || 0}%)</Text>
-                </View>
-                <Text style={styles.sectionTextSmall}>
-                  Policy: <Text style={styles.bold}>
-                    {data?.sir_policy === 'after_pir' ? 'Applies After PIR' : data?.sir_policy?.replace('_', ' ').toUpperCase() || '...'}
-                  </Text>
-                </Text>
-              </View>
-            )}
-          </>
-        )}
-
-        {isTerm && (
-          <>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Term Loan Base Rate</Text>
-              <Text style={styles.sectionText}>
-                Base Rate: <Text style={styles.bold}>{data?.iir_base ? `${data.iir_base}%` : '...'}</Text>
-              </Text>
-            </View>
-
-            {data?.iir_enabled && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Individual Interest Rate (IIR)</Text>
-                <Text style={styles.sectionTextSmall}>Rating-based rates:</Text>
-                <View style={styles.rateTable}>
-                  <View style={styles.rateRow}>
-                    <Text style={styles.rateLabel}>0–3 Stars (Fair):</Text>
-                    <Text style={styles.rateValue}>{data?.iir_rates?.fair ? `${data.iir_rates.fair}%` : '...'}</Text>
-                  </View>
-                  <View style={styles.rateRow}>
-                    <Text style={styles.rateLabel}>4–6 Stars (Good):</Text>
-                    <Text style={styles.rateValue}>{data?.iir_rates?.good ? `${data.iir_rates.good}%` : '...'}</Text>
-                  </View>
-                  <View style={styles.rateRow}>
-                    <Text style={styles.rateLabel}>7–10 Stars (Excellent):</Text>
-                    <Text style={styles.rateValue}>{data?.iir_rates?.excellent ? `${data.iir_rates.excellent}%` : '...'}</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-          </>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subsidized Interest Rate (SIR)</Text>
+          <Text style={styles.sectionTextGray}>
+            Subsidy: {data?.sir_enabled ? `${data?.sir_percent}%` : 'Not Applied'}
+          </Text>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Fees</Text>
           <View style={styles.feeRow}>
             <Text style={styles.feeLabel}>Processing Fee:</Text>
-            <Text style={styles.feeValue}>N$ {data?.fees?.processing || '...'}</Text>
+            <Text style={styles.feeValueTeal}>N$ {data?.fees?.processing || '32.00'}</Text>
           </View>
           <View style={styles.feeRow}>
             <Text style={styles.feeLabel}>Late Fee (Accumulating Arrears):</Text>
-            <Text style={styles.feeValue}>{data?.fees?.late_fee ? `${data.fees.late_fee}%` : '...'}</Text>
+            <Text style={styles.feeValueTeal}>{data?.fees?.late_fee ? `${data.fees.late_fee}%` : '6%'}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isNano ? 'Nano' : 'Term'} Loan Limits</Text>
-          {isNano && data?.progression_levels?.nano && (
-            <>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 1:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L1?.toLocaleString() || '2,000'}</Text>
-              </View>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 2:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L2?.toLocaleString() || '4,200'}</Text>
-              </View>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 3:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.nano.L3?.toLocaleString() || '8,700'}</Text>
-              </View>
-            </>
-          )}
-          {isTerm && data?.progression_levels?.term && (
-            <>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 1:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L1?.toLocaleString() || '13,000'}</Text>
-              </View>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 2:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L2?.toLocaleString() || '15,000'}</Text>
-              </View>
-              <View style={styles.levelRow}>
-                <Text style={styles.levelLabel}>Level 3:</Text>
-                <Text style={styles.levelValue}>N$ {data.progression_levels.term.L3?.toLocaleString() || '20,000'}</Text>
-              </View>
-            </>
-          )}
+          <Text style={styles.sectionTitle}>Nano Loan Limits</Text>
+          <View style={styles.levelRow}>
+            <Text style={styles.levelLabel}>Level 1:</Text>
+            <Text style={styles.levelValueTeal}>N$ {data?.progression_levels?.nano?.L1?.toLocaleString() || '1800.00'}</Text>
+          </View>
+          <View style={styles.levelRow}>
+            <Text style={styles.levelLabel}>Level 2:</Text>
+            <Text style={styles.levelValueTeal}>N$ {data?.progression_levels?.nano?.L2?.toLocaleString() || '3200.00'}</Text>
+          </View>
+          <View style={styles.levelRow}>
+            <Text style={styles.levelLabel}>Level 3:</Text>
+            <Text style={styles.levelValueTeal}>N$ {data?.progression_levels?.nano?.L3?.toLocaleString() || '8500.00'}</Text>
+          </View>
         </View>
 
         <View style={styles.yellowCard}>
           <Text style={styles.yellowTitle}>Your Applicable Rate</Text>
           <View style={styles.yellowRow}>
-            <Text style={styles.yellowLabel}>Your Rating:</Text>
-            <Text style={styles.yellowValue}>{data?.user_star_rating || 0}</Text>
+            <Text style={styles.yellowLabelGray}>Your Rating:</Text>
+            <Text style={styles.yellowValue}>{data?.user_star_rating || '0.5'}</Text>
           </View>
           <View style={styles.yellowRow}>
-            <Text style={styles.yellowLabel}>Your Tier:</Text>
+            <Text style={styles.yellowLabelGray}>Your Tier:</Text>
             <Text style={styles.yellowValue}>{data?.user_tier_label || 'Fair (0-3)'}</Text>
           </View>
           <View style={styles.yellowDivider} />
           <View style={styles.yellowRow}>
-            <Text style={styles.yellowLabel}>Interest Basis:</Text>
-            <Text style={styles.yellowValueSmall}>{data?.rate_basis || 'IIR'}</Text>
+            <Text style={styles.yellowLabelGray}>Interest Basis:</Text>
+            <Text style={styles.yellowValue}>{data?.rate_basis || 'PIR'}</Text>
           </View>
           <View style={styles.yellowRow}>
-            <Text style={styles.yellowLabel}>Subsidy Status:</Text>
-            <Text style={styles.yellowValue}>{data?.sir_enabled ? 'Applied' : 'Not Applied'}</Text>
+            <Text style={styles.yellowLabelGray}>Subsidy Status:</Text>
+            <Text style={styles.yellowValue}>{data?.sir_enabled ? 'Applied' : 'None'}</Text>
           </View>
           <View style={styles.yellowDivider} />
           <View style={styles.yellowFinalRow}>
             <View>
               <Text style={styles.yellowFinalLabel}>Your Final Interest Rate:</Text>
-              <Text style={styles.yellowFinalSubLabel}>(IIR - SIR)</Text>
+              <Text style={styles.yellowFinalSubLabel}>(PIR)</Text>
             </View>
-            <Text style={styles.yellowFinalValue}>
-              {data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : '...'}
+            <Text style={styles.yellowFinalValueTeal}>
+              {data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : '28.00%'}
             </Text>
           </View>
         </View>
@@ -284,7 +196,7 @@ export default function InterestConfirmationScreen() {
             disabled={data?.can_proceed === false || data?.has_active_loan}
           >
             <Text style={styles.proceedButtonText}>
-              {data?.has_active_loan ? 'ACTIVE LOAN EXISTS' : 'PROCEED'}
+              {data?.has_active_loan ? 'ACTIVE LOAN EXISTS' : 'Proceed'}
             </Text>
           </TouchableOpacity>
 
@@ -512,6 +424,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
+  feeValueTeal: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#00736e',
+  },
+  sectionTextGray: {
+    fontSize: 14,
+    color: '#9ca3af',
+  },
   levelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -525,6 +446,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  levelValueTeal: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#00736e',
   },
   yellowCard: {
     backgroundColor: '#FEF3C7',
@@ -553,6 +479,10 @@ const styles = StyleSheet.create({
   yellowLabel: {
     fontSize: 14,
     color: '#000000',
+  },
+  yellowLabelGray: {
+    fontSize: 14,
+    color: '#6b7280',
   },
   yellowValue: {
     fontSize: 14,
@@ -590,6 +520,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#006f3c',
+  },
+  yellowFinalValueTeal: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#00736e',
   },
   buttonContainer: {
     gap: 16,

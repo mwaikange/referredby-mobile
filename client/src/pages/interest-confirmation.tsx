@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Star, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { api, type InterestConfirmation } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,21 +11,18 @@ export default function InterestConfirmationPage() {
   const { toast } = useToast();
   const [data, setData] = useState<InterestConfirmation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
-  const [userId, setUserId] = useState<string>('');
 
-  const fetchData = async (type: 'nano' | 'term') => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       const profile = await api.getProfile();
-      setUserId(profile.id);
       
       console.log('📥 Fetching interest confirmation...', { 
         userId: profile.id, 
-        loanType: type 
+        loanType: 'nano' 
       });
 
-      const confirmation = await api.getInterestConfirmation(profile.id, type);
+      const confirmation = await api.getInterestConfirmation(profile.id, 'nano');
       setData(confirmation);
     } catch (error: any) {
       toast({
@@ -39,12 +36,8 @@ export default function InterestConfirmationPage() {
   };
 
   useEffect(() => {
-    fetchData(loanType);
-  }, [loanType]);
-
-  const handleTypeChange = (type: 'nano' | 'term') => {
-    setLoanType(type);
-  };
+    fetchData();
+  }, []);
 
   const handleProceed = () => {
     if (data?.has_active_loan) {
@@ -55,16 +48,8 @@ export default function InterestConfirmationPage() {
       });
       return;
     }
-    // Navigate to loan application based on type
-    if (loanType === 'nano') {
-      setLocation("/nano-loan-apply");
-    } else {
-      setLocation("/term-loans");
-    }
+    setLocation("/nano-loan-apply");
   };
-
-  const isNano = loanType === 'nano';
-  const isTerm = loanType === 'term';
 
   if (loading) {
     return (
@@ -80,7 +65,7 @@ export default function InterestConfirmationPage() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col font-sans">
-        <h1 className="text-center font-bold uppercase mb-6 tracking-tight text-[20px] whitespace-nowrap overflow-hidden text-ellipsis">
+        <h1 className="text-center font-bold uppercase mb-6 tracking-tight text-[20px]">
           INTEREST CONFIRMATION
         </h1>
 
@@ -98,171 +83,83 @@ export default function InterestConfirmationPage() {
           </div>
         </div>
 
-        {/* Loan Type Toggle */}
-        <div className="flex mb-4 bg-gray-200 rounded-lg p-1">
-          <button
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-colors ${
-              isNano ? 'bg-[#00736e] text-white' : 'text-gray-600'
-            }`}
-            onClick={() => handleTypeChange('nano')}
-          >
-            Nano Loan
-          </button>
-          <button
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-colors ${
-              isTerm ? 'bg-[#00736e] text-white' : 'text-gray-600'
-            }`}
-            onClick={() => handleTypeChange('term')}
-          >
-            Term Loan
-          </button>
-        </div>
-
         {/* Active Interest Mode Badge */}
         <div className="mb-6">
           <div className="bg-[#eff6ff] text-[#1e3a8a] px-4 py-3 rounded-lg text-sm font-bold border border-[#bfdbfe] w-full text-center shadow-sm">
-            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || "..."}
+            Active Interest Mode: {data?.active_interest_mode || data?.rate_basis || "PIR (Base Rate)"}
           </div>
         </div>
 
-        {/* NANO LOANS: PIR + SIR */}
-        {isNano && (
-          <>
-            {/* PIR Section */}
-            <div className="mb-6">
-              <h2 className="text-sm font-bold mb-1">Portfolio Interest Rate (PIR)</h2>
-              <p className="text-sm">Base Rate: <span className="font-bold">{data?.pir_percent ? `${data.pir_percent}%` : "..."}</span></p>
-            </div>
+        {/* PIR Section */}
+        <div className="mb-4">
+          <h2 className="text-sm font-bold mb-1">Portfolio Interest Rate (PIR)</h2>
+          <p className="text-sm text-gray-600">Base Rate: <span className="font-bold text-black">{data?.pir_percent ? `${data.pir_percent}%` : "28.00%"}</span></p>
+        </div>
 
-            {/* SIR Section */}
-            {data?.sir_enabled && (
-              <div className="bg-[#f0fdf4] p-4 rounded-lg border border-[#dcfce7] mb-6">
-                <h2 className="text-sm font-bold mb-2">Subsidized Interest Rate (SIR)</h2>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subsidy Enabled:</span>
-                    <span className="font-bold">Yes ({data?.sir_percent || 0}%)</span>
-                  </div>
-                  <p className="text-xs">
-                    Policy: <span className="font-bold">{data?.sir_policy === 'after_pir' ? 'Applies After PIR' : data?.sir_policy?.replace('_', ' ').toUpperCase() || "..."}</span>
-                  </p>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* TERM LOANS: IIR with tiers */}
-        {isTerm && (
-          <>
-            {/* Term Loan Base Rate */}
-            <div className="mb-6">
-              <h2 className="text-sm font-bold mb-1">Term Loan Base Rate</h2>
-              <p className="text-sm">Base Rate: <span className="font-bold">{data?.iir_base ? `${data.iir_base}%` : "..."}</span></p>
-            </div>
-
-            {/* IIR Section */}
-            {data?.iir_enabled && (
-              <div className="mb-6">
-                <h2 className="text-sm font-bold mb-3">Individual Interest Rate (IIR)</h2>
-                <p className="text-xs text-gray-500 mb-2">Rating-based rates:</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>0–3 Stars (Fair):</span>
-                    <span className="font-bold">{data?.iir_rates?.fair ? `${data.iir_rates.fair}%` : "..."}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>4–6 Stars (Good):</span>
-                    <span className="font-bold">{data?.iir_rates?.good ? `${data.iir_rates.good}%` : "..."}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>7–10 Stars (Excellent):</span>
-                    <span className="font-bold">{data?.iir_rates?.excellent ? `${data.iir_rates.excellent}%` : "..."}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        {/* SIR Section */}
+        <div className="mb-4">
+          <h2 className="text-sm font-bold mb-1">Subsidized Interest Rate (SIR)</h2>
+          <p className="text-sm text-gray-400">Subsidy: {data?.sir_enabled ? `${data?.sir_percent}%` : "Not Applied"}</p>
+        </div>
 
         {/* Fees Section */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h2 className="text-sm font-bold mb-3">Fees</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Processing Fee:</span>
-              <span className="font-bold">N$ {data?.fees?.processing || "..."}</span>
+              <span className="text-gray-600">Processing Fee:</span>
+              <span className="font-bold text-[#00736e]">N$ {data?.fees?.processing || "32.00"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Late Fee (Accumulating Arrears):</span>
-              <span className="font-bold">{data?.fees?.late_fee ? `${data.fees.late_fee}%` : "..."}</span>
+              <span className="text-gray-600">Late Fee (Accumulating Arrears):</span>
+              <span className="font-bold text-[#00736e]">{data?.fees?.late_fee ? `${data.fees.late_fee}%` : "6%"}</span>
             </div>
           </div>
         </div>
 
-        {/* Loan Limits - Show based on loan type */}
-        <div className="mb-8">
-          <h2 className="text-sm font-bold mb-3">{isNano ? 'Nano' : 'Term'} Loan Limits</h2>
+        {/* Nano Loan Limits */}
+        <div className="mb-6">
+          <h2 className="text-sm font-bold mb-3">Nano Loan Limits</h2>
           <div className="space-y-2 text-sm">
-            {isNano && data?.progression_levels?.nano && (
-              <>
-                <div className="flex justify-between">
-                  <span>Level 1:</span>
-                  <span className="font-bold">N$ {data.progression_levels.nano.L1?.toLocaleString() || "2,000"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Level 2:</span>
-                  <span className="font-bold">N$ {data.progression_levels.nano.L2?.toLocaleString() || "4,200"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Level 3:</span>
-                  <span className="font-bold">N$ {data.progression_levels.nano.L3?.toLocaleString() || "8,700"}</span>
-                </div>
-              </>
-            )}
-            {isTerm && data?.progression_levels?.term && (
-              <>
-                <div className="flex justify-between">
-                  <span>Level 1:</span>
-                  <span className="font-bold">N$ {data.progression_levels.term.L1?.toLocaleString() || "13,000"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Level 2:</span>
-                  <span className="font-bold">N$ {data.progression_levels.term.L2?.toLocaleString() || "15,000"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Level 3:</span>
-                  <span className="font-bold">N$ {data.progression_levels.term.L3?.toLocaleString() || "20,000"}</span>
-                </div>
-              </>
-            )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">Level 1:</span>
+              <span className="font-bold text-[#00736e]">N$ {data?.progression_levels?.nano?.L1?.toLocaleString() || "1800.00"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Level 2:</span>
+              <span className="font-bold text-[#00736e]">N$ {data?.progression_levels?.nano?.L2?.toLocaleString() || "3200.00"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Level 3:</span>
+              <span className="font-bold text-[#00736e]">N$ {data?.progression_levels?.nano?.L3?.toLocaleString() || "8500.00"}</span>
+            </div>
           </div>
         </div>
 
         {/* Applicable Rate Card (Yellow) */}
-        <div className="bg-[#FEF3C7] p-5 rounded-lg border border-[#fef3c7] mb-10 shadow-sm">
+        <div className="bg-[#FEF3C7] p-5 rounded-lg border border-[#fef3c7] mb-8 shadow-sm">
           <h2 className="text-base font-bold mb-4">Your Applicable Rate</h2>
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
-              <span>Your Rating:</span>
-              <span className="font-bold">{data?.user_star_rating || 0}</span>
+              <span className="text-gray-600">Your Rating:</span>
+              <span className="font-bold">{data?.user_star_rating || "0.5"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Your Tier:</span>
+              <span className="text-gray-600">Your Tier:</span>
               <span className="font-bold">{data?.user_tier_label || "Fair (0-3)"}</span>
             </div>
           </div>
           
           <div className="h-px bg-[#fcd34d] w-full mb-4 opacity-50" />
           
-          <div className="space-y-2 text-sm mb-6">
+          <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
-              <span>Interest Basis:</span>
-              <span className="font-bold uppercase text-xs">{data?.rate_basis || "IIR"}</span>
+              <span className="text-gray-600">Interest Basis:</span>
+              <span className="font-bold">{data?.rate_basis || "PIR"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Subsidy Status:</span>
-              <span className="font-bold">{data?.sir_enabled ? "Applied" : "Not Applied"}</span>
+              <span className="text-gray-600">Subsidy Status:</span>
+              <span className="font-bold">{data?.sir_enabled ? "Applied" : "None"}</span>
             </div>
           </div>
           
@@ -271,16 +168,16 @@ export default function InterestConfirmationPage() {
           <div className="flex justify-between items-end">
             <div className="text-sm leading-tight">
               <span className="font-bold block">Your Final Interest Rate:</span>
-              <span className="text-[10px] text-gray-500 font-medium">(IIR - SIR)</span>
+              <span className="text-[10px] text-gray-500 font-medium">(PIR)</span>
             </div>
-            <div className="text-3xl font-bold text-[#006f3c]">{data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : "..."}</div>
+            <div className="text-3xl font-bold text-[#00736e]">{data?.user_effective_rate ? `${data.user_effective_rate.toFixed(2)}%` : "28.00%"}</div>
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="space-y-4">
+        <div className="space-y-4 pb-6">
           <Button 
-            className={`w-full font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md ${
+            className={`w-full font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg ${
               data?.can_proceed !== false && !data?.has_active_loan
                 ? 'bg-[#0B0B3B] hover:bg-[#151555] text-white'
                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
