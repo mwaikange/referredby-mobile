@@ -5,26 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import logoImg from "@/assets/referredby-logo.png";
 
-interface LoanDetails {
+interface TermLoanDetails {
   account_level: string;
-  loan_max: number;
+  installment_max: number;
   min_amount: number;
   max_amount: number;
+  min_months: number;
+  max_months: number;
   interest_percent: number;
   processing_fee: number;
+  first_deduction_date: string;
+  final_deduction_date: string;
   due_date: string;
   outstanding_date: string;
   block_date: string;
 }
 
-export default function NanoLoanApplyPage() {
+export default function TermLoanApplyPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [loanDetails, setLoanDetails] = useState<LoanDetails | null>(null);
-  const [amount, setAmount] = useState<number>(300);
+  const [loanDetails, setLoanDetails] = useState<TermLoanDetails | null>(null);
+  const [amount, setAmount] = useState<number>(5000);
+  const [months, setMonths] = useState<number>(6);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
 
@@ -32,17 +38,24 @@ export default function NanoLoanApplyPage() {
     const fetchData = async () => {
       try {
         await api.getProfile();
-        setLoanDetails({
-          account_level: "NL1",
-          loan_max: 1800,
-          min_amount: 300,
-          max_amount: 1800,
-          interest_percent: 28.00,
+        const details: TermLoanDetails = {
+          account_level: "TL1",
+          installment_max: 13000,
+          min_amount: 5000,
+          max_amount: 13000,
+          min_months: 6,
+          max_months: 12,
+          interest_percent: 27.90,
           processing_fee: 32,
-          due_date: "2026-03-26",
-          outstanding_date: "2026-04-26",
-          block_date: "2026-05-27",
-        });
+          first_deduction_date: "2026-03-24",
+          final_deduction_date: "2026-08-24",
+          due_date: "2026-08-24",
+          outstanding_date: "2026-09-24",
+          block_date: "2026-10-25",
+        };
+        setLoanDetails(details);
+        setAmount(details.min_amount);
+        setMonths(details.min_months);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -53,14 +66,15 @@ export default function NanoLoanApplyPage() {
   }, []);
 
   const calculateLoan = () => {
-    if (!loanDetails) return { interest: 0, fee: 0, total: 0 };
+    if (!loanDetails) return { interest: 0, fee: 0, total: 0, installment: 0 };
     const interest = (amount * loanDetails.interest_percent) / 100;
     const fee = loanDetails.processing_fee;
     const total = amount + interest + fee;
-    return { interest, fee, total };
+    const installment = total / months;
+    return { interest, fee, total, installment };
   };
 
-  const { interest, fee, total } = calculateLoan();
+  const { interest, fee, total, installment } = calculateLoan();
 
   const handleContinue = async () => {
     if (!termsAccepted || !contractAccepted) {
@@ -76,7 +90,7 @@ export default function NanoLoanApplyPage() {
     try {
       toast({
         title: "Loan Application",
-        description: "Your loan application has been submitted successfully!",
+        description: "Your term loan application has been submitted successfully!",
       });
       setLocation("/profile");
     } catch (error: any) {
@@ -110,34 +124,46 @@ export default function NanoLoanApplyPage() {
 
         <div className="flex justify-center mb-4">
           <img 
-            src="/referredby-logo.png" 
+            src={logoImg} 
             alt="ReferredBy" 
             className="h-[50px] object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
           />
         </div>
 
         <p className="text-center text-sm mb-2">
           Account Level: <span className="font-bold">{loanDetails?.account_level}</span>
         </p>
-        <p className="text-center text-sm font-bold mb-4">
-          LOAN MAX : {loanDetails?.loan_max}
+        <p className="text-center text-sm font-bold text-[#C41E3A] mb-4">
+          INSTALLMENT MAX : {loanDetails?.installment_max?.toLocaleString()}
         </p>
 
         <div className="border border-gray-300 rounded-lg p-3 mb-2">
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(Math.min(Math.max(Number(e.target.value), loanDetails?.min_amount || 300), loanDetails?.max_amount || 1800))}
+            onChange={(e) => setAmount(Math.min(Math.max(Number(e.target.value), loanDetails?.min_amount || 5000), loanDetails?.max_amount || 13000))}
             className="w-full text-center text-lg font-bold outline-none"
             min={loanDetails?.min_amount}
             max={loanDetails?.max_amount}
           />
         </div>
         <p className="text-center text-xs text-gray-500 mb-4">
-          Min : NAD {loanDetails?.min_amount} - Max : NAD {loanDetails?.max_amount?.toLocaleString()}
+          Min : NAD {loanDetails?.min_amount?.toLocaleString()} - Max : NAD {loanDetails?.max_amount?.toLocaleString()}
+        </p>
+
+        <div className="border border-gray-300 rounded-lg p-3 mb-2">
+          <select
+            value={months}
+            onChange={(e) => setMonths(Number(e.target.value))}
+            className="w-full text-center text-lg font-bold outline-none bg-transparent cursor-pointer"
+          >
+            {Array.from({ length: (loanDetails?.max_months || 12) - (loanDetails?.min_months || 6) + 1 }, (_, i) => (loanDetails?.min_months || 6) + i).map((m) => (
+              <option key={m} value={m}>{m} Months</option>
+            ))}
+          </select>
+        </div>
+        <p className="text-center text-xs text-gray-500 mb-4">
+          Select Loan Period
         </p>
 
         <div className="border border-gray-200 rounded-lg p-4 mb-4">
@@ -154,15 +180,31 @@ export default function NanoLoanApplyPage() {
               <span className="text-gray-600">Processing Fee ( NAD )</span>
               <span className="font-bold">{fee.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+            <div className="flex justify-between">
               <span className="font-bold">Total Repayable ( NAD )</span>
               <span className="font-bold">{total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+              <span className="font-bold">Installments ( NAD )</span>
+              <span className="font-bold">{installment.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         <div className="border border-gray-200 rounded-lg p-4 mb-4">
           <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">First Date of Deduction</span>
+              <span>{loanDetails?.first_deduction_date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Final Date of Deduction</span>
+              <span>{loanDetails?.final_deduction_date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Total Loan Period</span>
+              <span>{months} Months</span>
+            </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Due Date</span>
               <span>{loanDetails?.due_date}</span>
@@ -221,7 +263,7 @@ export default function NanoLoanApplyPage() {
             {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'CONTINUE'}
           </Button>
           <Button 
-            onClick={() => setLocation("/interest-confirmation")}
+            onClick={() => setLocation("/term-loans")}
             className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
           >
             BACK

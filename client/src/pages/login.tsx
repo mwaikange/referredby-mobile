@@ -169,9 +169,9 @@ export default function Login() {
         </form>
 
         <div className="mt-auto py-4 flex justify-center gap-4 text-xs text-brand-blue/80 font-medium">
-          <a href="#" className="hover:underline">Terms of Service</a>
+          <a href="https://www.referredby.com.na/terms-of-service" target="_blank" rel="noopener noreferrer" className="hover:underline">Terms of Service</a>
           <span>|</span>
-          <a href="#" className="hover:underline">Privacy Policy</a>
+          <a href="https://www.referredby.com.na/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline">Privacy Policy</a>
         </div>
         <div className="text-center text-[10px] text-gray-500 pb-2">
           Version 2.0.0.1

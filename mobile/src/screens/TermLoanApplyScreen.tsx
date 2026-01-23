@@ -11,27 +11,33 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../lib/api';
 
-interface LoanDetails {
+interface TermLoanDetails {
   account_level: string;
-  loan_max: number;
+  installment_max: number;
   min_amount: number;
   max_amount: number;
+  min_months: number;
+  max_months: number;
   interest_percent: number;
   processing_fee: number;
+  first_deduction_date: string;
+  final_deduction_date: string;
   due_date: string;
   outstanding_date: string;
   block_date: string;
 }
 
-export default function NanoLoanApplyScreen() {
+export default function TermLoanApplyScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [loanDetails, setLoanDetails] = useState<LoanDetails | null>(null);
-  const [amount, setAmount] = useState<string>('300');
+  const [loanDetails, setLoanDetails] = useState<TermLoanDetails | null>(null);
+  const [amount, setAmount] = useState<string>('5000');
+  const [months, setMonths] = useState<number>(6);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
 
@@ -39,17 +45,24 @@ export default function NanoLoanApplyScreen() {
     const fetchData = async () => {
       try {
         await api.getProfile();
-        setLoanDetails({
-          account_level: 'NL1',
-          loan_max: 1800,
-          min_amount: 300,
-          max_amount: 1800,
-          interest_percent: 28.00,
+        const details: TermLoanDetails = {
+          account_level: 'TL1',
+          installment_max: 13000,
+          min_amount: 5000,
+          max_amount: 13000,
+          min_months: 6,
+          max_months: 12,
+          interest_percent: 27.90,
           processing_fee: 32,
-          due_date: '2026-03-26',
-          outstanding_date: '2026-04-26',
-          block_date: '2026-05-27',
-        });
+          first_deduction_date: '2026-03-24',
+          final_deduction_date: '2026-08-24',
+          due_date: '2026-08-24',
+          outstanding_date: '2026-09-24',
+          block_date: '2026-10-25',
+        };
+        setLoanDetails(details);
+        setAmount(details.min_amount.toString());
+        setMonths(details.min_months);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -60,15 +73,16 @@ export default function NanoLoanApplyScreen() {
   }, []);
 
   const calculateLoan = () => {
-    if (!loanDetails) return { interest: 0, fee: 0, total: 0 };
+    if (!loanDetails) return { interest: 0, fee: 0, total: 0, installment: 0 };
     const numAmount = Number(amount) || 0;
     const interest = (numAmount * loanDetails.interest_percent) / 100;
     const fee = loanDetails.processing_fee;
     const total = numAmount + interest + fee;
-    return { interest, fee, total };
+    const installment = total / months;
+    return { interest, fee, total, installment };
   };
 
-  const { interest, fee, total } = calculateLoan();
+  const { interest, fee, total, installment } = calculateLoan();
 
   const handleContinue = async () => {
     if (!termsAccepted || !contractAccepted) {
@@ -78,13 +92,17 @@ export default function NanoLoanApplyScreen() {
     
     setSubmitting(true);
     try {
-      Alert.alert('Success', 'Your loan application has been submitted successfully!');
+      Alert.alert('Success', 'Your term loan application has been submitted successfully!');
       navigation.navigate('Profile' as never);
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to submit loan application');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openLink = (url: string) => {
+    Linking.openURL(url);
   };
 
   if (loading) {
@@ -124,14 +142,14 @@ export default function NanoLoanApplyScreen() {
         <Text style={styles.accountLevel}>
           Account Level: <Text style={styles.bold}>{loanDetails?.account_level}</Text>
         </Text>
-        <Text style={styles.loanMax}>LOAN MAX : {loanDetails?.loan_max}</Text>
+        <Text style={styles.installmentMax}>INSTALLMENT MAX : {loanDetails?.installment_max?.toLocaleString()}</Text>
 
         <View style={styles.amountInputContainer}>
           <TextInput
             value={amount}
             onChangeText={(text) => {
               const num = Number(text.replace(/[^0-9]/g, ''));
-              if (num <= (loanDetails?.max_amount || 1800)) {
+              if (num <= (loanDetails?.max_amount || 13000)) {
                 setAmount(text.replace(/[^0-9]/g, ''));
               }
             }}
@@ -140,8 +158,21 @@ export default function NanoLoanApplyScreen() {
           />
         </View>
         <Text style={styles.amountRange}>
-          Min : NAD {loanDetails?.min_amount} - Max : NAD {loanDetails?.max_amount?.toLocaleString()}
+          Min : NAD {loanDetails?.min_amount?.toLocaleString()} - Max : NAD {loanDetails?.max_amount?.toLocaleString()}
         </Text>
+
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={months}
+            onValueChange={(value) => setMonths(value)}
+            style={styles.picker}
+          >
+            {Array.from({ length: (loanDetails?.max_months || 12) - (loanDetails?.min_months || 6) + 1 }, (_, i) => (loanDetails?.min_months || 6) + i).map((m) => (
+              <Picker.Item key={m} label={`${m} Months`} value={m} />
+            ))}
+          </Picker>
+        </View>
+        <Text style={styles.selectLabel}>Select Loan Period</Text>
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
@@ -156,13 +187,29 @@ export default function NanoLoanApplyScreen() {
             <Text style={styles.detailLabel}>Processing Fee ( NAD )</Text>
             <Text style={styles.detailValue}>{fee.toFixed(2)}</Text>
           </View>
-          <View style={[styles.detailRow, styles.totalRow]}>
+          <View style={styles.detailRow}>
             <Text style={styles.totalLabel}>Total Repayable ( NAD )</Text>
             <Text style={styles.totalValue}>{total.toFixed(2)}</Text>
+          </View>
+          <View style={[styles.detailRow, styles.totalRow]}>
+            <Text style={styles.totalLabel}>Installments ( NAD )</Text>
+            <Text style={styles.totalValue}>{installment.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.datesCard}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>First Date of Deduction</Text>
+            <Text style={styles.dateValue}>{loanDetails?.first_deduction_date}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Final Date of Deduction</Text>
+            <Text style={styles.dateValue}>{loanDetails?.final_deduction_date}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Total Loan Period</Text>
+            <Text style={styles.dateValue}>{months} Months</Text>
+          </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Due Date</Text>
             <Text style={styles.dateValue}>{loanDetails?.due_date}</Text>
@@ -178,10 +225,10 @@ export default function NanoLoanApplyScreen() {
         </View>
 
         <View style={styles.readLinks}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://www.referredby.com.na/terms-of-service')}>
+          <TouchableOpacity onPress={() => openLink('https://www.referredby.com.na/terms-of-service')}>
             <Text style={styles.readLink}>READ: <Text style={styles.linkText}>Terms & Conditions</Text></Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => Linking.openURL('https://www.referredby.com.na/privacy-policy')}>
+          <TouchableOpacity onPress={() => openLink('https://www.referredby.com.na/privacy-policy')}>
             <Text style={styles.readLink}>READ: <Text style={styles.linkText}>Digital Contract</Text></Text>
           </TouchableOpacity>
         </View>
@@ -308,12 +355,12 @@ const styles = StyleSheet.create({
   bold: {
     fontWeight: 'bold',
   },
-  loanMax: {
+  installmentMax: {
     textAlign: 'center',
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#000000',
+    color: '#C41E3A',
   },
   amountInputContainer: {
     borderWidth: 1,
@@ -329,6 +376,22 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   amountRange: {
+    textAlign: 'center',
+    fontSize: 11,
+    color: '#6b7280',
+    marginBottom: 16,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+  },
+  selectLabel: {
     textAlign: 'center',
     fontSize: 11,
     color: '#6b7280',

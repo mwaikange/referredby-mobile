@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -135,9 +136,13 @@ export default function LoginScreen() {
 
           <View style={styles.footer}>
             <View style={styles.footerLinks}>
-              <Text style={styles.footerLink}>Terms of Service</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.referredby.com.na/terms-of-service')}>
+                <Text style={styles.footerLink}>Terms of Service</Text>
+              </TouchableOpacity>
               <Text style={styles.footerDivider}>|</Text>
-              <Text style={styles.footerLink}>Privacy Policy</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.referredby.com.na/privacy-policy')}>
+                <Text style={styles.footerLink}>Privacy Policy</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.version}>Version 2.0.0.1</Text>
           </View>

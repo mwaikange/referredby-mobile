@@ -40,10 +40,7 @@ export default function TermInterestConfirmationPage() {
       });
       return;
     }
-    toast({
-      title: "Success",
-      description: "Your term loan request has been submitted.",
-    });
+    setLocation("/term-loan-apply");
   };
 
   if (loading) {
