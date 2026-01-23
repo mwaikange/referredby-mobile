@@ -106,7 +106,7 @@ export default function Login() {
           <img 
             src={logoGroup} 
             alt="ReferredBy Community Vetted Financing" 
-            className="h-[45px] object-contain"
+            className="h-[60px] object-contain"
           />
         </div>
 

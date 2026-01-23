@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logoImage: {
-    width: 280,
-    height: 45,
+    width: 360,
+    height: 60,
   },
   form: {
     flex: 1,
