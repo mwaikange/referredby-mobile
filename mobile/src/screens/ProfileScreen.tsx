@@ -4,81 +4,85 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
+  TouchableOpacity,
+  Alert,
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { supabase } from '../lib/supabase';
 import { api, UserProfile } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import type { RootStackParamList } from '../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
-
-const StarRating = ({ rating }: { rating: number }) => {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = (rating % 1) >= 0.5;
-  const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
-  
-  return (
-    <View style={styles.starContainer}>
-      {Array.from({ length: fullStars }).map((_, i) => (
-        <Text key={`full-${i}`} style={styles.starFilled}>★</Text>
-      ))}
-      {hasHalfStar && <Text style={styles.starHalf}>★</Text>}
-      {Array.from({ length: emptyStars }).map((_, i) => (
-        <Text key={`empty-${i}`} style={styles.starEmpty}>★</Text>
-      ))}
-    </View>
-  );
-};
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const loadProfile = async () => {
-    try {
-      setError(null);
-      const data = await api.getProfile();
-      setProfile(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
     loadProfile();
   }, []);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    loadProfile();
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await api.getProfile();
+      setProfile(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigation.replace('Login');
+    try {
+      await supabase.auth.signOut();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (err: any) {
+      Alert.alert('Error', 'Failed to sign out');
+    }
   };
 
-  const formatDeadline = (dateString?: string) => {
-    if (!dateString) return '...';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const formatDeadline = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    for (let i = 0; i < 10; i++) {
+      if (i < fullStars) {
+        stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
+      } else {
+        stars.push(<Text key={i} style={styles.starEmpty}>☆</Text>);
+      }
+    }
+    return stars;
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#00736e" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
@@ -95,9 +99,10 @@ export default function ProfileScreen() {
     );
   }
 
-  const rating = profile?.borrower_rating ?? profile?.credit_rating ?? 0;
-  const documents = profile?.documents || { national_id: false, payslip: false, kyc: false };
-  const kycStatus = profile?.kyc_status || { id: false, proof_of_income: false, kyc: false };
+  const rating = profile?.star_rating || profile?.credit_rating || 0;
+  const nanoInstallment = profile?.nano_installment || `MAX | NAD ${profile?.nano_loan_limit || 0}`;
+  const termInstallment = profile?.term_installment || `MAX | NAD ${profile?.term_loan_limit || 0}`;
+  const accountLevel = profile?.account_level || 'NL1 / TL0';
 
   return (
     <View style={styles.container}>
@@ -112,92 +117,68 @@ export default function ProfileScreen() {
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Profile</Text>
-          <Text style={styles.bellIcon}>🔔</Text>
+          <Text style={styles.title}>PROFILE</Text>
+          <View style={styles.headerIcons}>
+            <Text style={styles.bellIcon}>🔔</Text>
+            <Text style={styles.settingsIcon}>⚙️</Text>
+          </View>
         </View>
 
-        <View style={styles.infoGrid}>
+        <View style={styles.profileInfo}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Account Name</Text>
-            <Text style={styles.infoValue}>
-              {profile?.account_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || '...'}
-            </Text>
+            <Text style={styles.infoValue}>{profile?.first_name?.trim()} {profile?.last_name?.trim()}</Text>
           </View>
-          
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Client ID</Text>
-            <Text style={styles.infoValue}>{profile?.client_id || profile?.id_number || 'N/A'}</Text>
+            <Text style={styles.infoValue}>{profile?.id_number}</Text>
           </View>
-          
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Account UID</Text>
-            <Text style={styles.infoValue}>{profile?.uid || 'N/A'}</Text>
+            <Text style={styles.infoValue}>{profile?.uid}</Text>
           </View>
-          
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Nano Installment</Text>
-            <Text style={styles.infoValue}>
-              {profile?.nano_installment || (profile?.nano_loan_limit 
-                ? `MAX | NAD ${Number(profile.nano_loan_limit).toFixed(2)}` 
-                : 'N/A')}
-            </Text>
+            <Text style={styles.infoValue}>{nanoInstallment}</Text>
           </View>
-          
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Term Installment</Text>
-            <Text style={styles.infoValue}>
-              {profile?.term_installment || (profile?.term_loan_limit 
-                ? `MAX | NAD ${Number(profile.term_loan_limit).toFixed(2)}` 
-                : 'N/A')}
-            </Text>
+            <Text style={styles.infoValue}>{termInstallment}</Text>
           </View>
-          
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Account Level</Text>
-            <Text style={styles.infoValue}>
-              {profile?.account_level || profile?.membership_status || 'N/A'}
-            </Text>
+            <Text style={styles.infoValue}>{accountLevel}</Text>
           </View>
-          
-          <View style={[styles.infoRow, styles.infoRowNoBorder]}>
+          <View style={styles.ratingRow}>
             <Text style={styles.infoLabel}>Credit Rating</Text>
-            <StarRating rating={rating} />
+            <View style={styles.starsContainer}>
+              <Text style={styles.trophy}>🏆</Text>
+              {renderStars(rating)}
+            </View>
           </View>
         </View>
 
-        <View style={styles.sectionDivider} />
-
-        <View style={styles.docStatusRow}>
+        <View style={styles.documentsRow}>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>ID</Text>
-            <View style={[
-              styles.docBadge, 
-              (documents.national_id || kycStatus.id) ? styles.docBadgeGreen : styles.docBadgeGray
-            ]} />
+            <View style={[styles.docDot, { backgroundColor: profile?.documents?.national_id ? '#22c55e' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>Proof of Income</Text>
-            <View style={[
-              styles.docBadge, 
-              (documents.payslip || kycStatus.proof_of_income) ? styles.docBadgeGreen : styles.docBadgeGray
-            ]} />
+            <View style={[styles.docDot, { backgroundColor: profile?.documents?.payslip ? '#22c55e' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>KYC</Text>
-            <View style={[
-              styles.docBadge, 
-              (documents.kyc || kycStatus.kyc) ? styles.docBadgeGreen : styles.docBadgeGray
-            ]} />
+            <View style={[styles.docDot, { backgroundColor: profile?.documents?.kyc ? '#22c55e' : '#ef4444' }]} />
           </View>
-          <Text style={styles.settingsIcon}>⚙️</Text>
+          <Text style={styles.docSettings}>⚙️</Text>
         </View>
 
-        <Text style={styles.deadlineText}>
-          Documents need to update on: {formatDeadline(profile?.document_deadline) || profile?.documents_update_due || '...'}
+        <Text style={styles.updateDeadline}>
+          Documents need to update on: {formatDeadline(profile?.document_deadline) || profile?.documents_update_due || 'Not available'}
         </Text>
 
         <TouchableOpacity 
@@ -211,7 +192,7 @@ export default function ProfileScreen() {
             styles.updateButtonText,
             !profile?.is_doc_update_needed && styles.updateButtonTextDisabled
           ]}>
-            Update Documents
+            UPDATE DOCUMENTS
           </Text>
         </TouchableOpacity>
 
@@ -232,7 +213,10 @@ export default function ProfileScreen() {
             <Text style={styles.darkButtonText}>APPLY FOR TERM LOAN</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.darkButton}>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('Statement')}
+          >
             <Text style={styles.darkButtonText}>STATEMENT</Text>
           </TouchableOpacity>
 
@@ -307,152 +291,140 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#ef4444',
-    fontSize: 16,
-    textAlign: 'center',
     marginBottom: 16,
+    textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#00736e',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   retryButtonText: {
     color: '#ffffff',
-    fontSize: 16,
     fontWeight: '600',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 24,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#000000',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  bellIcon: {
-    fontSize: 28,
-    color: '#ef4444',
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  infoGrid: {
-    marginBottom: 24,
+  bellIcon: {
+    fontSize: 20,
+  },
+  settingsIcon: {
+    fontSize: 20,
+  },
+  profileInfo: {
+    marginBottom: 20,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(249, 250, 251, 1)',
-  },
-  infoRowNoBorder: {
-    borderBottomWidth: 0,
+    borderBottomColor: '#f3f4f6',
   },
   infoLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#111827',
+    color: '#6b7280',
   },
   infoValue: {
     fontSize: 14,
+    fontWeight: '500',
     color: '#000000',
-    textAlign: 'right',
-    flex: 1,
-    marginLeft: 16,
   },
-  starContainer: {
+  ratingRow: {
     flexDirection: 'row',
-    gap: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  trophy: {
+    fontSize: 16,
+    marginRight: 4,
   },
   starFilled: {
     fontSize: 14,
-    color: '#fbbf24',
-  },
-  starHalf: {
-    fontSize: 14,
-    color: '#fbbf24',
-    opacity: 0.6,
+    color: '#facc15',
   },
   starEmpty: {
     fontSize: 14,
     color: '#d1d5db',
   },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 24,
-  },
-  docStatusRow: {
+  documentsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
     gap: 16,
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    marginBottom: 8,
   },
   docItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   docLabel: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: '500',
     color: '#000000',
-    textTransform: 'uppercase',
   },
-  docBadge: {
-    width: 24,
-    height: 16,
-    borderRadius: 2,
+  docDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
-  docBadgeGreen: {
-    backgroundColor: '#22c55e',
+  docSettings: {
+    fontSize: 16,
+    marginLeft: 'auto',
+    color: '#9ca3af',
   },
-  docBadgeGray: {
-    backgroundColor: '#d1d5db',
-  },
-  settingsIcon: {
-    fontSize: 20,
-    color: '#6b7280',
-  },
-  deadlineText: {
+  updateDeadline: {
     fontSize: 11,
     color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   updateButton: {
-    backgroundColor: '#0B0B3B',
-    height: 54,
-    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#00736e',
+    height: 48,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 24,
   },
   updateButtonDisabled: {
-    backgroundColor: '#e5e7eb',
+    borderColor: '#e5e7eb',
   },
   updateButtonText: {
-    color: '#ffffff',
+    color: '#00736e',
     fontSize: 14,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   updateButtonTextDisabled: {
     color: '#9ca3af',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginBottom: 24,
   },
   actionButtons: {
     gap: 16,
@@ -461,39 +433,27 @@ const styles = StyleSheet.create({
   darkButton: {
     backgroundColor: '#0B0B3B',
     height: 54,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   darkButtonText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   signOutButton: {
     backgroundColor: '#dc2626',
     height: 54,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   signOutButtonText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
 });

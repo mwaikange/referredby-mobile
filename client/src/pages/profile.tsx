@@ -1,47 +1,61 @@
-import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, Star, Loader2 } from "lucide-react";
+import { Loader2, Settings, Bell } from "lucide-react";
 import { api, type UserProfile } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const profile = await api.getProfile();
-        console.log('📄 Profile Page - User Data:', profile);
-        setUser(profile);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to load profile",
-        });
-        // If unauthenticated, redirect to login
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          setLocation("/login");
-        }
+        const data = await api.getProfile();
+        console.log("📄 Profile Page - User Data:", data);
+        setProfile(data);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
-  }, [setLocation, toast]);
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setLocation("/login");
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    for (let i = 0; i < 10; i++) {
+      if (i < fullStars) {
+        stars.push(<span key={i} className="text-yellow-400">★</span>);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<span key={i} className="text-yellow-400">★</span>);
+      } else {
+        stars.push(<span key={i} className="text-gray-300">☆</span>);
+      }
+    }
+    return stars;
+  };
+
+  const formatDeadline = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
   };
 
   if (loading) {
@@ -55,172 +69,116 @@ export default function Profile() {
     );
   }
 
+  const rating = profile?.star_rating || profile?.credit_rating || 0;
+  const nanoInstallment = profile?.nano_installment || `MAX | NAD ${profile?.nano_loan_limit || 0}`;
+  const termInstallment = profile?.term_installment || `MAX | NAD ${profile?.term_loan_limit || 0}`;
+  const accountLevel = profile?.account_level || 'NL1 / TL0';
+
   return (
     <Layout>
       <div className="flex-1 flex flex-col font-sans">
-        {/* Header Section */}
-        <div className="flex justify-between items-start mb-6">
-          <h1 className="font-bold font-heading uppercase tracking-tight">Profile</h1>
-          <Bell className="w-8 h-8 text-red-500" />
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-bold uppercase tracking-tight">PROFILE</h1>
+          <div className="flex items-center gap-3">
+            <Bell className="w-5 h-5 text-red-500" />
+            <Settings className="w-5 h-5 text-gray-500" />
+          </div>
         </div>
 
-        {/* Profile Info Grid */}
-        <div className="flex flex-col gap-1.5 mb-6">
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Account Name</div>
-            <div className="text-right text-black">
-              {user?.account_name || (user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : "...")}
-            </div>
+        <div className="space-y-4 mb-6">
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Account Name</span>
+            <span className="text-sm font-medium">{profile?.first_name?.trim()} {profile?.last_name?.trim()}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Client ID</div>
-            <div className="text-right text-black">{user?.client_id || user?.id_number || "N/A"}</div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Client ID</span>
+            <span className="text-sm font-medium">{profile?.id_number}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Account UID</div>
-            <div className="text-right text-black">{user?.uid || "N/A"}</div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Account UID</span>
+            <span className="text-sm font-medium">{profile?.uid}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Nano Installment</div>
-            <div className="text-right text-black">
-              {user?.nano_installment || (user?.nano_loan_limit 
-                ? `MAX | NAD ${Number(user.nano_loan_limit).toFixed(2)}` 
-                : "N/A")}
-            </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Nano Installment</span>
+            <span className="text-sm font-medium">{nanoInstallment}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Term Installment</div>
-            <div className="text-right text-black">
-              {user?.term_installment || (user?.term_loan_limit 
-                ? `MAX | NAD ${Number(user.term_loan_limit).toFixed(2)}` 
-                : "N/A")}
-            </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Term Installment</span>
+            <span className="text-sm font-medium">{termInstallment}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5 border-b border-gray-50">
-            <div className="label text-gray-900 font-bold">Account Level</div>
-            <div className="text-right text-black">
-              {user?.account_level || user?.membership_status || "N/A"}
-            </div>
+          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <span className="text-sm text-gray-600">Account Level</span>
+            <span className="text-sm font-medium">{accountLevel}</span>
           </div>
-          
-          <div className="flex justify-between items-center py-0.5">
-            <div className="label text-gray-900 font-bold">Credit Rating</div>
-            <div className="flex justify-end items-center gap-2 text-black">
-              <div className="flex text-lg tracking-tighter items-center">
-                {(() => {
-                   const rating = user?.borrower_rating || user?.credit_rating || 0;
-                   const fullStars = Math.floor(rating);
-                   const hasHalfStar = (rating % 1) >= 0.5;
-                   // Logic: 10 total stars available.
-                   // fullStars = filled stars
-                   // hasHalfStar = one half-filled star
-                   // emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0)
-                   
-                   const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
-                   
-                   return (
-                     <>
-                       {/* Full Stars */}
-                       {Array.from({ length: fullStars }).map((_, i) => (
-                         <Star key={`full-${i}`} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                       ))}
-                       
-                       {/* Half Star - Custom SVG for half fill */}
-                       {hasHalfStar && (
-                         <div className="relative w-4 h-4">
-                           <Star className="absolute w-4 h-4 text-gray-300" />
-                           <div className="absolute w-[50%] h-full overflow-hidden">
-                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                           </div>
-                         </div>
-                       )}
-                       
-                       {/* Empty Stars */}
-                       {Array.from({ length: emptyStars }).map((_, i) => (
-                         <Star key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
-                       ))}
-                     </>
-                   );
-                })()}
-              </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-sm text-gray-600">Credit Rating</span>
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-400 text-lg">🏆</span>
+              {renderStars(rating)}
             </div>
           </div>
         </div>
 
-        <div className="h-px bg-gray-200 w-full mb-8" />
-
-        {/* Document Status */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 px-1">
+        <div className="flex items-center gap-4 mb-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xs uppercase">ID</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.national_id || user?.kyc_status?.id ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
+            <span className="text-xs font-medium">ID</span>
+            <span className={`w-3 h-3 rounded-full ${profile?.documents?.national_id ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xs uppercase whitespace-nowrap">Proof of Income</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.payslip || user?.kyc_status?.proof_of_income ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
+            <span className="text-xs font-medium">Proof of Income</span>
+            <span className={`w-3 h-3 rounded-full ${profile?.documents?.payslip ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xs uppercase">KYC</span>
-            <div className={`w-6 h-4 rounded-[2px] ${user?.documents?.kyc || user?.kyc_status?.kyc ? "bg-[#22C55E]" : "bg-gray-300"}`}></div>
+            <span className="text-xs font-medium">KYC</span>
+            <span className={`w-3 h-3 rounded-full ${profile?.documents?.kyc ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
-          <Settings className="w-5 h-5 text-gray-500 cursor-pointer" />
+          <Settings className="w-4 h-4 text-gray-400 ml-auto" />
         </div>
 
-        <div className="text-center text-[11px] text-gray-500 mb-8 pb-1 px-4">
-          Documents need to update on: {
-            user?.document_deadline 
-              ? format(new Date(user.document_deadline), "d MMMM yyyy") 
-              : (user?.documents_update_due || "...")
-          }
-        </div>
+        <p className="text-xs text-gray-500 mb-4">
+          Documents need to update on: {formatDeadline(profile?.document_deadline) || profile?.documents_update_due || 'Not available'}
+        </p>
 
-        {/* Update Button */}
-        <div className="mb-10">
-          <Button 
-            disabled={!user?.is_doc_update_needed}
-            className={`w-full font-bold uppercase tracking-wide h-[54px] rounded-md transition-colors ${
-              user?.is_doc_update_needed 
-                ? "bg-[#0B0B3B] hover:bg-[#151555] text-white shadow-lg cursor-pointer" 
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            Update Documents
-          </Button>
-        </div>
+        <Button 
+          variant="outline"
+          className={`w-full h-[48px] font-bold uppercase tracking-wide rounded-lg mb-8 ${
+            profile?.is_doc_update_needed 
+              ? 'border-[#00736e] text-[#00736e] hover:bg-[#00736e]/10' 
+              : 'border-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+          disabled={!profile?.is_doc_update_needed}
+        >
+          UPDATE DOCUMENTS
+        </Button>
 
-        <div className="h-px bg-gray-200 w-full mb-8" />
-
-        {/* Action Buttons */}
-        <div className="space-y-4 flex-1 pb-10">
+        <div className="space-y-4">
           <Button 
             onClick={() => setLocation("/interest-confirmation")}
-            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Request Nano Loan
           </Button>
           <Button 
             onClick={() => setLocation("/term-loans")}
-            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg">
             Apply for Term Loan
           </Button>
-          <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+          <Button 
+            onClick={() => setLocation("/statement")}
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+          >
             Statement
           </Button>
           <Button 
             onClick={() => setLocation("/credit-score-history")}
-            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Credit Score History
           </Button>
 
           <Button 
             onClick={handleSignOut}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Sign Out
           </Button>

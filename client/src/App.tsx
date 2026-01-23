@@ -14,6 +14,7 @@ import NetDisposableIncome from "@/pages/net-disposable-income";
 import BankAuthorization from "@/pages/bank-authorization";
 import TermInterestConfirmation from "@/pages/term-interest-confirmation";
 import CreditScoreHistory from "@/pages/credit-score-history";
+import Statement from "@/pages/statement";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/bank-authorization" component={BankAuthorization} />
       <Route path="/term-interest-confirmation" component={TermInterestConfirmation} />
       <Route path="/credit-score-history" component={CreditScoreHistory} />
+      <Route path="/statement" component={Statement} />
       <Route component={NotFound} />
     </Switch>
   );
