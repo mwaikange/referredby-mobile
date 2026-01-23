@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function CreditScoreHistory() {
@@ -13,7 +13,6 @@ export default function CreditScoreHistory() {
     earlyPayments: 5,
     onTimePayments: 0,
     latePenalties: 0,
-    referralBonus: 0,
   });
 
   useEffect(() => {
@@ -32,21 +31,28 @@ export default function CreditScoreHistory() {
     fetchData();
   }, []);
 
-  const totalScore = scoreBreakdown.earlyPayments + scoreBreakdown.onTimePayments - scoreBreakdown.latePenalties + scoreBreakdown.referralBonus;
+  const totalScore = scoreBreakdown.earlyPayments + scoreBreakdown.onTimePayments - Math.abs(scoreBreakdown.latePenalties);
   const scorePoints = Math.round(rating * 10);
 
   const renderStars = () => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const decimal = rating - fullStars;
+    const hasHalfStar = decimal >= 0.25 && decimal < 0.75;
+    const roundUp = decimal >= 0.75;
     
     for (let i = 0; i < 10; i++) {
-      if (i < fullStars) {
-        stars.push(<span key={i} className="text-yellow-400 text-xl">★</span>);
+      if (i < fullStars || (i === fullStars && roundUp)) {
+        stars.push(<span key={i} style={{ color: '#facc15', fontSize: '20px' }}>★</span>);
       } else if (i === fullStars && hasHalfStar) {
-        stars.push(<span key={i} className="text-yellow-400 text-xl">★</span>);
+        stars.push(
+          <span key={i} style={{ position: 'relative', display: 'inline-block', width: '20px', fontSize: '20px' }}>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>☆</span>
+            <span style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden', color: '#facc15' }}>★</span>
+          </span>
+        );
       } else {
-        stars.push(<span key={i} className="text-gray-300 text-xl">☆</span>);
+        stars.push(<span key={i} style={{ color: 'rgba(255,255,255,0.3)', fontSize: '20px' }}>☆</span>);
       }
     }
     return stars;
@@ -70,18 +76,20 @@ export default function CreditScoreHistory() {
           CREDIT SCORE HISTORY
         </h1>
 
-        <div className="bg-gray-50 rounded-xl p-6 mb-6 text-center">
-          <p className="text-sm text-gray-600 mb-2">Current Rating</p>
-          <div className="flex justify-center items-center gap-1 mb-2">
-            <span className="text-yellow-400 text-2xl">🏆</span>
+        {/* Current Rating - Green Card */}
+        <div className="bg-gradient-to-r from-teal-700 to-teal-600 rounded-xl p-6 mb-6 text-center text-white">
+          <p className="text-sm opacity-80 mb-2">Current Rating</p>
+          <div className="flex justify-center items-center gap-0.5 mb-2">
+            <span style={{ color: '#facc15', fontSize: '18px', marginRight: '4px' }}>⚡</span>
             {renderStars()}
           </div>
-          <div className="text-4xl font-bold text-[#00736e]">{rating}/10</div>
-          <p className="text-sm text-gray-500 mt-1">Score: {scorePoints} points</p>
+          <div className="text-4xl font-bold">{rating}/10</div>
+          <p className="text-sm opacity-80 mt-1">Score: {scorePoints} points</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-          <h2 className="font-bold mb-4">Score Breakdown</h2>
+        {/* Score Breakdown */}
+        <div className="bg-gray-50 rounded-xl p-5 mb-6">
+          <h2 className="font-bold mb-4 text-sm">Score Breakdown</h2>
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -94,10 +102,10 @@ export default function CreditScoreHistory() {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
                 <span className="text-sm">On-Time Payments</span>
               </div>
-              <span className="text-sm font-bold text-green-600">+{scoreBreakdown.onTimePayments} pts</span>
+              <span className="text-sm font-bold text-blue-600">+{scoreBreakdown.onTimePayments} pts</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -106,14 +114,6 @@ export default function CreditScoreHistory() {
                 <span className="text-sm">Late Penalties</span>
               </div>
               <span className="text-sm font-bold text-red-600">{scoreBreakdown.latePenalties} pts</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-                <span className="text-sm">Referral Bonus</span>
-              </div>
-              <span className="text-sm font-bold text-green-600">+{scoreBreakdown.referralBonus} pts</span>
             </div>
           </div>
           
@@ -125,25 +125,32 @@ export default function CreditScoreHistory() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-8">
-          <h2 className="font-bold mb-4">Rating History</h2>
+        {/* Rating History */}
+        <div className="mb-6">
+          <h2 className="font-bold mb-3 text-sm">Rating History</h2>
           
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div>
-              <p className="text-sm font-medium">Early Settlement</p>
-              <p className="text-xs text-gray-400">14/12/25 - NL10133474</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold text-green-600">+5</p>
-              <p className="text-xs text-gray-400">0.5</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp size={16} className="text-green-600" />
+                <div>
+                  <p className="text-sm font-medium">Early Settlement</p>
+                  <p className="text-xs text-gray-400">30/12/25 • NL52886717</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-green-600">+5</p>
+                <p className="text-xs text-gray-400">→ N/A</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="pb-10">
+        <div className="pb-6">
           <Button 
             onClick={() => setLocation("/profile")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            style={{ backgroundColor: "#C41E3A" }}
           >
             BACK
           </Button>

@@ -19,7 +19,6 @@ export default function CreditScoreHistoryScreen() {
     earlyPayments: 5,
     onTimePayments: 0,
     latePenalties: 0,
-    referralBonus: 0,
   });
 
   useEffect(() => {
@@ -38,21 +37,30 @@ export default function CreditScoreHistoryScreen() {
     fetchData();
   }, []);
 
-  const totalScore = scoreBreakdown.earlyPayments + scoreBreakdown.onTimePayments - scoreBreakdown.latePenalties + scoreBreakdown.referralBonus;
+  const totalScore = scoreBreakdown.earlyPayments + scoreBreakdown.onTimePayments - Math.abs(scoreBreakdown.latePenalties);
   const scorePoints = Math.round(rating * 10);
 
   const renderStars = () => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const decimal = rating - fullStars;
+    const hasHalfStar = decimal >= 0.25 && decimal < 0.75;
+    const roundUp = decimal >= 0.75;
     
     for (let i = 0; i < 10; i++) {
-      if (i < fullStars) {
+      if (i < fullStars || (i === fullStars && roundUp)) {
         stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
       } else if (i === fullStars && hasHalfStar) {
-        stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
+        stars.push(
+          <View key={i} style={styles.halfStarContainer}>
+            <Text style={styles.starEmptyWhite}>☆</Text>
+            <View style={styles.halfStarOverlay}>
+              <Text style={styles.starFilled}>★</Text>
+            </View>
+          </View>
+        );
       } else {
-        stars.push(<Text key={i} style={styles.starEmpty}>☆</Text>);
+        stars.push(<Text key={i} style={styles.starEmptyWhite}>☆</Text>);
       }
     }
     return stars;
@@ -84,16 +92,18 @@ export default function CreditScoreHistoryScreen() {
       >
         <Text style={styles.title}>CREDIT SCORE HISTORY</Text>
 
+        {/* Green Rating Card */}
         <View style={styles.ratingCard}>
           <Text style={styles.ratingLabel}>Current Rating</Text>
           <View style={styles.starsContainer}>
-            <Text style={styles.trophy}>🏆</Text>
+            <Text style={styles.lightning}>⚡</Text>
             {renderStars()}
           </View>
           <Text style={styles.ratingValue}>{rating}/10</Text>
           <Text style={styles.scorePoints}>Score: {scorePoints} points</Text>
         </View>
 
+        {/* Score Breakdown */}
         <View style={styles.breakdownCard}>
           <Text style={styles.sectionTitle}>Score Breakdown</Text>
           
@@ -107,10 +117,10 @@ export default function CreditScoreHistoryScreen() {
           
           <View style={styles.breakdownRow}>
             <View style={styles.breakdownLabel}>
-              <View style={[styles.dot, { backgroundColor: '#22c55e' }]} />
+              <View style={[styles.dot, { backgroundColor: '#3b82f6' }]} />
               <Text style={styles.breakdownText}>On-Time Payments</Text>
             </View>
-            <Text style={[styles.breakdownValue, { color: '#22c55e' }]}>+{scoreBreakdown.onTimePayments} pts</Text>
+            <Text style={[styles.breakdownValue, { color: '#3b82f6' }]}>+{scoreBreakdown.onTimePayments} pts</Text>
           </View>
           
           <View style={styles.breakdownRow}>
@@ -121,14 +131,6 @@ export default function CreditScoreHistoryScreen() {
             <Text style={[styles.breakdownValue, { color: '#ef4444' }]}>{scoreBreakdown.latePenalties} pts</Text>
           </View>
           
-          <View style={styles.breakdownRow}>
-            <View style={styles.breakdownLabel}>
-              <View style={[styles.dot, { backgroundColor: '#a855f7' }]} />
-              <Text style={styles.breakdownText}>Referral Bonus</Text>
-            </View>
-            <Text style={[styles.breakdownValue, { color: '#22c55e' }]}>+{scoreBreakdown.referralBonus} pts</Text>
-          </View>
-          
           <View style={styles.divider} />
           
           <View style={styles.totalRow}>
@@ -137,17 +139,20 @@ export default function CreditScoreHistoryScreen() {
           </View>
         </View>
 
+        {/* Rating History */}
+        <Text style={styles.historyTitle}>Rating History</Text>
         <View style={styles.historyCard}>
-          <Text style={styles.sectionTitle}>Rating History</Text>
-          
           <View style={styles.historyItem}>
-            <View>
-              <Text style={styles.historyTitle}>Early Settlement</Text>
-              <Text style={styles.historyDate}>14/12/25 - NL10133474</Text>
+            <View style={styles.historyLeft}>
+              <Text style={styles.arrowIcon}>↗</Text>
+              <View>
+                <Text style={styles.historyEventTitle}>Early Settlement</Text>
+                <Text style={styles.historyDate}>30/12/25 • NL52886717</Text>
+              </View>
             </View>
             <View style={styles.historyRight}>
               <Text style={styles.historyPoints}>+5</Text>
-              <Text style={styles.historyRating}>0.5</Text>
+              <Text style={styles.historyRating}>→ N/A</Text>
             </View>
           </View>
         </View>
@@ -220,55 +225,66 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   ratingCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: '#0f766e',
+    borderRadius: 12,
+    padding: 20,
     alignItems: 'center',
     marginBottom: 20,
   },
   ratingLabel: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(255,255,255,0.8)',
     marginBottom: 8,
   },
   starsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 1,
     marginBottom: 8,
   },
-  trophy: {
-    fontSize: 24,
-    marginRight: 8,
+  lightning: {
+    fontSize: 18,
+    color: '#facc15',
+    marginRight: 4,
   },
   starFilled: {
     fontSize: 20,
     color: '#facc15',
   },
-  starEmpty: {
+  starEmptyWhite: {
     fontSize: 20,
-    color: '#d1d5db',
+    color: 'rgba(255,255,255,0.3)',
+  },
+  halfStarContainer: {
+    position: 'relative',
+    width: 20,
+    height: 20,
+  },
+  halfStarOverlay: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 10,
+    overflow: 'hidden',
   },
   ratingValue: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#00736e',
+    color: '#ffffff',
   },
   scorePoints: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
   },
   breakdownCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 20,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#000000',
@@ -300,7 +316,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#e5e7eb',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   totalRow: {
     flexDirection: 'row',
@@ -308,38 +324,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
   },
   totalValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+    color: '#000000',
+  },
+  historyTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 12,
     color: '#000000',
   },
   historyCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    padding: 20,
+    padding: 16,
     marginBottom: 24,
   },
   historyItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
-  historyTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+  historyLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  arrowIcon: {
+    fontSize: 16,
+    color: '#22c55e',
+  },
+  historyEventTitle: {
+    fontSize: 13,
+    fontWeight: '600',
     color: '#000000',
   },
   historyDate: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9ca3af',
     marginTop: 2,
   },
@@ -352,14 +380,14 @@ const styles = StyleSheet.create({
     color: '#22c55e',
   },
   historyRating: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9ca3af',
   },
   buttonContainer: {
     paddingBottom: 24,
   },
   backButton: {
-    backgroundColor: '#00736e',
+    backgroundColor: '#C41E3A',
     height: 54,
     borderRadius: 8,
     justifyContent: 'center',
