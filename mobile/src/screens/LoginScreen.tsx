@@ -71,7 +71,7 @@ export default function LoginScreen() {
         >
           <View style={styles.logoSection}>
             <Image 
-              source={require('../../assets/logo-group.png')} 
+              source={require('../../assets/referredby-logo.png')} 
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -181,15 +181,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingTop: 32,
+    paddingBottom: 16,
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
   },
   logoImage: {
-    width: 250,
-    height: 90,
+    width: 280,
+    height: 45,
   },
   form: {
     flex: 1,

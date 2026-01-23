@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import logoGroup from "@assets/Group_2475_(2)_1768529192322.png";
+import logoGroup from "@/assets/referredby-logo.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -101,12 +101,12 @@ export default function Login() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col">
-        <div className="flex flex-col items-center mb-8">
+      <div className="flex-1 flex flex-col pt-6">
+        <div className="flex flex-col items-center mb-10">
           <img 
             src={logoGroup} 
             alt="ReferredBy Community Vetted Financing" 
-            className="w-full h-auto object-contain max-w-[280px]"
+            className="h-[45px] object-contain"
           />
         </div>
 
