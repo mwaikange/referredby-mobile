@@ -86,7 +86,7 @@ export default function BankAuthorization() {
           
           <Button 
             onClick={() => setLocation("/term-loans")}
-            className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             BACK
           </Button>

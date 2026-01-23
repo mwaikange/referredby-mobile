@@ -218,7 +218,7 @@ export default function Statement() {
             </Button>
             <Button 
               onClick={() => setLocation("/profile")}
-              className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+              className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
             >
               BACK
             </Button>
@@ -316,7 +316,7 @@ export default function Statement() {
           </Button>
           <Button 
             onClick={() => setLocation("/profile")}
-            className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
           >
             BACK
           </Button>

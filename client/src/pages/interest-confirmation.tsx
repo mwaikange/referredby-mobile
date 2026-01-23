@@ -291,7 +291,7 @@ export default function InterestConfirmationPage() {
           </Button>
           <Button 
             onClick={() => setLocation("/profile")}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             BACK
           </Button>

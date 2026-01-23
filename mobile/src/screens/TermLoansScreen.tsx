@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   redButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: '#C41E3A',
     height: 54,
     borderRadius: 8,
     justifyContent: 'center',

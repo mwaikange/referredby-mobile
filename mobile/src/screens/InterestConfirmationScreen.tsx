@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   backButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: '#C41E3A',
     height: 54,
     borderRadius: 6,
     justifyContent: 'center',
