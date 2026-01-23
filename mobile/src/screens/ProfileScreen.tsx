@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 20,
+    fontSize: 40,
     fontWeight: 'bold',
     color: '#000000',
     letterSpacing: 0.5,

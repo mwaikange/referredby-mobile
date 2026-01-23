@@ -75,7 +75,7 @@ export default function Profile() {
     <Layout>
       <div className="flex-1 flex flex-col font-sans">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold uppercase tracking-tight">PROFILE</h1>
+          <h1 className="text-4xl font-bold uppercase tracking-tight">PROFILE</h1>
           <Bell className="w-5 h-5 text-red-500" />
         </div>
 
