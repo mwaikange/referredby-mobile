@@ -198,7 +198,7 @@ export default function Statement() {
             <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
               PAY VIA PAYPULSE APP (COMING SOON)
             </Button>
-            <Button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold uppercase tracking-wide h-[48px] rounded-lg">
+            <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
               NEW PAYMENT METHOD COMING SOON
             </Button>
           </div>
@@ -296,7 +296,7 @@ export default function Statement() {
           <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
-          <Button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold uppercase tracking-wide h-[48px] rounded-lg">
+          <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
             NEW PAYMENT METHOD COMING SOON
           </Button>
         </div>

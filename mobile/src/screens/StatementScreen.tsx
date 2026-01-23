@@ -200,8 +200,8 @@ export default function StatementScreen() {
             <TouchableOpacity style={styles.disabledButton} disabled>
               <Text style={styles.disabledButtonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.yellowButton}>
-              <Text style={styles.yellowButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+            <TouchableOpacity style={styles.disabledButton} disabled>
+              <Text style={styles.disabledButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
             </TouchableOpacity>
           </View>
 
@@ -312,8 +312,8 @@ export default function StatementScreen() {
           <TouchableOpacity style={styles.disabledButton} disabled>
             <Text style={styles.disabledButtonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.yellowButton}>
-            <Text style={styles.yellowButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+          <TouchableOpacity style={styles.disabledButton} disabled>
+            <Text style={styles.disabledButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
