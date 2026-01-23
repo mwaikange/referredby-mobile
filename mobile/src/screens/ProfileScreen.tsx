@@ -55,13 +55,22 @@ export default function ProfileScreen() {
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const decimal = rating - fullStars;
+    const hasHalfStar = decimal >= 0.25 && decimal < 0.75;
+    const roundUp = decimal >= 0.75;
     
     for (let i = 0; i < 10; i++) {
-      if (i < fullStars) {
+      if (i < fullStars || (i === fullStars && roundUp)) {
         stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
       } else if (i === fullStars && hasHalfStar) {
-        stars.push(<Text key={i} style={styles.starFilled}>★</Text>);
+        stars.push(
+          <View key={i} style={styles.halfStarContainer}>
+            <Text style={styles.starEmpty}>☆</Text>
+            <View style={styles.halfStarOverlay}>
+              <Text style={styles.starFilled}>★</Text>
+            </View>
+          </View>
+        );
       } else {
         stars.push(<Text key={i} style={styles.starEmpty}>☆</Text>);
       }
@@ -142,7 +151,6 @@ export default function ProfileScreen() {
           <View style={styles.ratingRow}>
             <Text style={styles.infoLabel}>Credit Rating</Text>
             <View style={styles.starsContainer}>
-              <Text style={styles.lightning}>⚡</Text>
               {renderStars(rating)}
             </View>
           </View>
@@ -151,15 +159,15 @@ export default function ProfileScreen() {
         <View style={styles.documentsRow}>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>ID</Text>
-            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.national_id ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.national_id ? '#16a34a' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>Proof of Income</Text>
-            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.payslip ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.payslip ? '#16a34a' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>KYC</Text>
-            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.kyc ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.kyc ? '#16a34a' : '#ef4444' }]} />
           </View>
           <Text style={styles.settingsIcon}>⚙</Text>
         </View>
@@ -322,18 +330,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  lightning: {
-    fontSize: 16,
-    color: '#facc15',
-    marginRight: 4,
-  },
   starFilled: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#facc15',
   },
   starEmpty: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#d1d5db',
+  },
+  halfStarContainer: {
+    position: 'relative',
+    width: 18,
+    height: 18,
+  },
+  halfStarOverlay: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 9,
+    overflow: 'hidden',
   },
   documentsRow: {
     flexDirection: 'row',
