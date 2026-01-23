@@ -192,7 +192,10 @@ export default function Statement() {
           </p>
 
           <div className="space-y-3 mb-6">
-            <Button className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
+            <Button 
+              onClick={() => setLocation("/payment-record")}
+              className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            >
               Payment Record
             </Button>
             <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
@@ -213,7 +216,10 @@ export default function Statement() {
           </div>
 
           <div className="flex gap-4 pb-6">
-            <Button className="flex-1 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
+            <Button 
+              onClick={() => setLocation("/loan-history")}
+              className="flex-1 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            >
               History
             </Button>
             <Button 
@@ -290,7 +296,10 @@ export default function Statement() {
         </p>
 
         <div className="space-y-3 mb-6">
-          <Button className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
+          <Button 
+            onClick={() => setLocation("/payment-record")}
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+          >
             Payment Record
           </Button>
           <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
@@ -311,7 +320,10 @@ export default function Statement() {
         </div>
 
         <div className="flex gap-4 pb-6">
-          <Button className="flex-1 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
+          <Button 
+            onClick={() => setLocation("/loan-history")}
+            className="flex-1 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+          >
             History
           </Button>
           <Button 

@@ -10,4 +10,6 @@ export type RootStackParamList = {
   TermInterestConfirmation: undefined;
   CreditScoreHistory: undefined;
   Statement: undefined;
+  PaymentRecord: undefined;
+  LoanHistory: undefined;
 };

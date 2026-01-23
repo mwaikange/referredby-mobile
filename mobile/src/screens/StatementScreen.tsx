@@ -194,7 +194,10 @@ export default function StatementScreen() {
           </Text>
 
           <View style={styles.buttonsSection}>
-            <TouchableOpacity style={styles.tealButton}>
+            <TouchableOpacity 
+              style={styles.tealButton}
+              onPress={() => navigation.navigate('PaymentRecord' as never)}
+            >
               <Text style={styles.buttonText}>PAYMENT RECORD</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.disabledButton} disabled>
@@ -215,7 +218,10 @@ export default function StatementScreen() {
           </View>
 
           <View style={styles.footerButtons}>
-            <TouchableOpacity style={styles.historyButton}>
+            <TouchableOpacity 
+              style={styles.historyButton}
+              onPress={() => navigation.navigate('LoanHistory' as never)}
+            >
               <Text style={styles.buttonText}>HISTORY</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -306,7 +312,10 @@ export default function StatementScreen() {
         </Text>
 
         <View style={styles.buttonsSection}>
-          <TouchableOpacity style={styles.tealButton}>
+          <TouchableOpacity 
+            style={styles.tealButton}
+            onPress={() => navigation.navigate('PaymentRecord' as never)}
+          >
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.disabledButton} disabled>
@@ -327,7 +336,10 @@ export default function StatementScreen() {
         </View>
 
         <View style={styles.footerButtons}>
-          <TouchableOpacity style={styles.historyButton}>
+          <TouchableOpacity 
+            style={styles.historyButton}
+            onPress={() => navigation.navigate('LoanHistory' as never)}
+          >
             <Text style={styles.buttonText}>HISTORY</Text>
           </TouchableOpacity>
           <TouchableOpacity 
