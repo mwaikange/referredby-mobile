@@ -40,16 +40,16 @@ export default function Profile() {
     
     for (let i = 0; i < 10; i++) {
       if (i < fullStars || (i === fullStars && roundUp)) {
-        stars.push(<span key={i} style={{ color: '#facc15', fontSize: '45px' }}>★</span>);
+        stars.push(<span key={i} style={{ color: '#facc15', fontSize: '38px' }}>★</span>);
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
-          <span key={i} style={{ position: 'relative', display: 'inline-block', width: '45px', fontSize: '45px' }}>
+          <span key={i} style={{ position: 'relative', display: 'inline-block', width: '38px', fontSize: '38px' }}>
             <span style={{ color: '#d1d5db' }}>☆</span>
             <span style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden', color: '#facc15' }}>★</span>
           </span>
         );
       } else {
-        stars.push(<span key={i} style={{ color: '#d1d5db', fontSize: '45px' }}>☆</span>);
+        stars.push(<span key={i} style={{ color: '#d1d5db', fontSize: '38px' }}>☆</span>);
       }
     }
     return stars;
