@@ -1,10 +1,4 @@
-console.log("🚀 app.config.js IS EXECUTING");
-console.log("📍 Build-time environment check:", {
-  url: process.env.EXPO_PUBLIC_SUPABASE_URL ? "✅ Present" : "❌ Missing",
-  key: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? "✅ Present" : "❌ Missing",
-  api: process.env.EXPO_PUBLIC_API_BASE_URL ? "✅ Present" : "❌ Missing"
-});
-
+// Clean production config
 export default {
   expo: {
     name: "ReferredBy",
