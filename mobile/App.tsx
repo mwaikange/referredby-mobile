@@ -17,6 +17,7 @@ import CreditScoreHistoryScreen from './src/screens/CreditScoreHistoryScreen';
 import StatementScreen from './src/screens/StatementScreen';
 import PaymentRecordScreen from './src/screens/PaymentRecordScreen';
 import LoanHistoryScreen from './src/screens/LoanHistoryScreen';
+import NanoLoanApplyScreen from './src/screens/NanoLoanApplyScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -97,6 +98,7 @@ function AppContent() {
         <Stack.Screen name="Statement" component={StatementScreen} />
         <Stack.Screen name="PaymentRecord" component={PaymentRecordScreen} />
         <Stack.Screen name="LoanHistory" component={LoanHistoryScreen} />
+        <Stack.Screen name="NanoLoanApply" component={NanoLoanApplyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

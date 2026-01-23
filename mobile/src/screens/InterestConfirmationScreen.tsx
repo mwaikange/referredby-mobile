@@ -49,7 +49,12 @@ export default function InterestConfirmationScreen() {
       );
       return;
     }
-    Alert.alert('Proceed', 'Proceeding to loan application...');
+    // Navigate to loan application based on type
+    if (selectedType === 'nano') {
+      navigation.navigate('NanoLoanApply' as never);
+    } else {
+      navigation.navigate('TermLoans' as never);
+    }
   };
 
   const isNano = selectedType === 'nano';

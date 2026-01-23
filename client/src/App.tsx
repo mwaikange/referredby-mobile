@@ -17,6 +17,7 @@ import CreditScoreHistory from "@/pages/credit-score-history";
 import Statement from "@/pages/statement";
 import PaymentRecord from "@/pages/payment-record";
 import LoanHistory from "@/pages/loan-history";
+import NanoLoanApply from "@/pages/nano-loan-apply";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/statement" component={Statement} />
       <Route path="/payment-record" component={PaymentRecord} />
       <Route path="/loan-history" component={LoanHistory} />
+      <Route path="/nano-loan-apply" component={NanoLoanApply} />
       <Route component={NotFound} />
     </Switch>
   );

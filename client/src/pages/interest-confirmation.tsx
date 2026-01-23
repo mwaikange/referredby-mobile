@@ -55,11 +55,12 @@ export default function InterestConfirmationPage() {
       });
       return;
     }
-    // Navigate to loan application
-    toast({
-      title: "Proceed",
-      description: "Proceeding to loan application...",
-    });
+    // Navigate to loan application based on type
+    if (loanType === 'nano') {
+      setLocation("/nano-loan-apply");
+    } else {
+      setLocation("/term-loans");
+    }
   };
 
   const isNano = loanType === 'nano';

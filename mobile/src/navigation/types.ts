@@ -12,4 +12,5 @@ export type RootStackParamList = {
   Statement: undefined;
   PaymentRecord: undefined;
   LoanHistory: undefined;
+  NanoLoanApply: undefined;
 };
