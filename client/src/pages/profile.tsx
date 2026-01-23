@@ -112,6 +112,8 @@ export default function Profile() {
           </div>
         </div>
 
+        <div className="h-px bg-gray-300 w-full mb-4" />
+
         <div className="flex items-center gap-4 mb-2">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium">ID</span>

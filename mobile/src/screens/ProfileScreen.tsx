@@ -156,6 +156,8 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.grayLine} />
+
         <View style={styles.documentsRow}>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>ID</Text>
