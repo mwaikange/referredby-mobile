@@ -39,7 +39,9 @@ export default {
       favicon: "./assets/favicon.png"
     },
     plugins: [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-image-picker",
+      "expo-document-picker"
     ],
     extra: {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "",

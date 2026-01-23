@@ -1,0 +1,109 @@
+📸 For Document/Photo Upload, You Need Different Packages:
+Based on the Google Play policy you shared, for a fintech app uploading documents/photos, you should use:
+Option 1: Expo ImagePicker (Recommended for Expo)
+bashnpx expo install expo-image-picker
+Why it's compliant:
+
+Uses Android's native photo picker on Android 13+
+Falls back to system picker on older devices
+Respects Google's photo picker policy
+Built specifically for Expo apps
+
+Usage:
+typescriptimport * as ImagePicker from 'expo-image-picker';
+
+// Upload ID document
+const pickDocument = async () => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 1,
+  });
+  
+  if (!result.canceled) {
+    // Upload result.assets[0].uri
+  }
+};
+Option 2: Expo DocumentPicker (For PDFs + Images)
+bashnpx expo install expo-document-picker
+Perfect for fintech apps that need:
+
+ID documents (images)
+Bank statements (PDFs)
+Proof of address (images/PDFs)
+
+Usage:
+typescriptimport * as DocumentPicker from 'expo-document-picker';
+
+const pickDocument = async () => {
+  const result = await DocumentPicker.getDocumentAsync({
+    type: ['image/*', 'application/pdf'],
+    copyToCacheDirectory: true,
+  });
+  
+  if (result.type === 'success') {
+    // Upload result.uri
+  }
+};
+🎯 What You Have Now:
+Current Pickers in Your App:
+
+@react-native-picker/picker ✅
+
+Dropdown selector (loan terms, etc.)
+NOT for photos - completely fine, no Google policy issue
+
+
+Need to Add:
+
+expo-image-picker or expo-document-picker for document uploads
+
+
+
+✅ Google Play Compliance Checklist:
+For your fintech document upload feature:
+RequirementSolutionStatusUse system photo pickerexpo-image-picker (uses native picker on Android 13+)✅ CompliantDon't request broad photo permissionsExpo pickers handle this automatically✅ CompliantDocument upload for app functionalityID verification, proof of income = core fintech function✅ AllowedDeclare in Play ConsoleState "Document verification for loan applications"✅ Required
+📋 What You Should Do:
+1. Add Document Upload Package:
+bashcd mobile
+npx expo install expo-document-picker
+2. Update Your Document Upload Screens:
+Replace any photo/document upload code with:
+typescriptimport * as DocumentPicker from 'expo-document-picker';
+
+const uploadIDDocument = async () => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*', 'application/pdf'],
+      copyToCacheDirectory: true,
+    });
+    
+    if (result.type === 'success') {
+      // Upload to your backend
+      const formData = new FormData();
+      formData.append('document', {
+        uri: result.uri,
+        name: result.name,
+        type: result.mimeType,
+      });
+      
+      // POST to your API
+      await api.uploadDocument(formData);
+    }
+  } catch (error) {
+    console.error('Document picker error:', error);
+  }
+};
+3. In Your Play Console Submission:
+When asked about photo/media permissions, state:
+
+"Our app uses the system document picker (expo-document-picker) to allow users to upload identity documents, bank statements, and proof of address as part of our loan application verification process. This is a core functionality required for KYC compliance in financial services."
+
+🎯 Summary:
+
+✅ @react-native-picker/picker = Dropdown selector (fine to use)
+✅ expo-document-picker = Document upload (Google Play compliant)
+❌ DON'T use: Direct READ_MEDIA_IMAGES permissions
+✅ DO declare: Purpose is "Financial document verification"
+
+Your current picker installation is fine. Just add expo-document-picker for the document upload feature!
