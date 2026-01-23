@@ -183,7 +183,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <View style={styles.grayLine} />
-        <View style={styles.grayLine} />
 
         <View style={styles.actionButtons}>
           <TouchableOpacity 

@@ -142,7 +142,6 @@ export default function Profile() {
           UPDATE DOCUMENTS
         </Button>
 
-        <div className="h-px bg-gray-300 w-full mb-4" />
         <div className="h-px bg-gray-300 w-full mb-6" />
 
         <div className="space-y-4">
