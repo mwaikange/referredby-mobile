@@ -38,24 +38,14 @@ export default function Profile() {
     
     for (let i = 0; i < 10; i++) {
       if (i < fullStars) {
-        stars.push(<span key={i} className="text-yellow-400">★</span>);
+        stars.push(<span key={i} className="text-yellow-400 text-sm">★</span>);
       } else if (i === fullStars && hasHalfStar) {
-        stars.push(<span key={i} className="text-yellow-400">★</span>);
+        stars.push(<span key={i} className="text-yellow-400 text-sm">★</span>);
       } else {
-        stars.push(<span key={i} className="text-gray-300">☆</span>);
+        stars.push(<span key={i} className="text-gray-300 text-sm">☆</span>);
       }
     }
     return stars;
-  };
-
-  const formatDeadline = (dateStr?: string) => {
-    if (!dateStr) return null;
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    } catch {
-      return dateStr;
-    }
   };
 
   if (loading) {
@@ -70,83 +60,76 @@ export default function Profile() {
   }
 
   const rating = profile?.star_rating || profile?.credit_rating || 0;
-  const nanoInstallment = profile?.nano_installment || `MAX | NAD ${profile?.nano_loan_limit || 0}`;
-  const termInstallment = profile?.term_installment || `MAX | NAD ${profile?.term_loan_limit || 0}`;
-  const accountLevel = profile?.account_level || 'NL1 / TL0';
+  const nanoInstallment = profile?.nano_installment || `MAX | NAD ${profile?.nano_loan_limit || 0}.00`;
+  const termInstallment = profile?.term_installment || `MAX | NAD ${profile?.term_loan_limit || 0}.00`;
+  const accountLevel = profile?.account_level || 'NL9 / TL0';
 
   return (
     <Layout>
       <div className="flex-1 flex flex-col font-sans">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold uppercase tracking-tight">PROFILE</h1>
-          <div className="flex items-center gap-3">
-            <Bell className="w-5 h-5 text-red-500" />
-            <Settings className="w-5 h-5 text-gray-500" />
-          </div>
+          <Bell className="w-5 h-5 text-red-500" />
         </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Account Name</span>
-            <span className="text-sm font-medium">{profile?.first_name?.trim()} {profile?.last_name?.trim()}</span>
+            <span className="text-sm font-medium text-right">{profile?.first_name?.trim()} {profile?.last_name?.trim()}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Client ID</span>
             <span className="text-sm font-medium">{profile?.id_number}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Account UID</span>
             <span className="text-sm font-medium">{profile?.uid}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Nano Installment</span>
             <span className="text-sm font-medium">{nanoInstallment}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Term Installment</span>
             <span className="text-sm font-medium">{termInstallment}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Account Level</span>
             <span className="text-sm font-medium">{accountLevel}</span>
           </div>
-          <div className="flex justify-between items-center py-2">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Credit Rating</span>
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-400 text-lg">🏆</span>
+            <div className="flex items-center gap-0.5">
+              <span className="text-yellow-400 text-sm mr-1">🏆</span>
               {renderStars(rating)}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 mb-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium">ID</span>
-            <span className={`w-3 h-3 rounded-full ${profile?.documents?.national_id ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${profile?.documents?.national_id ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium">Proof of Income</span>
-            <span className={`w-3 h-3 rounded-full ${profile?.documents?.payslip ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${profile?.documents?.payslip ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium">KYC</span>
-            <span className={`w-3 h-3 rounded-full ${profile?.documents?.kyc ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${profile?.documents?.kyc ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </div>
           <Settings className="w-4 h-4 text-gray-400 ml-auto" />
         </div>
 
         <p className="text-xs text-gray-500 mb-4">
-          Documents need to update on: {formatDeadline(profile?.document_deadline) || profile?.documents_update_due || 'Not available'}
+          Documents need to update on: Not available
         </p>
 
         <Button 
           variant="outline"
-          className={`w-full h-[48px] font-bold uppercase tracking-wide rounded-lg mb-8 ${
-            profile?.is_doc_update_needed 
-              ? 'border-[#00736e] text-[#00736e] hover:bg-[#00736e]/10' 
-              : 'border-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-          disabled={!profile?.is_doc_update_needed}
+          className="w-full h-[48px] font-bold uppercase tracking-wide rounded-lg mb-8 border-gray-200 text-gray-400 bg-gray-50"
+          disabled
         >
           UPDATE DOCUMENTS
         </Button>
