@@ -193,6 +193,8 @@ export default function StatementScreen() {
             Make a payment via the methods listed below then upload the proof of payment to our online agents by clicking here:
           </Text>
 
+          <View style={styles.centeredLine} />
+
           <View style={styles.buttonsSection}>
             <TouchableOpacity 
               style={styles.tealButton}
@@ -310,6 +312,8 @@ export default function StatementScreen() {
         <Text style={styles.instructions}>
           Make a payment via the methods listed below then upload the proof of payment to our online agents by clicking here:
         </Text>
+
+        <View style={styles.centeredLine} />
 
         <View style={styles.buttonsSection}>
           <TouchableOpacity 
@@ -488,6 +492,13 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 16,
     lineHeight: 16,
+  },
+  centeredLine: {
+    height: 1,
+    backgroundColor: '#d1d5db',
+    width: '75%',
+    alignSelf: 'center',
+    marginBottom: 24,
   },
   buttonsSection: {
     gap: 12,
