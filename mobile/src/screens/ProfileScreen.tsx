@@ -142,7 +142,7 @@ export default function ProfileScreen() {
           <View style={styles.ratingRow}>
             <Text style={styles.infoLabel}>Credit Rating</Text>
             <View style={styles.starsContainer}>
-              <Text style={styles.trophy}>🏆</Text>
+              <Text style={styles.lightning}>⚡</Text>
               {renderStars(rating)}
             </View>
           </View>
@@ -151,17 +151,17 @@ export default function ProfileScreen() {
         <View style={styles.documentsRow}>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>ID</Text>
-            <View style={[styles.docDot, { backgroundColor: profile?.documents?.national_id ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.national_id ? '#22c55e' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>Proof of Income</Text>
-            <View style={[styles.docDot, { backgroundColor: profile?.documents?.payslip ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.payslip ? '#22c55e' : '#ef4444' }]} />
           </View>
           <View style={styles.docItem}>
             <Text style={styles.docLabel}>KYC</Text>
-            <View style={[styles.docDot, { backgroundColor: profile?.documents?.kyc ? '#22c55e' : '#ef4444' }]} />
+            <View style={[styles.docSquare, { backgroundColor: profile?.documents?.kyc ? '#22c55e' : '#ef4444' }]} />
           </View>
-          <Text style={styles.docSettings}>⚙️</Text>
+          <Text style={styles.settingsIcon}>⚙</Text>
         </View>
 
         <Text style={styles.updateDeadline}>
@@ -322,16 +322,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  trophy: {
-    fontSize: 14,
+  lightning: {
+    fontSize: 16,
+    color: '#facc15',
     marginRight: 4,
   },
   starFilled: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#facc15',
   },
   starEmpty: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#d1d5db',
   },
   documentsRow: {
@@ -350,15 +351,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#000000',
   },
-  docDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  docSquare: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
   },
-  docSettings: {
-    fontSize: 14,
+  settingsIcon: {
+    fontSize: 18,
     marginLeft: 'auto',
-    color: '#9ca3af',
+    color: '#6b7280',
   },
   updateDeadline: {
     fontSize: 11,
