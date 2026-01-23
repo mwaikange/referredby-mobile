@@ -225,7 +225,10 @@ export default function ProfileScreen() {
             <Text style={styles.darkButtonText}>REQUEST NANO LOAN</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.darkButton}>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('TermLoans')}
+          >
             <Text style={styles.darkButtonText}>APPLY FOR TERM LOAN</Text>
           </TouchableOpacity>
 

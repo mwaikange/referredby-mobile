@@ -203,7 +203,9 @@ export default function Profile() {
           >
             Request Nano Loan
           </Button>
-          <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+          <Button 
+            onClick={() => setLocation("/term-loans")}
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
             Apply for Term Loan
           </Button>
           <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">

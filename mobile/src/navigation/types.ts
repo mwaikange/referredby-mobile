@@ -3,4 +3,5 @@ export type RootStackParamList = {
   Login: undefined;
   Profile: undefined;
   InterestConfirmation: { userId: string; loanType?: 'nano' | 'term' };
+  TermLoans: undefined;
 };
