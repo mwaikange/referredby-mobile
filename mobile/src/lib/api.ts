@@ -22,6 +22,7 @@ export type UserProfile = {
   membership_status?: string;
   credit_rating: number;
   borrower_rating?: number; // 0-10 scale
+  star_rating?: number;
   
   // Document status
   documents?: {

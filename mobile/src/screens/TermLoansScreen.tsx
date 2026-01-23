@@ -94,7 +94,7 @@ export default function TermLoansScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
-            style={styles.redButton}
+            style={styles.darkButton}
             onPress={() => navigation.navigate('BankingDetails')}
           >
             <Text style={styles.buttonText}>ENTER BANK DETAILS</Text>
@@ -108,14 +108,14 @@ export default function TermLoansScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.outlineButton}
+            style={styles.tealButton}
             onPress={() => navigation.navigate('BankAuthorization')}
           >
-            <Text style={styles.outlineButtonText}>BANK AUTHORIZATION</Text>
+            <Text style={styles.buttonText}>BANK AUTHORIZATION</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.darkButton}
+            style={styles.tealButton}
             onPress={() => navigation.navigate('TermInterestConfirmation')}
           >
             <Text style={styles.buttonText}>REQUEST TERM LOAN</Text>
@@ -199,13 +199,6 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 24,
   },
-  redButton: {
-    backgroundColor: '#dc2626',
-    height: 54,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   darkButton: {
     backgroundColor: '#0B0B3B',
     height: 54,
@@ -213,23 +206,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  outlineButton: {
-    backgroundColor: '#ffffff',
+  tealButton: {
+    backgroundColor: '#00736e',
     height: 54,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#d1d5db',
+  },
+  redButton: {
+    backgroundColor: '#dc2626',
+    height: 54,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  outlineButtonText: {
-    color: '#000000',
     fontSize: 14,
     fontWeight: 'bold',
     letterSpacing: 0.5,

@@ -13,6 +13,7 @@ import BankingDetailsScreen from './src/screens/BankingDetailsScreen';
 import NetDisposableIncomeScreen from './src/screens/NetDisposableIncomeScreen';
 import BankAuthorizationScreen from './src/screens/BankAuthorizationScreen';
 import TermInterestConfirmationScreen from './src/screens/TermInterestConfirmationScreen';
+import CreditScoreHistoryScreen from './src/screens/CreditScoreHistoryScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -89,6 +90,7 @@ function AppContent() {
         <Stack.Screen name="NetDisposableIncome" component={NetDisposableIncomeScreen} />
         <Stack.Screen name="BankAuthorization" component={BankAuthorizationScreen} />
         <Stack.Screen name="TermInterestConfirmation" component={TermInterestConfirmationScreen} />
+        <Stack.Screen name="CreditScoreHistory" component={CreditScoreHistoryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

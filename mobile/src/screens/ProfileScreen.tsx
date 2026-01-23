@@ -236,7 +236,10 @@ export default function ProfileScreen() {
             <Text style={styles.darkButtonText}>STATEMENT</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.darkButton}>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('CreditScoreHistory')}
+          >
             <Text style={styles.darkButtonText}>CREDIT SCORE HISTORY</Text>
           </TouchableOpacity>
 

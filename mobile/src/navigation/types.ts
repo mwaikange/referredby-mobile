@@ -8,4 +8,5 @@ export type RootStackParamList = {
   NetDisposableIncome: undefined;
   BankAuthorization: undefined;
   TermInterestConfirmation: undefined;
+  CreditScoreHistory: undefined;
 };

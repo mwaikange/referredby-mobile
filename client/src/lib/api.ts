@@ -38,6 +38,7 @@ export type UserProfile = {
   // Credit rating (0-10 scale)
   credit_rating: number;
   borrower_rating?: number;
+  star_rating?: number;
   
   // Loan access control (NEW)
   loan_access?: {
