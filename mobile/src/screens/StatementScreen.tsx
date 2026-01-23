@@ -489,16 +489,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
+    backgroundColor: 'rgba(0, 115, 110, 0.5)',
     height: 48,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButtonText: {
-    color: '#9ca3af',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,

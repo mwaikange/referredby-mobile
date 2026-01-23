@@ -195,10 +195,10 @@ export default function Statement() {
             <Button className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
               Payment Record
             </Button>
-            <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
+            <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
               PAY VIA PAYPULSE APP (COMING SOON)
             </Button>
-            <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
+            <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
               NEW PAYMENT METHOD COMING SOON
             </Button>
           </div>
@@ -293,10 +293,10 @@ export default function Statement() {
           <Button className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg">
             Payment Record
           </Button>
-          <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
+          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
-          <Button variant="outline" className="w-full border-2 border-gray-300 text-gray-400 font-bold uppercase tracking-wide h-[48px] rounded-lg" disabled>
+          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
             NEW PAYMENT METHOD COMING SOON
           </Button>
         </div>
