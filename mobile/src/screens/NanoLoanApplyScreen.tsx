@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Linking,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../lib/api';
@@ -35,11 +36,17 @@ export default function NanoLoanApplyScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
 
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         await api.getProfile();
-        setLoanDetails({
+        const details = {
           account_level: 'NL1',
           loan_max: 1800,
           min_amount: 300,
@@ -49,7 +56,9 @@ export default function NanoLoanApplyScreen() {
           due_date: '2026-03-26',
           outstanding_date: '2026-04-26',
           block_date: '2026-05-27',
-        });
+        };
+        setLoanDetails(details);
+        setAmount(details.min_amount.toString());
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -59,9 +68,10 @@ export default function NanoLoanApplyScreen() {
     fetchData();
   }, []);
 
+  const numAmount = Number(amount) || 0;
+
   const calculateLoan = () => {
     if (!loanDetails) return { interest: 0, fee: 0, total: 0 };
-    const numAmount = Number(amount) || 0;
     const interest = (numAmount * loanDetails.interest_percent) / 100;
     const fee = loanDetails.processing_fee;
     const total = numAmount + interest + fee;
@@ -70,21 +80,57 @@ export default function NanoLoanApplyScreen() {
 
   const { interest, fee, total } = calculateLoan();
 
-  const handleContinue = async () => {
+  const handleAmountChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    setAmount(cleaned);
+  };
+
+  const handleAmountBlur = () => {
+    let num = Number(amount) || 0;
+    if (loanDetails) {
+      num = Math.min(Math.max(num, loanDetails.min_amount), loanDetails.max_amount);
+    }
+    setAmount(num.toString());
+  };
+
+  const handleContinue = () => {
     if (!termsAccepted || !contractAccepted) {
       Alert.alert('Required', 'Please accept both the Terms and Conditions and the Digital Contract.');
       return;
     }
-    
-    setSubmitting(true);
-    try {
-      Alert.alert('Success', 'Your loan application has been submitted successfully!');
-      navigation.navigate('Profile' as never);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to submit loan application');
-    } finally {
-      setSubmitting(false);
+    setShowOtpModal(true);
+    setOtp('');
+    setOtpError('');
+  };
+
+  const handleSubmitOtp = async () => {
+    if (!otp.trim()) {
+      setOtpError('Please enter OTP');
+      return;
     }
+    
+    setVerifyingOtp(true);
+    setOtpError('');
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (otp === '123456') {
+        setShowOtpModal(false);
+        setShowSuccess(true);
+      } else {
+        setOtpError('Invalid or expired OTP');
+      }
+    } catch (error: any) {
+      setOtpError('Verification failed. Please try again.');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccess(false);
+    navigation.navigate('Profile' as never);
   };
 
   if (loading) {
@@ -129,12 +175,8 @@ export default function NanoLoanApplyScreen() {
         <View style={styles.amountInputContainer}>
           <TextInput
             value={amount}
-            onChangeText={(text) => {
-              const num = Number(text.replace(/[^0-9]/g, ''));
-              if (num <= (loanDetails?.max_amount || 1800)) {
-                setAmount(text.replace(/[^0-9]/g, ''));
-              }
-            }}
+            onChangeText={handleAmountChange}
+            onBlur={handleAmountBlur}
             keyboardType="numeric"
             style={styles.amountInput}
           />
@@ -242,6 +284,84 @@ export default function NanoLoanApplyScreen() {
           resizeMode="cover"
         />
       </View>
+
+      <Modal
+        visible={showOtpModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowOtpModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowOtpModal(false)}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.modalTitle}>ENTER OTP</Text>
+            <Text style={styles.modalSubtitle}>
+              An OTP was sent to you via SMS please enter it here.
+            </Text>
+            <Text style={styles.modalHint}>OTP serves as a Digital Signature</Text>
+
+            {otpError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorTitle}>Verification Failed</Text>
+                <Text style={styles.errorText}>{otpError}</Text>
+              </View>
+            ) : null}
+
+            <TextInput
+              placeholder="Enter OTP"
+              value={otp}
+              onChangeText={(text) => setOtp(text.replace(/[^0-9]/g, ''))}
+              style={styles.otpInput}
+              keyboardType="numeric"
+              maxLength={6}
+            />
+
+            <TouchableOpacity
+              style={styles.submitOtpButton}
+              onPress={handleSubmitOtp}
+              disabled={verifyingOtp}
+            >
+              {verifyingOtp ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.buttonText}>SUBMIT OTP</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showSuccess}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseSuccess}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.successIcon}>
+              <Text style={styles.successCheck}>✓</Text>
+            </View>
+            <Text style={styles.successTitle}>Request Successful!</Text>
+            <Text style={styles.successMessage}>
+              Your loan request has been successfully submitted.{'\n'}
+              Please wait 30 minutes for feedback or disbursement to your mobile number.
+            </Text>
+            <TouchableOpacity
+              style={styles.closeSuccessButton}
+              onPress={handleCloseSuccess}
+            >
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -452,5 +572,120 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 350,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#9ca3af',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: '#000000',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalHint: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    textAlign: 'center',
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  submitOtpButton: {
+    backgroundColor: '#00736e',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#22c55e',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  successCheck: {
+    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: '#000000',
+  },
+  successMessage: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  closeSuccessButton: {
+    backgroundColor: '#00736e',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

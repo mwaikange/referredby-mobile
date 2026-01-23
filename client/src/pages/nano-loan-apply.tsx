@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import logoImg from "@/assets/referredby-logo.png";
 
 interface LoanDetails {
   account_level: string;
@@ -24,15 +25,21 @@ export default function NanoLoanApplyPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loanDetails, setLoanDetails] = useState<LoanDetails | null>(null);
-  const [amount, setAmount] = useState<number>(300);
+  const [amountStr, setAmountStr] = useState<string>("300");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
+  
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         await api.getProfile();
-        setLoanDetails({
+        const details = {
           account_level: "NL1",
           loan_max: 1800,
           min_amount: 300,
@@ -42,7 +49,9 @@ export default function NanoLoanApplyPage() {
           due_date: "2026-03-26",
           outstanding_date: "2026-04-26",
           block_date: "2026-05-27",
-        });
+        };
+        setLoanDetails(details);
+        setAmountStr(details.min_amount.toString());
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -51,6 +60,8 @@ export default function NanoLoanApplyPage() {
     };
     fetchData();
   }, []);
+
+  const amount = Number(amountStr) || 0;
 
   const calculateLoan = () => {
     if (!loanDetails) return { interest: 0, fee: 0, total: 0 };
@@ -62,7 +73,20 @@ export default function NanoLoanApplyPage() {
 
   const { interest, fee, total } = calculateLoan();
 
-  const handleContinue = async () => {
+  const handleAmountChange = (value: string) => {
+    const cleaned = value.replace(/[^0-9]/g, '');
+    setAmountStr(cleaned);
+  };
+
+  const handleAmountBlur = () => {
+    let num = Number(amountStr) || 0;
+    if (loanDetails) {
+      num = Math.min(Math.max(num, loanDetails.min_amount), loanDetails.max_amount);
+    }
+    setAmountStr(num.toString());
+  };
+
+  const handleContinue = () => {
     if (!termsAccepted || !contractAccepted) {
       toast({
         variant: "destructive",
@@ -71,23 +95,39 @@ export default function NanoLoanApplyPage() {
       });
       return;
     }
-    
-    setSubmitting(true);
-    try {
-      toast({
-        title: "Loan Application",
-        description: "Your loan application has been submitted successfully!",
-      });
-      setLocation("/profile");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to submit loan application",
-      });
-    } finally {
-      setSubmitting(false);
+    setShowOtpModal(true);
+    setOtp("");
+    setOtpError("");
+  };
+
+  const handleSubmitOtp = async () => {
+    if (!otp.trim()) {
+      setOtpError("Please enter OTP");
+      return;
     }
+    
+    setVerifyingOtp(true);
+    setOtpError("");
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (otp === "123456") {
+        setShowOtpModal(false);
+        setShowSuccess(true);
+      } else {
+        setOtpError("Invalid or expired OTP");
+      }
+    } catch (error: any) {
+      setOtpError("Verification failed. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccess(false);
+    setLocation("/profile");
   };
 
   if (loading) {
@@ -110,12 +150,9 @@ export default function NanoLoanApplyPage() {
 
         <div className="flex justify-center mb-4">
           <img 
-            src="/referredby-logo.png" 
+            src={logoImg} 
             alt="ReferredBy" 
             className="h-[50px] object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
           />
         </div>
 
@@ -128,12 +165,12 @@ export default function NanoLoanApplyPage() {
 
         <div className="border border-gray-300 rounded-lg p-3 mb-2">
           <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(Math.min(Math.max(Number(e.target.value), loanDetails?.min_amount || 300), loanDetails?.max_amount || 1800))}
+            type="text"
+            inputMode="numeric"
+            value={amountStr}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            onBlur={handleAmountBlur}
             className="w-full text-center text-lg font-bold outline-none"
-            min={loanDetails?.min_amount}
-            max={loanDetails?.max_amount}
           />
         </div>
         <p className="text-center text-xs text-gray-500 mb-4">
@@ -228,6 +265,72 @@ export default function NanoLoanApplyPage() {
           </Button>
         </div>
       </div>
+
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-sm p-6 relative">
+            <button 
+              onClick={() => setShowOtpModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+            >
+              <X size={20} />
+            </button>
+            
+            <h2 className="text-center font-bold text-lg mb-2">ENTER OTP</h2>
+            <p className="text-center text-sm text-gray-600 mb-1">
+              An OTP was sent to you via SMS please enter it here.
+            </p>
+            <p className="text-center text-xs text-gray-500 mb-4">
+              OTP serves as a Digital Signature
+            </p>
+
+            {otpError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm font-bold text-gray-800">Verification Failed</p>
+                <p className="text-xs text-gray-600">{otpError}</p>
+              </div>
+            )}
+
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+              className="w-full border border-gray-300 rounded-lg p-3 text-center mb-4 outline-none focus:border-[#00736e]"
+              maxLength={6}
+            />
+
+            <Button
+              onClick={handleSubmitOtp}
+              disabled={verifyingOtp}
+              className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase h-[48px] rounded-lg"
+            >
+              {verifyingOtp ? <Loader2 className="w-5 h-5 animate-spin" /> : 'SUBMIT OTP'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-sm p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="w-16 h-16 text-green-500" />
+            </div>
+            <h2 className="font-bold text-xl mb-2">Request Successful!</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Your loan request has been successfully submitted.<br />
+              Please wait 30 minutes for feedback or disbursement to your mobile number.
+            </p>
+            <Button
+              onClick={handleCloseSuccess}
+              className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase h-[48px] rounded-lg"
+            >
+              CLOSE
+            </Button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
