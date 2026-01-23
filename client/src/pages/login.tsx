@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { ENV } from "@/lib/env";
 import logoGroup from "@assets/Group_2475_(2)_1768529192322.png";
 
 export default function Login() {
@@ -17,39 +16,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const testConnection = async () => {
-    console.log('🧪 TESTING BACKEND CONNECTION');
-    console.log('----------------------------------------');
-    
-    console.log('Environment Variables:');
-    console.log('API_BASE_URL:', ENV.API_BASE_URL);
-    console.log('SUPABASE_URL:', ENV.SUPABASE_URL);
-    console.log('SUPABASE_ANON_KEY present:', !!ENV.SUPABASE_ANON_KEY);
-    
-    console.log('\nTesting Backend API Health:');
-    try {
-      // Test if backend is reachable
-      const testUrl = `${ENV.API_BASE_URL}/api/auth/login`;
-      console.log('Testing URL:', testUrl);
-      
-      const response = await fetch(testUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'test@test.com', pin: '0000' }),
-      });
-      
-      console.log('✅ Backend is reachable');
-      console.log('Status:', response.status);
-      console.log('(401/400 is expected for wrong credentials)');
-      
-    } catch (error: any) {
-      console.error('❌ Backend connection failed:', error.message);
-    }
-    
-    console.log('----------------------------------------');
-    alert('Check console for test results');
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +59,6 @@ export default function Login() {
       console.log('✅ Authentication successful!');
       console.log('👤 User ID:', data.user.id);
 
-      // Step 2: Fetch user profile from backend API (UPDATED!)
       console.log('📥 Fetching profile from API...');
       
       try {
@@ -107,7 +72,6 @@ export default function Login() {
         console.log('💰 Term Limit:', userData.term_loan_limit);
         console.log('⭐ Rating:', userData.borrower_rating);
 
-        // Navigate to profile page
         console.log('🎯 Navigating to Profile...');
         setLocation('/profile');
         
@@ -138,17 +102,14 @@ export default function Login() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col">
-        {/* Logo Section */}
         <div className="flex flex-col items-center mb-8">
           <img 
             src={logoGroup} 
             alt="ReferredBy Community Vetted Financing" 
-            className="w-full h-auto object-contain max-w-[320px]"
+            className="w-full h-auto object-contain max-w-[280px]"
           />
-          <div className="w-full h-px bg-gray-300 mt-6" />
         </div>
 
-        {/* Form Section */}
         <form onSubmit={handleLogin} className="flex-1 flex flex-col gap-6">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wide text-black pl-1">
@@ -158,7 +119,7 @@ export default function Login() {
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-100/50 border-gray-200 h-12 focus-visible:ring-brand-blue"
+              className="bg-gray-100/50 border-gray-200 h-12 focus-visible:ring-brand-blue rounded-lg"
               required
             />
           </div>
@@ -172,7 +133,7 @@ export default function Login() {
                 type={showPin ? "text" : "password"} 
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                className="bg-gray-100/50 border-gray-200 h-12 pr-10 focus-visible:ring-brand-blue"
+                className="bg-gray-100/50 border-gray-200 h-12 pr-10 focus-visible:ring-brand-blue rounded-lg"
                 required
               />
               <button
@@ -188,21 +149,13 @@ export default function Login() {
           <Button 
             type="submit" 
             disabled={loading}
-            className="w-full h-12 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold uppercase tracking-wide mt-2 rounded-md shadow-lg flex items-center justify-center gap-2"
+            className="w-full h-12 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide mt-2 rounded-lg shadow-lg flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "LOGIN"}
           </Button>
 
-          <div className="flex flex-col items-center gap-3 mt-8 text-sm text-center">
-            <button 
-              type="button"
-              onClick={testConnection}
-              className="mt-5 p-2.5 bg-gray-600 text-white border-none rounded-md"
-            >
-              🧪 Test Connections
-            </button>
-
+          <div className="flex flex-col items-center gap-3 mt-6 text-sm text-center">
             <p className="text-gray-900">
               Not Yet Registered - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
             </p>

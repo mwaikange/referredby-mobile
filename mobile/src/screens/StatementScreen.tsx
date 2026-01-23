@@ -11,10 +11,27 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { api, UserProfile } from '../lib/api';
 
+interface ActiveLoan {
+  id: string;
+  reference: string;
+  type: 'nano' | 'term';
+  status: string;
+  received: number;
+  interest_percent: number;
+  interest_amount: number;
+  processing_fee: number;
+  total_repayable: number;
+  instalment_amount?: number;
+  due_date: string;
+  outstanding_date: string;
+  grace_date: string;
+}
+
 export default function StatementScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [activeLoan, setActiveLoan] = useState<ActiveLoan | null>(null);
   const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
 
   useEffect(() => {
@@ -22,14 +39,68 @@ export default function StatementScreen() {
       try {
         const userProfile = await api.getProfile();
         setProfile(userProfile);
-        const status = userProfile.membership_status || '';
-        if (status.includes('TL') || status.includes('term')) {
-          setLoanType('term');
+        
+        const profileData = userProfile as any;
+        
+        if (profileData.active_loan) {
+          const loan = profileData.active_loan;
+          setActiveLoan({
+            id: loan.id || '',
+            reference: loan.reference || loan.loan_id || '',
+            type: loan.type || (loan.reference?.startsWith('TL') ? 'term' : 'nano'),
+            status: loan.status || 'Due',
+            received: loan.received || loan.amount || 0,
+            interest_percent: loan.interest_percent || loan.interest_rate || 0,
+            interest_amount: loan.interest_amount || loan.interest || 0,
+            processing_fee: loan.processing_fee || 0,
+            total_repayable: loan.total_repayable || loan.total || 0,
+            instalment_amount: loan.instalment_amount,
+            due_date: loan.due_date || '',
+            outstanding_date: loan.outstanding_date || '',
+            grace_date: loan.grace_date || '',
+          });
+          setLoanType(loan.type || (loan.reference?.startsWith('TL') ? 'term' : 'nano'));
         } else {
-          setLoanType('nano');
+          const status = userProfile.membership_status || '';
+          const hasTermLoan = status.includes('TL') || status.startsWith('AT') || profileData.active_term_loan;
+          
+          if (hasTermLoan) {
+            setLoanType('term');
+            setActiveLoan({
+              id: '1',
+              reference: 'TL86127543',
+              type: 'term',
+              status: 'Due',
+              received: 8200.00,
+              interest_percent: 15.90,
+              interest_amount: 1303.80,
+              processing_fee: 0.00,
+              total_repayable: 9586.80,
+              instalment_amount: 958.68,
+              due_date: '31 October 2026',
+              outstanding_date: '01 December 2026',
+              grace_date: '02 November 2026',
+            });
+          } else {
+            setLoanType('nano');
+            setActiveLoan({
+              id: '2',
+              reference: 'NL95726406',
+              type: 'nano',
+              status: 'Due',
+              received: 780.00,
+              interest_percent: 25.74,
+              interest_amount: 200.77,
+              processing_fee: 32.00,
+              total_repayable: 1012.77,
+              due_date: '24 March 2026',
+              outstanding_date: '24 April 2026',
+              grace_date: '26 March 2026',
+            });
+          }
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -45,6 +116,9 @@ export default function StatementScreen() {
       </View>
     );
   }
+
+  const loan = activeLoan;
+  const isPaidUp = loan?.status?.toLowerCase() === 'paid' || loan?.status?.toLowerCase() === 'paid up';
 
   if (loanType === 'term') {
     return (
@@ -67,49 +141,51 @@ export default function StatementScreen() {
             LOAN TYPE: <Text style={styles.loanTypeValue}>TERM LOAN</Text>
           </Text>
           <Text style={styles.loanRef}>
-            LOAN REFERENCE: <Text style={styles.bold}>TL86127543</Text>{' '}
-            <Text style={styles.due}>Due</Text>
+            LOAN REFERENCE: <Text style={styles.bold}>{loan?.reference}</Text>{' '}
+            <Text style={isPaidUp ? styles.paidUp : styles.due}>{isPaidUp ? 'Paid Up' : 'Due'}</Text>
           </Text>
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Received (NAD)</Text>
-              <Text style={styles.detailValue}>8200.00</Text>
+              <Text style={styles.detailValue}>{loan?.received?.toFixed(2)}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Interest (%)</Text>
-              <Text style={styles.detailValue}>15.90 %</Text>
+              <Text style={styles.detailValue}>{loan?.interest_percent?.toFixed(2)} %</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Interest (NAD)</Text>
-              <Text style={styles.detailValue}>1303.80</Text>
+              <Text style={styles.detailValue}>{loan?.interest_amount?.toFixed(2)}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Processing Fee (NAD)</Text>
-              <Text style={styles.detailValue}>0.00</Text>
+              <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2)}</Text>
             </View>
             <View style={[styles.detailRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total Repayable (NAD)</Text>
-              <Text style={styles.totalValue}>9586.80</Text>
+              <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2)}</Text>
             </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Instalment Amount (NAD)</Text>
-              <Text style={styles.detailValue}>958.68</Text>
-            </View>
+            {loan?.instalment_amount && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Instalment Amount (NAD)</Text>
+                <Text style={styles.detailValue}>{loan?.instalment_amount?.toFixed(2)}</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.datesSection}>
             <View style={styles.dateRow}>
               <Text style={styles.dateLabel}>Due Date :</Text>
-              <Text style={styles.dateValue}>31 October 2026</Text>
+              <Text style={styles.dateValue}>{loan?.due_date}</Text>
             </View>
             <View style={styles.dateRow}>
               <Text style={styles.dateLabel}>Outstanding Date :</Text>
-              <Text style={styles.dateValue}>01 December 2026</Text>
+              <Text style={styles.dateValue}>{loan?.outstanding_date}</Text>
             </View>
             <View style={styles.dateRow}>
               <Text style={styles.dateLabel}>Grace Date :</Text>
-              <Text style={styles.dateValue}>02 November 2026</Text>
+              <Text style={styles.dateValue}>{loan?.grace_date}</Text>
             </View>
           </View>
 
@@ -183,45 +259,45 @@ export default function StatementScreen() {
           LOAN TYPE: <Text style={styles.loanTypeValue}>NANO LOAN</Text>
         </Text>
         <Text style={styles.loanRef}>
-          LOAN REFERENCE: <Text style={styles.bold}>NL14793071</Text>{' '}
-          <Text style={styles.paidUp}>Paid Up</Text>
+          LOAN REFERENCE: <Text style={styles.bold}>{loan?.reference}</Text>{' '}
+          <Text style={isPaidUp ? styles.paidUp : styles.due}>{isPaidUp ? 'Paid Up' : 'Due'}</Text>
         </Text>
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Received (NAD)</Text>
-            <Text style={styles.detailValue}>4200.00</Text>
+            <Text style={styles.detailValue}>{loan?.received?.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (%)</Text>
-            <Text style={styles.detailValue}>14.05 %</Text>
+            <Text style={styles.detailValue}>{loan?.interest_percent?.toFixed(2)} %</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (NAD)</Text>
-            <Text style={styles.detailValue}>590.10</Text>
+            <Text style={styles.detailValue}>{loan?.interest_amount?.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Processing Fee (NAD)</Text>
-            <Text style={styles.detailValue}>40.00</Text>
+            <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2)}</Text>
           </View>
           <View style={[styles.detailRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Repayable (NAD)</Text>
-            <Text style={styles.totalValue}>4830.10</Text>
+            <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.datesSection}>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Due Date :</Text>
-            <Text style={styles.dateValue}>15 January 2026</Text>
+            <Text style={styles.dateValue}>{loan?.due_date}</Text>
           </View>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Outstanding Date :</Text>
-            <Text style={styles.dateValue}>15 February 2026</Text>
+            <Text style={styles.dateValue}>{loan?.outstanding_date}</Text>
           </View>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Grace Date :</Text>
-            <Text style={styles.dateValue}>17 January 2026</Text>
+            <Text style={styles.dateValue}>{loan?.grace_date}</Text>
           </View>
         </View>
 

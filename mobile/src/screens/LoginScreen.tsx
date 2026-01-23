@@ -75,7 +75,6 @@ export default function LoginScreen() {
               style={styles.logoImage}
               resizeMode="contain"
             />
-            <View style={styles.divider} />
           </View>
 
           <View style={styles.form}>
@@ -182,21 +181,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
   },
   logoSection: {
     alignItems: 'center',
     marginBottom: 32,
   },
   logoImage: {
-    width: 280,
-    height: 100,
-  },
-  divider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: '#d1d5db',
-    marginTop: 24,
+    width: 250,
+    height: 90,
   },
   form: {
     flex: 1,
@@ -247,7 +240,7 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   loginButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#0B0B3B',
     height: 48,
     borderRadius: 8,
     justifyContent: 'center',
