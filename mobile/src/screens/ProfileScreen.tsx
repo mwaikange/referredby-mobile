@@ -335,23 +335,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   starFilled: {
-    fontSize: 18,
+    fontSize: 45,
     color: '#facc15',
   },
   starEmpty: {
-    fontSize: 18,
+    fontSize: 45,
     color: '#d1d5db',
   },
   halfStarContainer: {
     position: 'relative',
-    width: 18,
-    height: 18,
+    width: 45,
+    height: 45,
   },
   halfStarOverlay: {
     position: 'absolute',
     left: 0,
     top: 0,
-    width: 9,
+    width: 22,
     overflow: 'hidden',
   },
   documentsRow: {
