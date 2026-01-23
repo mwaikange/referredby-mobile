@@ -191,6 +191,8 @@ export default function Statement() {
             Make a payment via the methods listed below then upload the proof of payment to our online agents by clicking here:
           </p>
 
+          <div className="h-px bg-gray-300 w-3/4 mx-auto mb-6" />
+
           <div className="space-y-3 mb-6">
             <Button 
               onClick={() => setLocation("/payment-record")}
@@ -294,6 +296,8 @@ export default function Statement() {
         <p className="text-xs text-gray-500 mb-4">
           Make a payment via the methods listed below then upload the proof of payment to our online agents by clicking here:
         </p>
+
+        <div className="h-px bg-gray-300 w-3/4 mx-auto mb-6" />
 
         <div className="space-y-3 mb-6">
           <Button 

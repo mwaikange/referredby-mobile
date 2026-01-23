@@ -67,28 +67,28 @@ export default function TermLoans() {
         <div className="space-y-4 pb-10">
           <Button 
             onClick={() => setLocation("/banking-details")}
-            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Enter Bank Details
           </Button>
           
           <Button 
             onClick={() => setLocation("/net-disposable-income")}
-            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Net Disposable Income
           </Button>
           
           <Button 
             onClick={() => setLocation("/bank-authorization")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Bank Authorization
           </Button>
           
           <Button 
             onClick={() => setLocation("/term-interest-confirmation")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Request Term Loan
           </Button>

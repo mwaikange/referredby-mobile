@@ -180,6 +180,9 @@ export default function ProfileScreen() {
           <Text style={styles.updateButtonTextDisabled}>UPDATE DOCUMENTS</Text>
         </TouchableOpacity>
 
+        <View style={styles.grayLine} />
+        <View style={styles.grayLine} />
+
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.darkButton}
@@ -389,7 +392,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  grayLine: {
+    height: 1,
+    backgroundColor: '#d1d5db',
+    width: '100%',
+    marginBottom: 8,
   },
   updateButtonTextDisabled: {
     color: '#9ca3af',

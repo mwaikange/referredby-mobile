@@ -94,28 +94,28 @@ export default function TermLoansScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
-            style={styles.darkButton}
+            style={styles.tealButton}
             onPress={() => navigation.navigate('BankingDetails')}
           >
             <Text style={styles.buttonText}>ENTER BANK DETAILS</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.darkButton}
+            style={styles.tealButton}
             onPress={() => navigation.navigate('NetDisposableIncome')}
           >
             <Text style={styles.buttonText}>NET DISPOSABLE INCOME</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.tealButton}
+            style={styles.darkButton}
             onPress={() => navigation.navigate('BankAuthorization')}
           >
             <Text style={styles.buttonText}>BANK AUTHORIZATION</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.tealButton}
+            style={styles.darkButton}
             onPress={() => navigation.navigate('TermInterestConfirmation')}
           >
             <Text style={styles.buttonText}>REQUEST TERM LOAN</Text>

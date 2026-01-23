@@ -134,11 +134,14 @@ export default function Profile() {
 
         <Button 
           variant="outline"
-          className="w-full h-[48px] font-bold uppercase tracking-wide rounded-lg mb-8 border-gray-200 text-gray-400 bg-gray-50"
+          className="w-full h-[48px] font-bold uppercase tracking-wide rounded-lg mb-4 border-gray-200 text-gray-400 bg-gray-50"
           disabled
         >
           UPDATE DOCUMENTS
         </Button>
+
+        <div className="h-px bg-gray-300 w-full mb-4" />
+        <div className="h-px bg-gray-300 w-full mb-6" />
 
         <div className="space-y-4">
           <Button 
