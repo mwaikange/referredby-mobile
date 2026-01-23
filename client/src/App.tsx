@@ -9,6 +9,10 @@ import Login from "@/pages/login";
 import Profile from "@/pages/profile";
 import InterestConfirmation from "@/pages/interest-confirmation";
 import TermLoans from "@/pages/term-loans";
+import BankingDetails from "@/pages/banking-details";
+import NetDisposableIncome from "@/pages/net-disposable-income";
+import BankAuthorization from "@/pages/bank-authorization";
+import TermInterestConfirmation from "@/pages/term-interest-confirmation";
 
 function Router() {
   return (
@@ -18,6 +22,10 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/interest-confirmation" component={InterestConfirmation} />
       <Route path="/term-loans" component={TermLoans} />
+      <Route path="/banking-details" component={BankingDetails} />
+      <Route path="/net-disposable-income" component={NetDisposableIncome} />
+      <Route path="/bank-authorization" component={BankAuthorization} />
+      <Route path="/term-interest-confirmation" component={TermInterestConfirmation} />
       <Route component={NotFound} />
     </Switch>
   );

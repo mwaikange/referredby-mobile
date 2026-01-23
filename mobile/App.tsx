@@ -9,6 +9,10 @@ import LoginScreen from './src/screens/LoginScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import InterestConfirmationScreen from './src/screens/InterestConfirmationScreen';
 import TermLoansScreen from './src/screens/TermLoansScreen';
+import BankingDetailsScreen from './src/screens/BankingDetailsScreen';
+import NetDisposableIncomeScreen from './src/screens/NetDisposableIncomeScreen';
+import BankAuthorizationScreen from './src/screens/BankAuthorizationScreen';
+import TermInterestConfirmationScreen from './src/screens/TermInterestConfirmationScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -81,6 +85,10 @@ function AppContent() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="InterestConfirmation" component={InterestConfirmationScreen} />
         <Stack.Screen name="TermLoans" component={TermLoansScreen} />
+        <Stack.Screen name="BankingDetails" component={BankingDetailsScreen} />
+        <Stack.Screen name="NetDisposableIncome" component={NetDisposableIncomeScreen} />
+        <Stack.Screen name="BankAuthorization" component={BankAuthorizationScreen} />
+        <Stack.Screen name="TermInterestConfirmation" component={TermInterestConfirmationScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

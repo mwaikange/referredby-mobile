@@ -65,28 +65,37 @@ export default function TermLoans() {
         </div>
 
         <div className="space-y-4 pb-10">
-          <Button className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+          <Button 
+            onClick={() => setLocation("/banking-details")}
+            className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+          >
             Enter Bank Details
           </Button>
           
-          <Button className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md">
+          <Button 
+            onClick={() => setLocation("/net-disposable-income")}
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
+          >
             Net Disposable Income
           </Button>
           
-          <Button className="w-full bg-white hover:bg-gray-50 text-black font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md border-2 border-gray-300">
+          <Button 
+            onClick={() => setLocation("/bank-authorization")}
+            className="w-full bg-white hover:bg-gray-50 text-black font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg border-2 border-gray-300"
+          >
             Bank Authorization
           </Button>
           
           <Button 
-            disabled
-            className="w-full bg-gray-200 text-gray-400 font-bold uppercase tracking-wide h-[54px] rounded-md cursor-not-allowed"
+            onClick={() => setLocation("/term-interest-confirmation")}
+            className="w-full bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             Request Term Loan
           </Button>
           
           <Button 
             onClick={() => setLocation("/profile")}
-            className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-md"
+            className="w-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold uppercase tracking-wide h-[54px] shadow-lg rounded-lg"
           >
             BACK
           </Button>

@@ -8,9 +8,13 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'TermLoans'>;
 
 export default function TermLoansScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <View style={styles.container}>
@@ -89,20 +93,32 @@ export default function TermLoansScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.redButton}>
+          <TouchableOpacity 
+            style={styles.redButton}
+            onPress={() => navigation.navigate('BankingDetails')}
+          >
             <Text style={styles.buttonText}>ENTER BANK DETAILS</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.darkButton}>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('NetDisposableIncome')}
+          >
             <Text style={styles.buttonText}>NET DISPOSABLE INCOME</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.outlineButton}>
+          <TouchableOpacity 
+            style={styles.outlineButton}
+            onPress={() => navigation.navigate('BankAuthorization')}
+          >
             <Text style={styles.outlineButtonText}>BANK AUTHORIZATION</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.disabledButton} disabled>
-            <Text style={styles.disabledButtonText}>REQUEST TERM LOAN</Text>
+          <TouchableOpacity 
+            style={styles.darkButton}
+            onPress={() => navigation.navigate('TermInterestConfirmation')}
+          >
+            <Text style={styles.buttonText}>REQUEST TERM LOAN</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -186,67 +202,36 @@ const styles = StyleSheet.create({
   redButton: {
     backgroundColor: '#dc2626',
     height: 54,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   darkButton: {
     backgroundColor: '#0B0B3B',
     height: 54,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   outlineButton: {
     backgroundColor: '#ffffff',
     height: 54,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#d1d5db',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  disabledButton: {
-    backgroundColor: '#e5e7eb',
-    height: 54,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   outlineButtonText: {
     color: '#000000',
     fontSize: 14,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  disabledButtonText: {
-    color: '#9ca3af',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
 });

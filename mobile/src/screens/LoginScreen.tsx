@@ -105,7 +105,7 @@ export default function LoginScreen() {
                 onPress={() => setShowPin(!showPin)}
                 style={styles.eyeButton}
               >
-                <Text style={styles.eyeIcon}>{showPin ? '👁️' : '👁️‍🗨️'}</Text>
+                <Text style={styles.eyeIcon}>{showPin ? '👁' : '👁‍🗨'}</Text>
               </TouchableOpacity>
             </View>
 
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(243, 244, 246, 0.5)',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 6,
+    borderRadius: 8,
     height: 48,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(243, 244, 246, 0.5)',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 6,
+    borderRadius: 8,
     height: 48,
     marginBottom: 24,
   },
@@ -249,15 +249,10 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: '#3b82f6',
     height: 48,
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   loginButtonDisabled: {
     opacity: 0.7,
