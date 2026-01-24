@@ -101,8 +101,8 @@ export default function Login() {
 
   return (
     <Layout>
-      <div className="flex-1 flex flex-col pt-6">
-        <div className="flex flex-col items-center mb-10">
+      <div className="flex-1 flex flex-col pt-12">
+        <div className="flex flex-col items-center mb-12">
           <img 
             src={logoGroup} 
             alt="ReferredBy Community Vetted Financing" 

@@ -40,16 +40,16 @@ export default function Profile() {
     
     for (let i = 0; i < 10; i++) {
       if (i < fullStars || (i === fullStars && roundUp)) {
-        stars.push(<span key={i} style={{ color: '#facc15', fontSize: '23px' }}>★</span>);
+        stars.push(<span key={i} style={{ color: '#D4AF37', fontSize: '18px' }}>★</span>);
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
-          <span key={i} style={{ position: 'relative', display: 'inline-block', width: '23px', fontSize: '23px' }}>
+          <span key={i} style={{ position: 'relative', display: 'inline-block', width: '18px', fontSize: '18px' }}>
             <span style={{ color: '#d1d5db' }}>☆</span>
-            <span style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden', color: '#facc15' }}>★</span>
+            <span style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden', color: '#D4AF37' }}>★</span>
           </span>
         );
       } else {
-        stars.push(<span key={i} style={{ color: '#d1d5db', fontSize: '23px' }}>☆</span>);
+        stars.push(<span key={i} style={{ color: '#d1d5db', fontSize: '18px' }}>☆</span>);
       }
     }
     return stars;
@@ -106,7 +106,7 @@ export default function Profile() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Credit Rating</span>
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
               {renderStars(rating)}
             </div>
           </div>

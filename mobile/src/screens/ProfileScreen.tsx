@@ -379,25 +379,26 @@ const styles = StyleSheet.create({
   starsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 1,
   },
   starFilled: {
-    fontSize: 23,
-    color: '#facc15',
+    fontSize: 18,
+    color: '#D4AF37',
   },
   starEmpty: {
-    fontSize: 23,
+    fontSize: 18,
     color: '#d1d5db',
   },
   halfStarContainer: {
     position: 'relative',
-    width: 23,
-    height: 23,
+    width: 18,
+    height: 18,
   },
   halfStarOverlay: {
     position: 'absolute',
     left: 0,
     top: 0,
-    width: 11,
+    width: 9,
     overflow: 'hidden',
   },
   documentsRow: {

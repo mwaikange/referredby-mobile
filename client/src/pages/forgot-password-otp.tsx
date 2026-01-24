@@ -3,6 +3,7 @@ import { useLocation, useSearch } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import logoGroup from "@/assets/referredby-logo.png";
 
 export default function ForgotPasswordOtp() {
   const [, setLocation] = useLocation();
@@ -39,9 +40,9 @@ export default function ForgotPasswordOtp() {
         <div className="w-full max-w-sm">
           <div className="flex justify-center mb-8">
             <img 
-              src="/referredby-logo.png" 
-              alt="ReferredBy" 
-              className="h-16 object-contain"
+              src={logoGroup} 
+              alt="ReferredBy Community Vetted Financing" 
+              className="h-[60px] object-contain"
               data-testid="img-logo"
             />
           </div>
