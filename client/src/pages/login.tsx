@@ -157,13 +157,13 @@ export default function Login() {
 
           <div className="flex flex-col items-center gap-3 mt-6 text-sm text-center">
             <p className="text-gray-900">
-              Not Yet Registered - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
+              Not Yet Registered - <a href="/register-referral" className="text-blue-600 hover:underline" data-testid="link-register">Click Here</a>
             </p>
             <p className="text-gray-900">
-              Forgot Password - <a href="/forgot-password" className="text-blue-600 hover:underline">Click Here</a>
+              Forgot Password - <a href="/forgot-password" className="text-blue-600 hover:underline" data-testid="link-forgot">Click Here</a>
             </p>
             <p className="text-gray-900">
-              Talk to an Agent - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
+              Talk to an Agent - <a href="#" className="text-blue-600 hover:underline" data-testid="link-agent">Click Here</a>
             </p>
           </div>
         </form>

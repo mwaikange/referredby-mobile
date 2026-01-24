@@ -22,6 +22,12 @@ import TermLoanApplyScreen from './src/screens/TermLoanApplyScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ForgotPasswordOtpScreen from './src/screens/ForgotPasswordOtpScreen';
 import ForgotPasswordNewPinScreen from './src/screens/ForgotPasswordNewPinScreen';
+import RegisterReferralScreen from './src/screens/RegisterReferralScreen';
+import RegisterLinkCommunityScreen from './src/screens/RegisterLinkCommunityScreen';
+import RegisterPersonalInfoScreen from './src/screens/RegisterPersonalInfoScreen';
+import RegisterEmployerKinScreen from './src/screens/RegisterEmployerKinScreen';
+import RegisterSetPinScreen from './src/screens/RegisterSetPinScreen';
+import RegisterOtpScreen from './src/screens/RegisterOtpScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -107,6 +113,12 @@ function AppContent() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ForgotPasswordOtp" component={ForgotPasswordOtpScreen} />
         <Stack.Screen name="ForgotPasswordNewPin" component={ForgotPasswordNewPinScreen} />
+        <Stack.Screen name="RegisterReferral" component={RegisterReferralScreen} />
+        <Stack.Screen name="RegisterLinkCommunity" component={RegisterLinkCommunityScreen} />
+        <Stack.Screen name="RegisterPersonalInfo" component={RegisterPersonalInfoScreen} />
+        <Stack.Screen name="RegisterEmployerKin" component={RegisterEmployerKinScreen} />
+        <Stack.Screen name="RegisterSetPin" component={RegisterSetPinScreen} />
+        <Stack.Screen name="RegisterOtp" component={RegisterOtpScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

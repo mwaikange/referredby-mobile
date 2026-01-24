@@ -22,6 +22,12 @@ import TermLoanApply from "@/pages/term-loan-apply";
 import ForgotPassword from "@/pages/forgot-password";
 import ForgotPasswordOtp from "@/pages/forgot-password-otp";
 import ForgotPasswordNewPin from "@/pages/forgot-password-new-pin";
+import RegisterReferral from "@/pages/register-referral";
+import RegisterLinkCommunity from "@/pages/register-link-community";
+import RegisterPersonalInfo from "@/pages/register-personal-info";
+import RegisterEmployerKin from "@/pages/register-employer-kin";
+import RegisterSetPin from "@/pages/register-set-pin";
+import RegisterOtp from "@/pages/register-otp";
 
 function Router() {
   return (
@@ -44,6 +50,12 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/forgot-password-otp" component={ForgotPasswordOtp} />
       <Route path="/forgot-password-new-pin" component={ForgotPasswordNewPin} />
+      <Route path="/register-referral" component={RegisterReferral} />
+      <Route path="/register-link-community" component={RegisterLinkCommunity} />
+      <Route path="/register-personal-info" component={RegisterPersonalInfo} />
+      <Route path="/register-employer-kin" component={RegisterEmployerKin} />
+      <Route path="/register-set-pin" component={RegisterSetPin} />
+      <Route path="/register-otp" component={RegisterOtp} />
       <Route component={NotFound} />
     </Switch>
   );

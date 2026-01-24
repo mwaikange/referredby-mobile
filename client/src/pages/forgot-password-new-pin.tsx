@@ -80,7 +80,7 @@ export default function ForgotPasswordNewPin() {
 
             <div className="text-center space-y-3 pt-4">
               <p className="text-sm text-gray-700">
-                Not Yet Registered - <span className="text-blue-600 cursor-pointer" data-testid="link-register">Click Here</span>
+                Not Yet Registered - <span className="text-blue-600 cursor-pointer" data-testid="link-register" onClick={() => setLocation("/register-referral")}>Click Here</span>
               </p>
               <p className="text-sm text-gray-700">
                 Already Registered - <span className="text-blue-600 cursor-pointer" data-testid="link-login" onClick={() => setLocation("/login")}>Click Here</span>

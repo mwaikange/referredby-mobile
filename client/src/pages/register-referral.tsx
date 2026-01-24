@@ -1,23 +1,20 @@
 import { useState } from "react";
-import { useLocation, useSearch } from "wouter";
+import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
+import { Clipboard } from "lucide-react";
 
-export default function ForgotPasswordOtp() {
+export default function RegisterReferral() {
   const [, setLocation] = useLocation();
-  const searchString = useSearch();
-  const params = new URLSearchParams(searchString);
-  const mobileNumber = params.get("mobile") || "";
-  
-  const [otp, setOtp] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmitOtp = async () => {
-    if (!otp || otp.length < 4) {
-      setError("Please enter the OTP");
+  const handleSignUp = async () => {
+    if (!referralCode.trim()) {
+      setError("Please enter a referral code");
       return;
     }
 
@@ -26,11 +23,11 @@ export default function ForgotPasswordOtp() {
 
     setTimeout(() => {
       setIsLoading(false);
-      if (otp === "123456") {
-        setLocation(`/forgot-password-new-pin?mobile=${encodeURIComponent(mobileNumber)}`);
-      } else {
-        setError("Invalid or expired OTP");
-      }
+      sessionStorage.setItem("registration_referral_code", referralCode);
+      sessionStorage.setItem("registration_referral_partner", "Niksman Groot");
+      sessionStorage.setItem("registration_lending_society", "kayla Industries");
+      sessionStorage.setItem("registration_portfolio_holder", "Destiny Group Pty LTD");
+      setLocation("/register-link-community");
     }, 1000);
   };
 
@@ -50,18 +47,21 @@ export default function ForgotPasswordOtp() {
           <div className="space-y-6">
             <div>
               <label className="block text-[11px] font-bold tracking-wider text-black mb-2">
-                ENTER OTP
+                REFERRAL CODE
               </label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder=""
-                className="h-12 bg-gray-50/50 border-gray-200 rounded-lg text-base text-center tracking-widest"
-                maxLength={6}
-                data-testid="input-otp"
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Clipboard size={18} />
+                </div>
+                <Input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  placeholder=""
+                  className="h-12 bg-gray-50/50 border-2 border-yellow-400 rounded-lg text-base pl-10"
+                  data-testid="input-referral-code"
+                />
+              </div>
             </div>
 
             {error && (
@@ -69,20 +69,20 @@ export default function ForgotPasswordOtp() {
             )}
 
             <Button
-              onClick={handleSubmitOtp}
+              onClick={handleSignUp}
               disabled={isLoading}
               className="w-full h-12 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold tracking-wide rounded-lg"
-              data-testid="button-submit-otp"
+              data-testid="button-signup"
             >
-              {isLoading ? "VALIDATING..." : "SUBMIT OTP"}
+              {isLoading ? "VALIDATING..." : "SIGN UP"}
             </Button>
 
             <div className="text-center space-y-3 pt-4">
               <p className="text-sm text-gray-700">
-                Not Yet Registered - <span className="text-blue-600 cursor-pointer" data-testid="link-register" onClick={() => setLocation("/register-referral")}>Click Here</span>
+                Back to Login - <span className="text-blue-600 cursor-pointer" data-testid="link-login" onClick={() => setLocation("/login")}>Click Here</span>
               </p>
               <p className="text-sm text-gray-700">
-                Already Registered - <span className="text-blue-600 cursor-pointer" data-testid="link-login" onClick={() => setLocation("/login")}>Click Here</span>
+                Forgot Password - <span className="text-blue-600 cursor-pointer" data-testid="link-forgot" onClick={() => setLocation("/forgot-password")}>Click Here</span>
               </p>
               <p className="text-sm text-gray-700">
                 Talk to an Agent - <span className="text-blue-600 cursor-pointer" data-testid="link-agent">Click Here</span>

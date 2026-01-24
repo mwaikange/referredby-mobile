@@ -17,4 +17,10 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   ForgotPasswordOtp: { mobileNumber: string };
   ForgotPasswordNewPin: { mobileNumber: string };
+  RegisterReferral: undefined;
+  RegisterLinkCommunity: { referralPartner: string; lendingSociety: string; portfolioHolder: string };
+  RegisterPersonalInfo: undefined;
+  RegisterEmployerKin: undefined;
+  RegisterSetPin: { mobileNumber: string };
+  RegisterOtp: { mobileNumber: string };
 };

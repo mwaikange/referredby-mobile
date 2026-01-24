@@ -126,9 +126,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.linksSection}>
-              <Text style={styles.linkText}>
-                Not Yet Registered - <Text style={styles.linkBlue}>Click Here</Text>
-              </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('RegisterReferral')}>
+                <Text style={styles.linkText}>
+                  Not Yet Registered - <Text style={styles.linkBlue}>Click Here</Text>
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
                 <Text style={styles.linkText}>
                   Forgot Password - <Text style={styles.linkBlue}>Click Here</Text>
