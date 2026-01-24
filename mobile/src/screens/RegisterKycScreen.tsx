@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
 import type { RootStackParamList } from '../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterKyc'>;
@@ -22,42 +21,52 @@ export default function RegisterKycScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a selfie.');
-      return;
-    }
+    try {
+      const ImagePicker = require('expo-image-picker');
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a selfie.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setSelfieUri(result.assets[0].uri);
-      const uri = result.assets[0].uri;
-      setFileName(uri.split('/').pop() || 'selfie.jpg');
+      if (!result.canceled && result.assets[0]) {
+        setSelfieUri(result.assets[0].uri);
+        const uri = result.assets[0].uri;
+        setFileName(uri.split('/').pop() || 'selfie.jpg');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Could not pick image');
     }
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera permissions to take a selfie.');
-      return;
-    }
+    try {
+      const ImagePicker = require('expo-image-picker');
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera permissions to take a selfie.');
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setSelfieUri(result.assets[0].uri);
-      setFileName('selfie.jpg');
+      if (!result.canceled && result.assets[0]) {
+        setSelfieUri(result.assets[0].uri);
+        setFileName('selfie.jpg');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Could not take photo');
     }
   };
 
@@ -103,22 +112,20 @@ export default function RegisterKycScreen() {
           Click the camera icon below and upload a selfie with you holding your ID just below your chin and today's date written on a white paper as indicated on the photo below.
         </Text>
 
-        <TouchableOpacity style={styles.cameraArea} onPress={handleCameraPress}>
-          {selfieUri ? (
-            <Image source={{ uri: selfieUri }} style={styles.previewImage} />
-          ) : (
-            <View style={styles.cameraIcon}>
-              <Text style={styles.cameraEmoji}>📷</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* Dark blue panel */}
+        <View style={styles.darkPanel}>
+          <TouchableOpacity style={styles.cameraArea} onPress={handleCameraPress}>
+            {selfieUri ? (
+              <Image source={{ uri: selfieUri }} style={styles.previewImage} />
+            ) : (
+              <View style={styles.cameraIcon}>
+                <Text style={styles.cameraEmoji}>📷</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        <View style={styles.uploadSection}>
           <Text style={styles.uploadLabel}>Upload selfie with ID</Text>
-          <View style={styles.fileRow}>
-            <TouchableOpacity style={styles.chooseButton} onPress={pickImage}>
-              <Text style={styles.chooseButtonText}>CHOOSE FILE</Text>
-            </TouchableOpacity>
+          <View style={styles.fileNameBox}>
             <Text style={styles.fileName}>{fileName || 'No file chosen'}</Text>
           </View>
         </View>
@@ -150,21 +157,19 @@ const styles = StyleSheet.create({
   headerPattern: { height: 60, overflow: 'hidden' },
   footerPattern: { height: 60, overflow: 'hidden' },
   patternImage: { width: '100%', height: 60 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 16 },
-  instructions: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 24, paddingHorizontal: 16 },
-  cameraArea: { backgroundColor: '#0B0B3B', borderRadius: 8, height: 180, alignItems: 'center', justifyContent: 'center', marginBottom: 24, alignSelf: 'center', width: '100%', maxWidth: 280 },
-  cameraIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  cameraEmoji: { fontSize: 28 },
+  subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 12 },
+  instructions: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 16, paddingHorizontal: 8 },
+  darkPanel: { backgroundColor: '#0B0B3B', borderRadius: 12, padding: 16, marginBottom: 16 },
+  cameraArea: { backgroundColor: '#1a1a5c', borderRadius: 8, height: 160, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  cameraIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  cameraEmoji: { fontSize: 24 },
   previewImage: { width: '100%', height: '100%', borderRadius: 8 },
-  uploadSection: { marginBottom: 24 },
-  uploadLabel: { fontSize: 14, color: '#374151', marginBottom: 8 },
-  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  chooseButton: { backgroundColor: '#16a34a', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 },
-  chooseButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '600' },
-  fileName: { fontSize: 14, color: '#6b7280', flex: 1 },
-  proceedButton: { backgroundColor: '#6B7280', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 'auto' },
+  uploadLabel: { fontSize: 14, color: '#ffffff', marginBottom: 8 },
+  fileNameBox: { backgroundColor: '#f3f4f6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
+  fileName: { fontSize: 14, color: '#6b7280' },
+  proceedButton: { backgroundColor: '#0B0B3B', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   buttonDisabled: { opacity: 0.5 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
 });

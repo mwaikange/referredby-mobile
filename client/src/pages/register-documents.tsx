@@ -39,24 +39,22 @@ export default function RegisterDocuments() {
   return (
     <Layout>
       <div className="flex-1 flex flex-col px-2">
-        <h1 className="text-xl font-bold text-center mb-8" data-testid="text-title">
+        <h1 className="text-xl font-bold text-center mb-6" data-testid="text-title">
           UPLOAD REQUIRED<br />DOCUMENTS
         </h1>
 
-        <div className="space-y-6 flex-1">
+        <div className="space-y-4 flex-1">
+          {/* National ID Section */}
           <div>
-            <label className="text-sm font-semibold text-gray-900 mb-3 block">
+            <label className="text-sm font-semibold text-gray-900 mb-2 block">
               National Identification Card
             </label>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => idInputRef.current?.click()}
-                className="bg-green-600 hover:bg-green-700 text-white text-xs px-4 py-2 rounded"
-                data-testid="button-choose-id"
-              >
-                CHOOSE FILE
-              </Button>
-              <span className="text-sm text-gray-500" data-testid="text-id-file">
+            <div 
+              className="bg-gray-100 rounded-lg px-4 py-3 cursor-pointer border border-gray-200"
+              onClick={() => idInputRef.current?.click()}
+              data-testid="button-choose-id"
+            >
+              <span className="text-sm text-gray-600" data-testid="text-id-file">
                 {idFile ? idFile.name : "No file chosen"}
               </span>
             </div>
@@ -70,19 +68,17 @@ export default function RegisterDocuments() {
             />
           </div>
 
+          {/* Proof of Income Section */}
           <div>
-            <label className="text-sm font-semibold text-gray-900 mb-3 block">
-              Proof of Income
+            <label className="text-sm font-semibold text-gray-900 mb-2 block">
+              Payslip
             </label>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => incomeInputRef.current?.click()}
-                className="bg-green-600 hover:bg-green-700 text-white text-xs px-4 py-2 rounded"
-                data-testid="button-choose-income"
-              >
-                CHOOSE FILE
-              </Button>
-              <span className="text-sm text-gray-500" data-testid="text-income-file">
+            <div 
+              className="bg-gray-100 rounded-lg px-4 py-3 cursor-pointer border border-gray-200"
+              onClick={() => incomeInputRef.current?.click()}
+              data-testid="button-choose-income"
+            >
+              <span className="text-sm text-gray-600" data-testid="text-income-file">
                 {incomeFile ? incomeFile.name : "No file chosen"}
               </span>
             </div>
@@ -95,23 +91,24 @@ export default function RegisterDocuments() {
               data-testid="input-income-file"
             />
           </div>
-
-          <p className="text-xs text-gray-500 text-center px-4">
-            All these form will be valid for 6 months only, afterwhich they must be renewed and re-uploaded.
-          </p>
         </div>
 
-        <div className="mt-auto space-y-4">
+        {/* Dark blue panel for bottom section */}
+        <div className="bg-[#0B0B3B] rounded-lg p-4 mt-4">
+          <p className="text-xs text-white/80 text-center mb-4">
+            All these form will be valid for 6 months only, afterwhich they must be renewed and re-uploaded.
+          </p>
+
           <Button
             onClick={handleProceed}
             disabled={!idFile || !incomeFile || isLoading}
-            className="w-full bg-[#0B0B3B] hover:bg-[#1a1a5c] text-white font-bold py-3 rounded-lg disabled:opacity-50"
+            className="w-full bg-[#00736e] hover:bg-[#005c58] text-white font-bold py-3 rounded-lg disabled:opacity-50"
             data-testid="button-proceed"
           >
             {isLoading ? "UPLOADING..." : "PROCEED"}
           </Button>
 
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-white/70 text-center mt-3">
             Please make sure all required documents are uploaded for immediate approval.
           </p>
         </div>
