@@ -41,8 +41,7 @@ export default function RegisterOtp() {
     setTimeout(() => {
       setIsLoading(false);
       if (otp === "123456") {
-        sessionStorage.clear();
-        setLocation("/login");
+        setLocation("/register-kyc");
       } else {
         setError("Invalid OTP. Please try again.");
       }

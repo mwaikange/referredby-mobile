@@ -28,6 +28,8 @@ import RegisterPersonalInfo from "@/pages/register-personal-info";
 import RegisterEmployerKin from "@/pages/register-employer-kin";
 import RegisterSetPin from "@/pages/register-set-pin";
 import RegisterOtp from "@/pages/register-otp";
+import RegisterKyc from "@/pages/register-kyc";
+import RegisterDocuments from "@/pages/register-documents";
 
 function Router() {
   return (
@@ -56,6 +58,8 @@ function Router() {
       <Route path="/register-employer-kin" component={RegisterEmployerKin} />
       <Route path="/register-set-pin" component={RegisterSetPin} />
       <Route path="/register-otp" component={RegisterOtp} />
+      <Route path="/register-kyc" component={RegisterKyc} />
+      <Route path="/register-documents" component={RegisterDocuments} />
       <Route component={NotFound} />
     </Switch>
   );

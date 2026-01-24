@@ -23,4 +23,6 @@ export type RootStackParamList = {
   RegisterEmployerKin: undefined;
   RegisterSetPin: { mobileNumber: string };
   RegisterOtp: { mobileNumber: string };
+  RegisterKyc: undefined;
+  RegisterDocuments: undefined;
 };

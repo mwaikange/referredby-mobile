@@ -52,10 +52,7 @@ export default function RegisterOtpScreen() {
     setTimeout(async () => {
       setIsLoading(false);
       if (otp === '123456') {
-        await AsyncStorage.removeItem('registration_mobile');
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
+        navigation.navigate('RegisterKyc');
       } else {
         setError('Invalid OTP. Please try again.');
       }
