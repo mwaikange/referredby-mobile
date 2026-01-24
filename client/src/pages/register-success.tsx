@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import logoGroup from "@/assets/referredby-logo.png";
+import { Layout } from "@/components/layout";
 
 export default function RegisterSuccess() {
   const [, setLocation] = useLocation();
@@ -12,15 +13,7 @@ export default function RegisterSuccess() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover"
-        />
-      </div>
-
+    <Layout>
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <img 
           src={logoGroup} 
@@ -49,14 +42,6 @@ export default function RegisterSuccess() {
           GO TO LOGIN
         </Button>
       </div>
-
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover rotate-180"
-        />
-      </div>
-    </div>
+    </Layout>
   );
 }

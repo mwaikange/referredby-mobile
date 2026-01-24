@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout";
 
 export default function RegisterDocuments() {
   const [, setLocation] = useLocation();
@@ -36,16 +37,8 @@ export default function RegisterDocuments() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover"
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col px-6 py-6">
+    <Layout>
+      <div className="flex-1 flex flex-col px-2">
         <h1 className="text-xl font-bold text-center mb-8" data-testid="text-title">
           UPLOAD REQUIRED<br />DOCUMENTS
         </h1>
@@ -123,14 +116,6 @@ export default function RegisterDocuments() {
           </p>
         </div>
       </div>
-
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover rotate-180"
-        />
-      </div>
-    </div>
+    </Layout>
   );
 }

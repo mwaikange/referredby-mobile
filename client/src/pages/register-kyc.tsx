@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout";
 
 export default function RegisterKyc() {
   const [, setLocation] = useLocation();
@@ -38,16 +39,8 @@ export default function RegisterKyc() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover"
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col px-6 py-4">
+    <Layout>
+      <div className="flex-1 flex flex-col px-2">
         <h1 className="text-xl font-bold text-center mb-2" data-testid="text-title">
           KNOW YOUR CUSTOMER (KYC)
         </h1>
@@ -104,7 +97,7 @@ export default function RegisterKyc() {
           />
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-auto pt-4">
           <Button
             onClick={handleProceed}
             disabled={!selfieFile || isLoading}
@@ -115,14 +108,6 @@ export default function RegisterKyc() {
           </Button>
         </div>
       </div>
-
-      <div className="h-16 overflow-hidden">
-        <img 
-          src="/header-pattern.png" 
-          alt="" 
-          className="w-full h-16 object-cover rotate-180"
-        />
-      </div>
-    </div>
+    </Layout>
   );
 }
