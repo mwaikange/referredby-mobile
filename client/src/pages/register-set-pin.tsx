@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
+import { api } from "@/lib/api";
 
 export default function RegisterSetPin() {
   const [, setLocation] = useLocation();
@@ -18,7 +19,7 @@ export default function RegisterSetPin() {
     setMobileNumber(mobile);
   }, []);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!pin || pin.length < 4) {
       setError("PIN must be 4-6 digits");
       return;
@@ -37,12 +38,17 @@ export default function RegisterSetPin() {
     setIsLoading(true);
     setError("");
 
-    sessionStorage.setItem("registration_pin", pin);
-
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      sessionStorage.setItem("registration_pin", pin);
+      
+      await api.auth.sendOtp(mobileNumber, 'registration');
+      
       setLocation("/register-otp");
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

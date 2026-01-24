@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
 import { ArrowLeft, RotateCcw } from "lucide-react";
+import { api, type ReferralData, type PersonalData, type EmployerData } from "@/lib/api";
 
 export default function RegisterOtp() {
   const [, setLocation] = useLocation();
@@ -38,20 +39,69 @@ export default function RegisterOtp() {
     setIsLoading(true);
     setError("");
 
-    setTimeout(() => {
+    try {
+      await api.auth.verifyOtp(mobileNumber, otp, 'registration');
+      
+      const referral: ReferralData = {
+        code: sessionStorage.getItem("registration_referral_code") || "",
+        lending_society_id: sessionStorage.getItem("registration_lending_society_id") || "",
+        lending_society_name: sessionStorage.getItem("registration_lending_society") || "",
+        partner_id: sessionStorage.getItem("registration_partner_id") || "",
+        staff_code: sessionStorage.getItem("registration_staff_code") || "",
+        referral_owner_id: sessionStorage.getItem("registration_referral_owner_id") || "",
+      };
+
+      const personal: PersonalData = {
+        full_names: sessionStorage.getItem("registration_fullnames") || "",
+        surname: sessionStorage.getItem("registration_surname") || "",
+        id_number: sessionStorage.getItem("registration_id_number") || "",
+        mobile: sessionStorage.getItem("registration_mobile") || "",
+        gender: sessionStorage.getItem("registration_gender") || "Male",
+        region: sessionStorage.getItem("registration_region") || "",
+        town: sessionStorage.getItem("registration_town") || "",
+        street_name: sessionStorage.getItem("registration_street") || "",
+        physical_address: sessionStorage.getItem("registration_address") || "",
+        email: sessionStorage.getItem("registration_email") || "",
+      };
+
+      const employer: EmployerData = {
+        employer_name: sessionStorage.getItem("registration_employer") || "",
+        occupation: sessionStorage.getItem("registration_occupation") || "",
+        office_number: sessionStorage.getItem("registration_office_number") || "",
+        employee_code: sessionStorage.getItem("registration_employee_code") || "",
+        nok_name: sessionStorage.getItem("registration_nok_name") || "",
+        nok_surname: sessionStorage.getItem("registration_nok_surname") || "",
+        nok_relationship: sessionStorage.getItem("registration_nok_relationship") || "",
+        nok_mobile: sessionStorage.getItem("registration_nok_mobile") || "",
+        po_box: sessionStorage.getItem("registration_po_box") || "",
+        source_funds: sessionStorage.getItem("registration_source_funds") || "",
+        source_income: sessionStorage.getItem("registration_source_income") || "",
+      };
+
+      const pin = sessionStorage.getItem("registration_pin") || "";
+      
+      const signupResult = await api.auth.signup({ referral, personal, employer, pin });
+      
+      sessionStorage.setItem("registration_user_id", signupResult.user_id);
+      
+      setLocation("/register-kyc");
+    } catch (err: any) {
+      setError(err.message || "Invalid OTP. Please try again.");
+    } finally {
       setIsLoading(false);
-      if (otp === "123456") {
-        setLocation("/register-kyc");
-      } else {
-        setError("Invalid OTP. Please try again.");
-      }
-    }, 1500);
+    }
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (!canResend) return;
-    setResendTimer(60);
-    setCanResend(false);
+    
+    try {
+      await api.auth.sendOtp(mobileNumber, 'registration');
+      setResendTimer(60);
+      setCanResend(false);
+    } catch (err: any) {
+      setError(err.message || "Failed to resend OTP");
+    }
   };
 
   const handleBack = () => {

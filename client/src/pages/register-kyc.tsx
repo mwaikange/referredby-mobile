@@ -3,18 +3,25 @@ import { useLocation } from "wouter";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
+import { api } from "@/lib/api";
 
 export default function RegisterKyc() {
   const [, setLocation] = useLocation();
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError("File size must be less than 10MB");
+        return;
+      }
       setSelfieFile(file);
+      setError("");
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelfiePreview(reader.result as string);
@@ -27,15 +34,26 @@ export default function RegisterKyc() {
     fileInputRef.current?.click();
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     if (!selfieFile) {
+      setError("Please upload a selfie");
       return;
     }
+    
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setError("");
+
+    try {
+      const userId = sessionStorage.getItem("registration_user_id");
+      if (userId) {
+        await api.upload.selfie(userId, selfieFile);
+      }
       setLocation("/register-documents");
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || "Upload failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -98,6 +116,10 @@ export default function RegisterKyc() {
             data-testid="input-file"
           />
         </div>
+
+        {error && (
+          <p className="text-red-500 text-sm text-center mb-4" data-testid="text-error">{error}</p>
+        )}
 
         <div className="mt-auto pt-4">
           <Button

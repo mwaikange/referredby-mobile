@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
+import { api } from "@/lib/api";
 
 export default function ForgotPasswordNewPin() {
   const [, setLocation] = useLocation();
@@ -14,6 +15,7 @@ export default function ForgotPasswordNewPin() {
   const [newPin, setNewPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleResetPin = async () => {
     if (!newPin || newPin.length < 4) {
@@ -29,10 +31,17 @@ export default function ForgotPasswordNewPin() {
     setIsLoading(true);
     setError("");
 
-    setTimeout(() => {
+    try {
+      await api.auth.resetPassword(mobileNumber, newPin);
+      setSuccess(true);
+      setTimeout(() => {
+        setLocation("/login");
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || "Failed to reset PIN. Please try again.");
+    } finally {
       setIsLoading(false);
-      setLocation("/login");
-    }, 1000);
+    }
   };
 
   return (

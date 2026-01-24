@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
+import { api } from "@/lib/api";
 
 export default function ForgotPassword() {
   const [, setLocation] = useLocation();
@@ -20,10 +21,14 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setError("");
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await api.auth.sendOtp(mobileNumber, 'password_reset');
       setLocation(`/forgot-password-otp?mobile=${encodeURIComponent(mobileNumber)}`);
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

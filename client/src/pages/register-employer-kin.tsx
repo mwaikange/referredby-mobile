@@ -36,13 +36,14 @@ export default function RegisterEmployerKin() {
 
     sessionStorage.setItem("registration_employer", employerName);
     sessionStorage.setItem("registration_occupation", occupation);
-    sessionStorage.setItem("registration_employer_office", employerOfficeNumber);
+    sessionStorage.setItem("registration_office_number", employerOfficeNumber);
     sessionStorage.setItem("registration_employee_code", employeeCode);
-    sessionStorage.setItem("registration_income_source", sourceOfIncome);
-    sessionStorage.setItem("registration_kin_fullname", nextOfKinFullName);
-    sessionStorage.setItem("registration_kin_surname", nextOfKinSurname);
-    sessionStorage.setItem("registration_kin_relationship", relationship);
-    sessionStorage.setItem("registration_kin_mobile", nextOfKinMobile);
+    sessionStorage.setItem("registration_source_income", sourceOfIncome);
+    sessionStorage.setItem("registration_source_funds", sourceOfIncome);
+    sessionStorage.setItem("registration_nok_name", nextOfKinFullName);
+    sessionStorage.setItem("registration_nok_surname", nextOfKinSurname);
+    sessionStorage.setItem("registration_nok_relationship", relationship);
+    sessionStorage.setItem("registration_nok_mobile", nextOfKinMobile);
     sessionStorage.setItem("registration_po_box", poBox);
 
     setLocation("/register-set-pin");

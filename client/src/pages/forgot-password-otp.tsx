@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
+import { api } from "@/lib/api";
 
 export default function ForgotPasswordOtp() {
   const [, setLocation] = useLocation();
@@ -24,14 +25,14 @@ export default function ForgotPasswordOtp() {
     setIsLoading(true);
     setError("");
 
-    setTimeout(() => {
+    try {
+      await api.auth.verifyOtp(mobileNumber, otp, 'password_reset');
+      setLocation(`/forgot-password-new-pin?mobile=${encodeURIComponent(mobileNumber)}`);
+    } catch (err: any) {
+      setError(err.message || "Invalid or expired OTP");
+    } finally {
       setIsLoading(false);
-      if (otp === "123456") {
-        setLocation(`/forgot-password-new-pin?mobile=${encodeURIComponent(mobileNumber)}`);
-      } else {
-        setError("Invalid or expired OTP");
-      }
-    }, 1000);
+    }
   };
 
   return (

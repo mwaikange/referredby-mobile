@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoGroup from "@/assets/referredby-logo.png";
 import { Clipboard } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function RegisterReferral() {
   const [, setLocation] = useLocation();
@@ -21,14 +22,22 @@ export default function RegisterReferral() {
     setIsLoading(true);
     setError("");
 
-    setTimeout(() => {
-      setIsLoading(false);
-      sessionStorage.setItem("registration_referral_code", referralCode);
-      sessionStorage.setItem("registration_referral_partner", "Niksman Groot");
-      sessionStorage.setItem("registration_lending_society", "kayla Industries");
-      sessionStorage.setItem("registration_portfolio_holder", "Destiny Group Pty LTD");
+    try {
+      const data = await api.referrals.validate(referralCode.trim());
+      
+      sessionStorage.setItem("registration_referral_code", data.code || referralCode);
+      sessionStorage.setItem("registration_lending_society_id", data.lending_society_id);
+      sessionStorage.setItem("registration_lending_society", data.lending_society_name);
+      sessionStorage.setItem("registration_partner_id", data.partner_id);
+      sessionStorage.setItem("registration_staff_code", data.staff_code);
+      sessionStorage.setItem("registration_referral_owner_id", data.referral_owner_id);
+      
       setLocation("/register-link-community");
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Invalid or expired referral code");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

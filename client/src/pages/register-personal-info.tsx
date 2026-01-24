@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
 
 const REGIONS = [
   "ERONGO",
@@ -41,24 +42,53 @@ export default function RegisterPersonalInfo() {
     r.toLowerCase().includes(regionSearch.toLowerCase())
   );
 
-  const handleProceed = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleProceed = async () => {
     if (!surname || !fullNames || !idNumber || !mobileNumber || !email || !region) {
       setError("Please fill in all required fields");
       return;
     }
 
-    sessionStorage.setItem("registration_surname", surname);
-    sessionStorage.setItem("registration_fullnames", fullNames);
-    sessionStorage.setItem("registration_id_number", idNumber);
-    sessionStorage.setItem("registration_mobile", mobileNumber);
-    sessionStorage.setItem("registration_email", email);
-    sessionStorage.setItem("registration_region", region);
-    sessionStorage.setItem("registration_town", town);
-    sessionStorage.setItem("registration_street", streetName);
-    sessionStorage.setItem("registration_address", physicalAddress);
-    sessionStorage.setItem("registration_gender", gender);
+    setIsLoading(true);
+    setError("");
 
-    setLocation("/register-employer-kin");
+    try {
+      const uniqueCheck = await api.auth.checkUniqueness(idNumber, mobileNumber, email);
+      
+      if (uniqueCheck.id_number_exists) {
+        setError("This ID number is already registered");
+        setIsLoading(false);
+        return;
+      }
+      if (uniqueCheck.mobile_exists) {
+        setError("This mobile number is already registered");
+        setIsLoading(false);
+        return;
+      }
+      if (uniqueCheck.email_exists) {
+        setError("This email is already registered");
+        setIsLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem("registration_surname", surname);
+      sessionStorage.setItem("registration_fullnames", fullNames);
+      sessionStorage.setItem("registration_id_number", idNumber);
+      sessionStorage.setItem("registration_mobile", mobileNumber);
+      sessionStorage.setItem("registration_email", email);
+      sessionStorage.setItem("registration_region", region);
+      sessionStorage.setItem("registration_town", town);
+      sessionStorage.setItem("registration_street", streetName);
+      sessionStorage.setItem("registration_address", physicalAddress);
+      sessionStorage.setItem("registration_gender", gender);
+
+      setLocation("/register-employer-kin");
+    } catch (err: any) {
+      setError(err.message || "Validation failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -228,10 +258,11 @@ export default function RegisterPersonalInfo() {
         <div className="mt-6">
           <Button
             onClick={handleProceed}
+            disabled={isLoading}
             className="w-full h-12 bg-[#0B0B3B] hover:bg-[#151555] text-white font-bold tracking-wide rounded-lg"
             data-testid="button-proceed"
           >
-            PROCEED
+            {isLoading ? "CHECKING..." : "PROCEED"}
           </Button>
         </div>
       </div>
