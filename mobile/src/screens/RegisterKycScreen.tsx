@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 12 },
   instructions: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 16, paddingHorizontal: 8 },
-  cameraArea: { backgroundColor: '#0B0B3B', borderRadius: 8, height: 180, alignItems: 'center', justifyContent: 'center', marginBottom: 20, alignSelf: 'center', width: '100%', maxWidth: 280 },
+  cameraArea: { backgroundColor: '#0B0B3B', borderRadius: 8, height: 240, alignItems: 'center', justifyContent: 'center', marginBottom: 28, width: '100%' },
   cameraIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   cameraEmoji: { fontSize: 28 },
   previewImage: { width: '100%', height: '100%', borderRadius: 8 },

@@ -55,7 +55,7 @@ export default function RegisterKyc() {
 
         {/* Dark blue camera area */}
         <div 
-          className="bg-[#0B0B3B] rounded-lg mx-auto w-full max-w-[280px] h-48 flex items-center justify-center cursor-pointer mb-6"
+          className="bg-[#0B0B3B] rounded-lg mx-auto w-full h-64 flex items-center justify-center cursor-pointer mb-8"
           onClick={handleCameraClick}
           data-testid="button-camera-area"
         >
