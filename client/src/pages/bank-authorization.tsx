@@ -77,6 +77,12 @@ export default function BankAuthorization() {
               CHOOSE FILE
             </Button>
           </div>
+          <div className="flex items-center justify-between py-3 border-b border-gray-200">
+            <span className="text-xs">Affordability Assessment</span>
+            <Button size="sm" className="bg-[#00736e] text-white text-[10px] h-8 px-4 rounded">
+              CHOOSE FILE
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4 pb-10">

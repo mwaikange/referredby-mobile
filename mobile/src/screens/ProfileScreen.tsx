@@ -120,7 +120,13 @@ export default function ProfileScreen() {
       >
         <View style={styles.headerRow}>
           <Text style={styles.title}>PROFILE</Text>
-          <Text style={styles.bellIcon}>🔔</Text>
+          <View style={styles.bellIconContainer}>
+            <View style={styles.bellOuter}>
+              <View style={styles.bellTop} />
+              <View style={styles.bellBody} />
+              <View style={styles.bellClapper} />
+            </View>
+          </View>
         </View>
 
         <View style={styles.profileInfo}>
@@ -163,15 +169,19 @@ export default function ProfileScreen() {
             <Text style={styles.docLabel}>ID</Text>
             <View style={[styles.docSquare, { backgroundColor: profile?.documents?.national_id ? '#16a34a' : '#ef4444' }]} />
           </View>
-          <View style={styles.docItem}>
+          <View style={styles.docItemSpaced}>
             <Text style={styles.docLabel}>Proof of Income</Text>
             <View style={[styles.docSquare, { backgroundColor: profile?.documents?.payslip ? '#16a34a' : '#ef4444' }]} />
           </View>
-          <View style={styles.docItem}>
+          <View style={styles.docItemSpaced}>
             <Text style={styles.docLabel}>KYC</Text>
             <View style={[styles.docSquare, { backgroundColor: profile?.documents?.kyc ? '#16a34a' : '#ef4444' }]} />
           </View>
-          <Text style={styles.settingsIcon}>⚙</Text>
+          <View style={styles.settingsIconContainer}>
+            <View style={styles.gearOuter}>
+              <View style={styles.gearInner} />
+            </View>
+          </View>
         </View>
 
         <Text style={styles.updateDeadline}>
@@ -302,8 +312,44 @@ const styles = StyleSheet.create({
     color: '#000000',
     letterSpacing: 0.5,
   },
-  bellIcon: {
-    fontSize: 20,
+  bellIconContainer: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bellOuter: {
+    width: 20,
+    height: 20,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  bellTop: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#C41E3A',
+    position: 'absolute',
+    top: 0,
+  },
+  bellBody: {
+    width: 16,
+    height: 14,
+    borderWidth: 2,
+    borderColor: '#C41E3A',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+    backgroundColor: 'transparent',
+  },
+  bellClapper: {
+    width: 6,
+    height: 3,
+    backgroundColor: '#C41E3A',
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+    marginTop: -1,
   },
   profileInfo: {
     marginBottom: 20,
@@ -363,7 +409,13 @@ const styles = StyleSheet.create({
   docItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+  },
+  docItemSpaced: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 12,
   },
   docLabel: {
     fontSize: 11,
@@ -375,10 +427,27 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 2,
   },
-  settingsIcon: {
-    fontSize: 18,
+  settingsIconContainer: {
     marginLeft: 'auto',
-    color: '#6b7280',
+    width: 22,
+    height: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gearOuter: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: '#6b7280',
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gearInner: {
+    width: 6,
+    height: 6,
+    backgroundColor: '#6b7280',
+    borderRadius: 3,
   },
   updateDeadline: {
     fontSize: 11,

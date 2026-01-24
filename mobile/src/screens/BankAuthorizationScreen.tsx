@@ -114,6 +114,12 @@ export default function BankAuthorizationScreen() {
               <Text style={styles.chooseFileText}>CHOOSE FILE</Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.uploadRow}>
+            <Text style={styles.uploadLabel}>Affordability Assessment</Text>
+            <TouchableOpacity style={styles.chooseFileButton}>
+              <Text style={styles.chooseFileText}>CHOOSE FILE</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.buttonContainer}>
