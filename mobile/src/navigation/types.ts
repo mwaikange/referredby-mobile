@@ -25,4 +25,5 @@ export type RootStackParamList = {
   RegisterOtp: { mobileNumber: string };
   RegisterKyc: undefined;
   RegisterDocuments: undefined;
+  RegisterSuccess: undefined;
 };

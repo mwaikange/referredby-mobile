@@ -72,13 +72,9 @@ export default function RegisterDocumentsScreen() {
       return;
     }
     setIsLoading(true);
-    setTimeout(async () => {
-      await AsyncStorage.removeItem('registration_mobile');
+    setTimeout(() => {
       setIsLoading(false);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Profile' }],
-      });
+      navigation.navigate('RegisterSuccess');
     }, 500);
   };
 

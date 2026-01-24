@@ -30,6 +30,7 @@ import RegisterSetPin from "@/pages/register-set-pin";
 import RegisterOtp from "@/pages/register-otp";
 import RegisterKyc from "@/pages/register-kyc";
 import RegisterDocuments from "@/pages/register-documents";
+import RegisterSuccess from "@/pages/register-success";
 
 function Router() {
   return (
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/register-otp" component={RegisterOtp} />
       <Route path="/register-kyc" component={RegisterKyc} />
       <Route path="/register-documents" component={RegisterDocuments} />
+      <Route path="/register-success" component={RegisterSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

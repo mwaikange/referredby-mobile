@@ -30,6 +30,7 @@ import RegisterSetPinScreen from './src/screens/RegisterSetPinScreen';
 import RegisterOtpScreen from './src/screens/RegisterOtpScreen';
 import RegisterKycScreen from './src/screens/RegisterKycScreen';
 import RegisterDocumentsScreen from './src/screens/RegisterDocumentsScreen';
+import RegisterSuccessScreen from './src/screens/RegisterSuccessScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -123,6 +124,7 @@ function AppContent() {
         <Stack.Screen name="RegisterOtp" component={RegisterOtpScreen} />
         <Stack.Screen name="RegisterKyc" component={RegisterKycScreen} />
         <Stack.Screen name="RegisterDocuments" component={RegisterDocumentsScreen} />
+        <Stack.Screen name="RegisterSuccess" component={RegisterSuccessScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

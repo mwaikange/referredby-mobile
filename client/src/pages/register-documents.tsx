@@ -31,8 +31,7 @@ export default function RegisterDocuments() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      sessionStorage.removeItem("registration_mobile");
-      setLocation("/profile");
+      setLocation("/register-success");
     }, 500);
   };
 
