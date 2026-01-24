@@ -98,46 +98,45 @@ export default function RegisterDocumentsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>UPLOAD REQUIRED{'\n'}DOCUMENTS</Text>
 
+        {/* National ID Section with gray background accent */}
         <View style={styles.documentSection}>
           <Text style={styles.documentLabel}>National Identification Card</Text>
-          <TouchableOpacity 
-            style={styles.fileBox}
-            onPress={() => pickDocument('id')}
-          >
+          <View style={styles.fileRow}>
+            <TouchableOpacity style={styles.chooseButton} onPress={() => pickDocument('id')}>
+              <Text style={styles.chooseButtonText}>CHOOSE FILE</Text>
+            </TouchableOpacity>
             <Text style={styles.fileName}>{idFileName || 'No file chosen'}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
+        {/* Proof of Income Section with gray background accent */}
         <View style={styles.documentSection}>
-          <Text style={styles.documentLabel}>Payslip</Text>
-          <TouchableOpacity 
-            style={styles.fileBox}
-            onPress={() => pickDocument('income')}
-          >
+          <Text style={styles.documentLabel}>Proof of Income</Text>
+          <View style={styles.fileRow}>
+            <TouchableOpacity style={styles.chooseButton} onPress={() => pickDocument('income')}>
+              <Text style={styles.chooseButtonText}>CHOOSE FILE</Text>
+            </TouchableOpacity>
             <Text style={styles.fileName}>{incomeFileName || 'No file chosen'}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Dark blue panel for bottom section */}
-        <View style={styles.darkPanel}>
-          <Text style={styles.validityNote}>
-            All these form will be valid for 6 months only, afterwhich they must all be renewed and re-uploaded.
-          </Text>
+        <Text style={styles.validityNote}>
+          All these form will be valid for 6 months only, afterwhich they must be renewed and re-uploaded.
+        </Text>
 
-          <TouchableOpacity
-            style={[styles.proceedButton, (!idFileName || !incomeFileName || isLoading) && styles.buttonDisabled]}
-            onPress={handleProceed}
-            disabled={!idFileName || !incomeFileName || isLoading}
-          >
-            <Text style={styles.proceedButtonText}>
-              {isLoading ? 'UPLOADING...' : 'PROCEED'}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.approvalNote}>
-            Please make sure all required documents are uploaded for immediate approval.
+        <TouchableOpacity
+          style={[styles.proceedButton, (!idFileName || !incomeFileName || isLoading) && styles.buttonDisabled]}
+          onPress={handleProceed}
+          disabled={!idFileName || !incomeFileName || isLoading}
+        >
+          <Text style={styles.proceedButtonText}>
+            {isLoading ? 'UPLOADING...' : 'PROCEED'}
           </Text>
-        </View>
+        </TouchableOpacity>
+
+        <Text style={styles.approvalNote}>
+          Please make sure all required documents are uploaded for immediate approval.
+        </Text>
       </ScrollView>
 
       <View style={styles.footerPattern}>
@@ -158,14 +157,15 @@ const styles = StyleSheet.create({
   patternImage: { width: '100%', height: 60 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 24 },
   title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },
-  documentSection: { marginBottom: 16 },
-  documentLabel: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  fileBox: { backgroundColor: '#f3f4f6', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#e5e7eb' },
-  fileName: { fontSize: 14, color: '#6b7280' },
-  darkPanel: { backgroundColor: '#0B0B3B', borderRadius: 12, padding: 16, marginTop: 'auto' },
-  validityNote: { fontSize: 11, color: 'rgba(255,255,255,0.8)', textAlign: 'center', marginBottom: 16 },
-  proceedButton: { backgroundColor: '#00736e', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  documentSection: { backgroundColor: '#f3f4f6', borderRadius: 8, padding: 16, marginBottom: 16 },
+  documentLabel: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 12 },
+  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  chooseButton: { backgroundColor: '#16a34a', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 },
+  chooseButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '600' },
+  fileName: { fontSize: 14, color: '#6b7280', flex: 1 },
+  validityNote: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 20, paddingHorizontal: 16 },
+  proceedButton: { backgroundColor: '#0B0B3B', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   buttonDisabled: { opacity: 0.5 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  approvalNote: { fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
+  approvalNote: { fontSize: 11, color: '#6b7280', textAlign: 'center' },
 });

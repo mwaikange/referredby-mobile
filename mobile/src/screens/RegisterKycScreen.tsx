@@ -112,20 +112,24 @@ export default function RegisterKycScreen() {
           Click the camera icon below and upload a selfie with you holding your ID just below your chin and today's date written on a white paper as indicated on the photo below.
         </Text>
 
-        {/* Dark blue panel */}
-        <View style={styles.darkPanel}>
-          <TouchableOpacity style={styles.cameraArea} onPress={handleCameraPress}>
-            {selfieUri ? (
-              <Image source={{ uri: selfieUri }} style={styles.previewImage} />
-            ) : (
-              <View style={styles.cameraIcon}>
-                <Text style={styles.cameraEmoji}>📷</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+        {/* Dark blue camera area */}
+        <TouchableOpacity style={styles.cameraArea} onPress={handleCameraPress}>
+          {selfieUri ? (
+            <Image source={{ uri: selfieUri }} style={styles.previewImage} />
+          ) : (
+            <View style={styles.cameraIcon}>
+              <Text style={styles.cameraEmoji}>📷</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
+        {/* Upload section with gray background accent */}
+        <View style={styles.uploadSection}>
           <Text style={styles.uploadLabel}>Upload selfie with ID</Text>
-          <View style={styles.fileNameBox}>
+          <View style={styles.fileRow}>
+            <TouchableOpacity style={styles.chooseButton} onPress={pickImage}>
+              <Text style={styles.chooseButtonText}>CHOOSE FILE</Text>
+            </TouchableOpacity>
             <Text style={styles.fileName}>{fileName || 'No file chosen'}</Text>
           </View>
         </View>
@@ -161,15 +165,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 12 },
   instructions: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 16, paddingHorizontal: 8 },
-  darkPanel: { backgroundColor: '#0B0B3B', borderRadius: 12, padding: 16, marginBottom: 16 },
-  cameraArea: { backgroundColor: '#1a1a5c', borderRadius: 8, height: 160, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  cameraIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  cameraEmoji: { fontSize: 24 },
+  cameraArea: { backgroundColor: '#0B0B3B', borderRadius: 8, height: 180, alignItems: 'center', justifyContent: 'center', marginBottom: 20, alignSelf: 'center', width: '100%', maxWidth: 280 },
+  cameraIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  cameraEmoji: { fontSize: 28 },
   previewImage: { width: '100%', height: '100%', borderRadius: 8 },
-  uploadLabel: { fontSize: 14, color: '#ffffff', marginBottom: 8 },
-  fileNameBox: { backgroundColor: '#f3f4f6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
-  fileName: { fontSize: 14, color: '#6b7280' },
-  proceedButton: { backgroundColor: '#0B0B3B', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  uploadSection: { backgroundColor: '#f3f4f6', borderRadius: 8, padding: 16, marginBottom: 20 },
+  uploadLabel: { fontSize: 14, color: '#374151', marginBottom: 12 },
+  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  chooseButton: { backgroundColor: '#16a34a', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 },
+  chooseButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '600' },
+  fileName: { fontSize: 14, color: '#6b7280', flex: 1 },
+  proceedButton: { backgroundColor: '#6B7280', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 'auto' },
   buttonDisabled: { opacity: 0.5 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
 });

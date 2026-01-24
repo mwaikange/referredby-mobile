@@ -53,51 +53,57 @@ export default function RegisterKyc() {
           Click the camera icon below and upload a selfie with you holding your ID just below your chin and today's date written on a white paper as indicated on the photo below.
         </p>
 
-        {/* Dark blue panel for selfie capture */}
-        <div className="bg-[#0B0B3B] rounded-lg p-4 mb-4">
-          <div 
-            className="bg-[#1a1a5c] rounded-lg w-full h-40 flex items-center justify-center cursor-pointer mb-4"
-            onClick={handleCameraClick}
-            data-testid="button-camera-area"
-          >
-            {selfiePreview ? (
-              <img 
-                src={selfiePreview} 
-                alt="Selfie preview" 
-                className="w-full h-full object-cover rounded-lg"
-                data-testid="img-selfie-preview"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                <Camera className="w-7 h-7 text-white" />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="text-sm text-white mb-2 block">Upload selfie with ID</label>
-            <div className="bg-gray-100 rounded-lg px-3 py-2">
-              <span className="text-sm text-gray-600" data-testid="text-file-name">
-                {selfieFile ? selfieFile.name : "No file chosen"}
-              </span>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={handleFileChange}
-              className="hidden"
-              data-testid="input-file"
+        {/* Dark blue camera area */}
+        <div 
+          className="bg-[#0B0B3B] rounded-lg mx-auto w-full max-w-[280px] h-48 flex items-center justify-center cursor-pointer mb-6"
+          onClick={handleCameraClick}
+          data-testid="button-camera-area"
+        >
+          {selfiePreview ? (
+            <img 
+              src={selfiePreview} 
+              alt="Selfie preview" 
+              className="w-full h-full object-cover rounded-lg"
+              data-testid="img-selfie-preview"
             />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+              <Camera className="w-8 h-8 text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Upload section with gray background accent */}
+        <div className="bg-gray-100 rounded-lg p-4 mb-6">
+          <label className="text-sm text-gray-700 mb-2 block">Upload selfie with ID</label>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-green-600 hover:bg-green-700 text-white text-xs px-4 py-2 rounded"
+              data-testid="button-choose-file"
+            >
+              CHOOSE FILE
+            </Button>
+            <span className="text-sm text-gray-500" data-testid="text-file-name">
+              {selfieFile ? selfieFile.name : "No file chosen"}
+            </span>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={handleFileChange}
+            className="hidden"
+            data-testid="input-file"
+          />
         </div>
 
         <div className="mt-auto pt-4">
           <Button
             onClick={handleProceed}
             disabled={!selfieFile || isLoading}
-            className="w-full bg-[#0B0B3B] hover:bg-[#1a1a5c] text-white font-bold py-3 rounded-lg disabled:opacity-50"
+            className="w-full bg-[#6B7280] hover:bg-[#4B5563] text-white font-bold py-3 rounded-lg disabled:opacity-50"
             data-testid="button-proceed"
           >
             {isLoading ? "UPLOADING..." : "PROCEED"}
