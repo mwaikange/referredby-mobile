@@ -4,6 +4,98 @@ import { ENV } from "./env";
 // API Base URL from centralized config
 const API_BASE_URL = ENV.API_BASE_URL;
 
+// Phone number formatting (convert to +264 format)
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) {
+    return `+264${cleaned.substring(1)}`;
+  } else if (!cleaned.startsWith('264')) {
+    return `+264${cleaned}`;
+  } else {
+    return `+${cleaned}`;
+  }
+}
+
+// Currency formatting
+export function formatCurrency(amount: number): string {
+  return `N$ ${amount.toLocaleString('en-NA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// Date formatting
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// Status codes
+export const MEMBERSHIP_STATUS: Record<string, { label: string; color: string }> = {
+  "AA": { label: "Awaiting LS Approval", color: "green" },
+  "AP": { label: "Awaiting Community Approval", color: "green" },
+  "AP2": { label: "Approved by LS Partner", color: "green" },
+  "DE": { label: "Declined", color: "red" },
+  "BL": { label: "Blocked", color: "red" },
+  "TA": { label: "Total Applications", color: "red" },
+  "NR": { label: "No Record", color: "grey" },
+};
+
+export const LOAN_STATUS: Record<string, { label: string; color: string }> = {
+  "PU": { label: "Paid Up", color: "green" },
+  "DU": { label: "Due", color: "green" },
+  "AD": { label: "Awaiting Disbursements", color: "blue" },
+  "AA": { label: "Awaiting Approval", color: "yellow" },
+  "OT": { label: "Outstanding", color: "orange" },
+  "NR": { label: "No Record", color: "grey" },
+  "BL": { label: "Blocked", color: "red" },
+  "DE": { label: "Decline", color: "red" },
+};
+
+export function getLoanStatusLabel(status: string): string {
+  return LOAN_STATUS[status]?.label || status;
+}
+
+export function getMembershipStatusLabel(status: string): string {
+  return MEMBERSHIP_STATUS[status]?.label || status;
+}
+
+// Referral data type
+export type ReferralData = {
+  code: string;
+  lending_society_id: string;
+  lending_society_name: string;
+  partner_id: string;
+  staff_code: string;
+  referral_owner_id: string;
+};
+
+// Personal data type
+export type PersonalData = {
+  full_names: string;
+  surname: string;
+  id_number: string;
+  mobile: string;
+  gender: string;
+  region: string;
+  town: string;
+  street_name: string;
+  physical_address: string;
+  email: string;
+};
+
+// Employer data type
+export type EmployerData = {
+  employer_name: string;
+  occupation: string;
+  office_number: string;
+  employee_code: string;
+  nok_name: string;
+  nok_surname: string;
+  nok_relationship: string;
+  nok_mobile: string;
+  po_box: string;
+  source_funds: string;
+  source_income: string;
+};
+
 export type UserProfile = {
   id: string;
   uid: string;
@@ -126,8 +218,155 @@ const getHeaders = async () => {
 };
 
 export const api = {
-  // Login is handled via Supabase Auth directly in the component, 
-  // but we can add a wrapper if needed. For now we use supabase.auth.signInWithPassword
+  // ============== AUTHENTICATION ==============
+  auth: {
+    login: async (email: string, pin: string) => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, pin }),
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Invalid email or PIN');
+      return data;
+    },
+    
+    sendOtp: async (mobile: string, type: 'registration' | 'password_reset' | 'loan_signature') => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: formatPhoneNumber(mobile), type }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to send OTP');
+      return data;
+    },
+    
+    verifyOtp: async (mobile: string, otp: string, type: 'registration' | 'password_reset' | 'loan_signature') => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: formatPhoneNumber(mobile), otp, type }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Invalid or expired OTP');
+      return data;
+    },
+    
+    resetPassword: async (mobile: string, newPin: string) => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: formatPhoneNumber(mobile), newPin }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to reset PIN');
+      return data;
+    },
+    
+    signup: async (signupData: {
+      referral: ReferralData;
+      personal: PersonalData;
+      employer: EmployerData;
+      pin: string;
+    }) => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...signupData,
+          personal: {
+            ...signupData.personal,
+            mobile: formatPhoneNumber(signupData.personal.mobile),
+          },
+          employer: {
+            ...signupData.employer,
+            nok_mobile: formatPhoneNumber(signupData.employer.nok_mobile),
+          },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Account creation failed');
+      return data;
+    },
+    
+    checkUniqueness: async (id_number: string, mobile: string, email: string) => {
+      const response = await fetch(`${API_BASE_URL}/api/auth/check-uniqueness`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_number, mobile: formatPhoneNumber(mobile), email }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Validation check failed');
+      return data;
+    },
+  },
+
+  // ============== REFERRALS ==============
+  referrals: {
+    validate: async (code: string): Promise<ReferralData & { valid: boolean }> => {
+      const response = await fetch(`${API_BASE_URL}/api/referrals/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.valid) {
+        throw new Error(data.error || 'Invalid or expired referral code');
+      }
+      return data;
+    },
+  },
+
+  // ============== UPLOADS ==============
+  upload: {
+    selfie: async (userId: string, file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', userId);
+      
+      const response = await fetch(`${API_BASE_URL}/api/upload/selfie`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload failed');
+      return data;
+    },
+    
+    documents: async (userId: string, nationalId: File, payslip: File) => {
+      const formData = new FormData();
+      formData.append('userId', userId);
+      formData.append('national_id', nationalId);
+      formData.append('payslip', payslip);
+      
+      const response = await fetch(`${API_BASE_URL}/api/upload/documents`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload failed');
+      return data;
+    },
+  },
+
+  // ============== USERS ==============
+  users: {
+    updateDocuments: async (userId: string, urls: { national_id_url?: string; payslip_url?: string }) => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/documents`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(urls),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Update failed');
+      return data;
+    },
+  },
 
   // Get Logged-in User Profile
   getProfile: async (): Promise<UserProfile> => {
