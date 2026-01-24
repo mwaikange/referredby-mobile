@@ -14,4 +14,7 @@ export type RootStackParamList = {
   LoanHistory: undefined;
   NanoLoanApply: undefined;
   TermLoanApply: undefined;
+  ForgotPassword: undefined;
+  ForgotPasswordOtp: { mobileNumber: string };
+  ForgotPasswordNewPin: { mobileNumber: string };
 };

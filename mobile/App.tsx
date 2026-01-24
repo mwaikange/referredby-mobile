@@ -19,6 +19,9 @@ import PaymentRecordScreen from './src/screens/PaymentRecordScreen';
 import LoanHistoryScreen from './src/screens/LoanHistoryScreen';
 import NanoLoanApplyScreen from './src/screens/NanoLoanApplyScreen';
 import TermLoanApplyScreen from './src/screens/TermLoanApplyScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ForgotPasswordOtpScreen from './src/screens/ForgotPasswordOtpScreen';
+import ForgotPasswordNewPinScreen from './src/screens/ForgotPasswordNewPinScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { isSupabaseConfigured } from './src/lib/supabase';
 
@@ -101,6 +104,9 @@ function AppContent() {
         <Stack.Screen name="LoanHistory" component={LoanHistoryScreen} />
         <Stack.Screen name="NanoLoanApply" component={NanoLoanApplyScreen} />
         <Stack.Screen name="TermLoanApply" component={TermLoanApplyScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ForgotPasswordOtp" component={ForgotPasswordOtpScreen} />
+        <Stack.Screen name="ForgotPasswordNewPin" component={ForgotPasswordNewPinScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -160,7 +160,7 @@ export default function Login() {
               Not Yet Registered - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
             </p>
             <p className="text-gray-900">
-              Forgot Password - <a href="#" className="text-blue-600 hover:underline">Click Here</a>
+              Forgot Password - <a href="/forgot-password" className="text-blue-600 hover:underline">Click Here</a>
             </p>
             <p className="text-gray-900">
               Talk to an Agent - <a href="#" className="text-blue-600 hover:underline">Click Here</a>

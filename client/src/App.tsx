@@ -19,6 +19,9 @@ import PaymentRecord from "@/pages/payment-record";
 import LoanHistory from "@/pages/loan-history";
 import NanoLoanApply from "@/pages/nano-loan-apply";
 import TermLoanApply from "@/pages/term-loan-apply";
+import ForgotPassword from "@/pages/forgot-password";
+import ForgotPasswordOtp from "@/pages/forgot-password-otp";
+import ForgotPasswordNewPin from "@/pages/forgot-password-new-pin";
 
 function Router() {
   return (
@@ -38,6 +41,9 @@ function Router() {
       <Route path="/loan-history" component={LoanHistory} />
       <Route path="/nano-loan-apply" component={NanoLoanApply} />
       <Route path="/term-loan-apply" component={TermLoanApply} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/forgot-password-otp" component={ForgotPasswordOtp} />
+      <Route path="/forgot-password-new-pin" component={ForgotPasswordNewPin} />
       <Route component={NotFound} />
     </Switch>
   );

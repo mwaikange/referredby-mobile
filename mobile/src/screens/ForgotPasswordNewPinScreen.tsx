@@ -13,43 +13,51 @@ import {
   Image,
   Linking,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { supabase } from '../lib/supabase';
 import type { RootStackParamList } from '../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordNewPin'>;
+type RouteProps = RouteProp<RootStackParamList, 'ForgotPasswordNewPin'>;
 
-export default function LoginScreen() {
+export default function ForgotPasswordNewPinScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
-  const [showPin, setShowPin] = useState(false);
+  const route = useRoute<RouteProps>();
+  const { mobileNumber } = route.params;
+  
+  const [newPin, setNewPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    if (!email || !pin) {
-      Alert.alert('Error', 'Please enter email and PIN');
+  const handleResetPin = async () => {
+    if (!newPin || newPin.length < 4) {
+      setError('PIN must be 4-6 digits');
+      return;
+    }
+
+    if (newPin.length > 6) {
+      setError('PIN must be 4-6 digits');
       return;
     }
 
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: pin,
-      });
+    setError('');
 
-      if (error) {
-        Alert.alert('Login Failed', error.message);
-      } else {
-        navigation.replace('Profile');
-      }
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Login failed');
-    } finally {
+    // Simulate API call to reset PIN
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      Alert.alert('Success', 'Your PIN has been reset successfully', [
+        {
+          text: 'OK',
+          onPress: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          },
+        },
+      ]);
+    }, 1000);
   };
 
   return (
@@ -79,49 +87,31 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            <Text style={styles.label}>EMAIL ADDRESS</Text>
+            <Text style={styles.label}>NEW PIN</Text>
             <TextInput
               style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
+              value={newPin}
+              onChangeText={(text) => setNewPin(text.replace(/\D/g, '').slice(0, 6))}
+              keyboardType="number-pad"
+              maxLength={6}
+              secureTextEntry
+              placeholder="Enter 4-6 digit PIN"
               placeholderTextColor="#9ca3af"
             />
 
-            <Text style={styles.label}>ENTER PIN</Text>
-            <View style={styles.pinInputContainer}>
-              <TextInput
-                style={styles.pinInput}
-                value={pin}
-                onChangeText={setPin}
-                secureTextEntry={!showPin}
-                keyboardType="number-pad"
-                maxLength={6}
-                placeholderTextColor="#9ca3af"
-              />
-              <TouchableOpacity 
-                onPress={() => setShowPin(!showPin)}
-                style={styles.eyeButton}
-              >
-                <View style={styles.eyeIconContainer}>
-                  <View style={styles.eyeOuter}>
-                    <View style={styles.eyeInner} />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
+            {error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : null}
 
             <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
+              style={[styles.resetButton, isLoading && styles.buttonDisabled]}
+              onPress={handleResetPin}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.loginButtonText}>LOGIN</Text>
+                <Text style={styles.resetButtonText}>RESET PIN</Text>
               )}
             </TouchableOpacity>
 
@@ -129,9 +119,9 @@ export default function LoginScreen() {
               <Text style={styles.linkText}>
                 Not Yet Registered - <Text style={styles.linkBlue}>Click Here</Text>
               </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.linkText}>
-                  Forgot Password - <Text style={styles.linkBlue}>Click Here</Text>
+                  Already Registered - <Text style={styles.linkBlue}>Click Here</Text>
                 </Text>
               </TouchableOpacity>
               <Text style={styles.linkText}>
@@ -223,53 +213,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#111827',
-    marginBottom: 24,
+    marginBottom: 8,
   },
-  pinInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(243, 244, 246, 0.5)',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    height: 48,
-    marginBottom: 24,
+  errorText: {
+    color: '#dc2626',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  pinInput: {
-    flex: 1,
-    height: 48,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#111827',
-  },
-  eyeButton: {
-    paddingHorizontal: 12,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  eyeIconContainer: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  eyeOuter: {
-    width: 20,
-    height: 12,
-    borderWidth: 2,
-    borderColor: '#9ca3af',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  eyeInner: {
-    width: 6,
-    height: 6,
-    backgroundColor: '#9ca3af',
-    borderRadius: 3,
-  },
-  loginButton: {
+  resetButton: {
     backgroundColor: '#0B0B3B',
     height: 48,
     borderRadius: 8,
@@ -277,10 +229,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  loginButtonDisabled: {
+  buttonDisabled: {
     opacity: 0.7,
   },
-  loginButtonText: {
+  resetButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
