@@ -11,86 +11,122 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { api, UserProfile } from '../lib/api';
 
-interface ActiveLoan {
-  id: string;
-  reference: string;
-  type: 'nano' | 'term';
+interface LoanStatement {
+  loan_id: string;
+  loan_type: 'NANO' | 'TERM';
   status: string;
-  received: number;
-  interest_percent: number;
-  interest_amount: number;
+  borrowed_amount: number;
+  interest_rate: number;
+  interest_fee: number;
   processing_fee: number;
   total_repayable: number;
-  instalment_amount?: number;
+  outstanding_amount: number;
+  amount_paid: number;
   due_date: string;
-  outstanding_date: string;
-  grace_date: string;
+  outstanding_date: string | null;
+  paid_date: string | null;
+  principal?: number;
+  outstanding_balance?: number;
+  total_installments?: number;
+  paid_installments?: number;
+  remaining_installments?: number;
+  next_due_date?: string;
+  installment_amount?: number;
+  lending_society: {
+    name: string;
+    bank: string;
+    account_number: string;
+    account_type?: string;
+    branch?: string;
+    branch_code?: string;
+  };
 }
 
 export default function StatementScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeLoan, setActiveLoan] = useState<ActiveLoan | null>(null);
+  const [statement, setStatement] = useState<LoanStatement | null>(null);
   const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
+  const [hasLoans, setHasLoans] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userProfile = await api.getProfile();
         setProfile(userProfile);
+        const profileData = userProfile as any;
         
-        console.log('📥 Fetching active loans for user:', userProfile.id);
+        console.log('📥 Loading statement for user:', userProfile.id);
         
-        // Fetch active loans from API for the current user
-        const activeLoans = await api.loans.getActiveLoans(userProfile.id);
-        console.log('📡 Active loans response:', activeLoans);
+        // Priority logic from API guidelines:
+        // 1. Check for ACTIVE term loan (status = 'A')
+        // 2. Check for ACTIVE nano loan (status = 'A')
+        // 3. Check for PAID-UP term loan (status = 'PU')
+        // 4. Check for PAID-UP nano loan (status = 'PU')
+        // 5. No loans at all
         
-        // Check if user has term loans first, then nano loans
-        const termLoans = activeLoans.term_loans || [];
-        const nanoLoans = activeLoans.nano_loans || [];
+        const termLoan = profileData.term_loan;
+        const nanoLoan = profileData.nano_loan;
         
-        if (termLoans.length > 0) {
-          const loan = termLoans[0];
-          setLoanType('term');
-          setActiveLoan({
-            id: loan.id || '',
-            reference: loan.reference || loan.loan_id || '',
-            type: 'term',
-            status: loan.status || 'Due',
-            received: loan.received || loan.amount || 0,
-            interest_percent: loan.interest_percent || loan.interest_rate || 0,
-            interest_amount: loan.interest_amount || loan.interest || 0,
-            processing_fee: loan.processing_fee || 0,
-            total_repayable: loan.total_repayable || loan.total || 0,
-            instalment_amount: loan.instalment_amount || loan.installment_amount,
-            due_date: loan.due_date || '',
-            outstanding_date: loan.outstanding_date || '',
-            grace_date: loan.grace_date || '',
-          });
-        } else if (nanoLoans.length > 0) {
-          const loan = nanoLoans[0];
-          setLoanType('nano');
-          setActiveLoan({
-            id: loan.id || '',
-            reference: loan.reference || loan.loan_id || '',
-            type: 'nano',
-            status: loan.status || 'Due',
-            received: loan.received || loan.amount || 0,
-            interest_percent: loan.interest_percent || loan.interest_rate || 0,
-            interest_amount: loan.interest_amount || loan.interest || 0,
-            processing_fee: loan.processing_fee || 0,
-            total_repayable: loan.total_repayable || loan.total || 0,
-            due_date: loan.due_date || '',
-            outstanding_date: loan.outstanding_date || '',
-            grace_date: loan.grace_date || '',
-          });
-        } else {
-          // No active loans - show empty state
-          setActiveLoan(null);
+        // Check for active term loan first
+        if (termLoan && termLoan.status === 'A') {
+          console.log('📊 Found active TERM loan');
+          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+          if (termStatement.success && termStatement.statement) {
+            setStatement(termStatement.statement);
+            setLoanType('term');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
         }
+        
+        // Check for active nano loan
+        if (nanoLoan && nanoLoan.status === 'A') {
+          console.log('📊 Found active NANO loan');
+          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+          if (nanoStatement.success && nanoStatement.statement) {
+            setStatement(nanoStatement.statement);
+            setLoanType('nano');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Check for paid-up term loan
+        if (termLoan && termLoan.status === 'PU') {
+          console.log('📊 Found paid-up TERM loan');
+          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+          if (termStatement.success && termStatement.statement) {
+            setStatement(termStatement.statement);
+            setLoanType('term');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Check for paid-up nano loan
+        if (nanoLoan && nanoLoan.status === 'PU') {
+          console.log('📊 Found paid-up NANO loan');
+          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+          if (nanoStatement.success && nanoStatement.statement) {
+            setStatement(nanoStatement.statement);
+            setLoanType('nano');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // No loans found - show empty state
+        console.log('📊 No loans found for user');
+        setHasLoans(false);
+        
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching statement:', error);
       } finally {
         setLoading(false);
       }
@@ -107,11 +143,8 @@ export default function StatementScreen() {
     );
   }
 
-  const loan = activeLoan;
-  const isPaidUp = loan?.status?.toLowerCase() === 'paid' || loan?.status?.toLowerCase() === 'paid up';
-
-  // Show empty state when no active loans
-  if (!activeLoan) {
+  // Show empty state when no loans at all
+  if (!hasLoans || !statement) {
     return (
       <View style={styles.container}>
         <View style={styles.headerPattern}>
@@ -127,33 +160,33 @@ export default function StatementScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>ACTIVE STATEMENT</Text>
+          <Text style={styles.title}>STATEMENTS</Text>
           
-          <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-            <View style={{ width: 80, height: 80, backgroundColor: '#f3f4f6', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 32, color: '#9ca3af' }}>📄</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyIconText}>📄</Text>
             </View>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 }}>No Active Loans</Text>
-            <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
-              You don't have any active loans at the moment. Apply for a loan to get started.
+            <Text style={styles.emptyTitle}>No Loans Yet</Text>
+            <Text style={styles.emptyText}>
+              You haven't taken any loans yet. Apply for a loan to get started.
             </Text>
             
             <TouchableOpacity 
-              style={[styles.button, { marginBottom: 12 }]}
+              style={[styles.button, styles.tealButton]}
               onPress={() => navigation.navigate('NanoLoanApply' as never)}
             >
               <Text style={styles.buttonText}>Apply for Nano Loan</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.button, { backgroundColor: '#0B0B3B', marginBottom: 12 }]}
+              style={[styles.button, styles.navyButton]}
               onPress={() => navigation.navigate('TermLoanApply' as never)}
             >
               <Text style={styles.buttonText}>Apply for Term Loan</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.button, { backgroundColor: '#C41E3A' }]}
+              style={[styles.button, styles.backButton]}
               onPress={() => navigation.goBack()}
             >
               <Text style={styles.buttonText}>Back to Profile</Text>
@@ -164,7 +197,13 @@ export default function StatementScreen() {
     );
   }
 
-  if (loanType === 'term') {
+  const isPaidUp = statement.status === 'PU';
+  const isActive = statement.status === 'A';
+  const statusLabel = isPaidUp ? 'Paid Up' : isActive ? 'Active' : 'Due';
+  const statusStyle = isPaidUp ? styles.paidUp : isActive ? styles.active : styles.due;
+
+  // Term Loan Statement
+  if (loanType === 'term' || statement.loan_type === 'TERM') {
     return (
       <View style={styles.container}>
         <View style={styles.headerPattern}>
@@ -185,35 +224,47 @@ export default function StatementScreen() {
             LOAN TYPE: <Text style={styles.loanTypeValue}>TERM LOAN</Text>
           </Text>
           <Text style={styles.loanRef}>
-            LOAN REFERENCE: <Text style={styles.bold}>{loan?.reference}</Text>{' '}
-            <Text style={isPaidUp ? styles.paidUp : styles.due}>{isPaidUp ? 'Paid Up' : 'Due'}</Text>
+            LOAN REFERENCE: <Text style={styles.bold}>{statement.loan_id}</Text>{' '}
+            <Text style={statusStyle}>{statusLabel}</Text>
           </Text>
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Received (NAD)</Text>
-              <Text style={styles.detailValue}>{loan?.received?.toFixed(2)}</Text>
+              <Text style={styles.detailLabel}>Principal (NAD)</Text>
+              <Text style={styles.detailValue}>{(statement.principal || statement.borrowed_amount)?.toFixed(2)}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Interest (%)</Text>
-              <Text style={styles.detailValue}>{loan?.interest_percent?.toFixed(2)} %</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Interest (NAD)</Text>
-              <Text style={styles.detailValue}>{loan?.interest_amount?.toFixed(2)}</Text>
+              <Text style={styles.detailLabel}>Interest Rate (%)</Text>
+              <Text style={styles.detailValue}>{statement.interest_rate?.toFixed(2)} %</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Processing Fee (NAD)</Text>
-              <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2)}</Text>
+              <Text style={styles.detailValue}>{statement.processing_fee?.toFixed(2)}</Text>
             </View>
             <View style={[styles.detailRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total Repayable (NAD)</Text>
-              <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>{statement.total_repayable?.toFixed(2)}</Text>
             </View>
-            {loan?.instalment_amount && (
+            {statement.outstanding_balance !== undefined && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Outstanding Balance (NAD)</Text>
+                <Text style={[styles.detailValue, styles.redText]}>{statement.outstanding_balance?.toFixed(2)}</Text>
+              </View>
+            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Amount Paid (NAD)</Text>
+              <Text style={[styles.detailValue, styles.greenText]}>{statement.amount_paid?.toFixed(2)}</Text>
+            </View>
+            {statement.installment_amount && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Instalment Amount (NAD)</Text>
-                <Text style={styles.detailValue}>{loan?.instalment_amount?.toFixed(2)}</Text>
+                <Text style={styles.detailValue}>{statement.installment_amount?.toFixed(2)}</Text>
+              </View>
+            )}
+            {statement.total_installments && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Instalments</Text>
+                <Text style={styles.detailValue}>{statement.paid_installments || 0} of {statement.total_installments} paid</Text>
               </View>
             )}
           </View>
@@ -221,16 +272,26 @@ export default function StatementScreen() {
           <View style={styles.datesSection}>
             <View style={styles.dateRow}>
               <Text style={styles.dateLabel}>Due Date :</Text>
-              <Text style={styles.dateValue}>{loan?.due_date}</Text>
+              <Text style={styles.dateValue}>{statement.due_date}</Text>
             </View>
-            <View style={styles.dateRow}>
-              <Text style={styles.dateLabel}>Outstanding Date :</Text>
-              <Text style={styles.dateValue}>{loan?.outstanding_date}</Text>
-            </View>
-            <View style={styles.dateRow}>
-              <Text style={styles.dateLabel}>Grace Date :</Text>
-              <Text style={styles.dateValue}>{loan?.grace_date}</Text>
-            </View>
+            {statement.next_due_date && (
+              <View style={styles.dateRow}>
+                <Text style={styles.dateLabel}>Next Due Date :</Text>
+                <Text style={styles.dateValue}>{statement.next_due_date}</Text>
+              </View>
+            )}
+            {statement.outstanding_date && (
+              <View style={styles.dateRow}>
+                <Text style={styles.dateLabel}>Outstanding Date :</Text>
+                <Text style={styles.dateValue}>{statement.outstanding_date}</Text>
+              </View>
+            )}
+            {statement.paid_date && (
+              <View style={styles.dateRow}>
+                <Text style={styles.dateLabel}>Paid Date :</Text>
+                <Text style={[styles.dateValue, styles.greenText]}>{statement.paid_date}</Text>
+              </View>
+            )}
           </View>
 
           <Text style={styles.instructions}>
@@ -255,12 +316,18 @@ export default function StatementScreen() {
           </View>
 
           <View style={styles.bankDetails}>
-            <Text style={styles.bankText}>Acc Name: <Text style={styles.bankValue}>Destiny Group Pty LTD</Text></Text>
-            <Text style={styles.bankText}>Bank: <Text style={styles.bankValue}>Nedbank Namibia</Text></Text>
-            <Text style={styles.bankText}>Acc no: <Text style={styles.bankValue}>6000238099</Text></Text>
-            <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>Cheque</Text></Text>
-            <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>Corporate Branch</Text></Text>
-            <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>280173</Text></Text>
+            <Text style={styles.bankText}>Acc Name: <Text style={styles.bankValue}>{statement.lending_society?.name}</Text></Text>
+            <Text style={styles.bankText}>Bank: <Text style={styles.bankValue}>{statement.lending_society?.bank}</Text></Text>
+            <Text style={styles.bankText}>Acc no: <Text style={styles.bankValue}>{statement.lending_society?.account_number}</Text></Text>
+            {statement.lending_society?.account_type && (
+              <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>{statement.lending_society.account_type}</Text></Text>
+            )}
+            {statement.lending_society?.branch && (
+              <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>{statement.lending_society.branch}</Text></Text>
+            )}
+            {statement.lending_society?.branch_code && (
+              <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>{statement.lending_society.branch_code}</Text></Text>
+            )}
           </View>
 
           <View style={styles.footerButtons}>
@@ -311,46 +378,60 @@ export default function StatementScreen() {
           LOAN TYPE: <Text style={styles.loanTypeValue}>NANO LOAN</Text>
         </Text>
         <Text style={styles.loanRef}>
-          LOAN REFERENCE: <Text style={styles.bold}>{loan?.reference}</Text>{' '}
-          <Text style={isPaidUp ? styles.paidUp : styles.due}>{isPaidUp ? 'Paid Up' : 'Due'}</Text>
+          LOAN REFERENCE: <Text style={styles.bold}>{statement.loan_id}</Text>{' '}
+          <Text style={statusStyle}>{statusLabel}</Text>
         </Text>
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Received (NAD)</Text>
-            <Text style={styles.detailValue}>{loan?.received?.toFixed(2)}</Text>
+            <Text style={styles.detailLabel}>Borrowed (NAD)</Text>
+            <Text style={styles.detailValue}>{statement.borrowed_amount?.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (%)</Text>
-            <Text style={styles.detailValue}>{loan?.interest_percent?.toFixed(2)} %</Text>
+            <Text style={styles.detailValue}>{statement.interest_rate?.toFixed(2)} %</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (NAD)</Text>
-            <Text style={styles.detailValue}>{loan?.interest_amount?.toFixed(2)}</Text>
+            <Text style={styles.detailValue}>{statement.interest_fee?.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Processing Fee (NAD)</Text>
-            <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2)}</Text>
+            <Text style={styles.detailValue}>{statement.processing_fee?.toFixed(2)}</Text>
           </View>
           <View style={[styles.detailRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Repayable (NAD)</Text>
-            <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{statement.total_repayable?.toFixed(2)}</Text>
+          </View>
+          {statement.outstanding_amount > 0 && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Outstanding Amount (NAD)</Text>
+              <Text style={[styles.detailValue, styles.redText]}>{statement.outstanding_amount?.toFixed(2)}</Text>
+            </View>
+          )}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Amount Paid (NAD)</Text>
+            <Text style={[styles.detailValue, styles.greenText]}>{statement.amount_paid?.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.datesSection}>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Due Date :</Text>
-            <Text style={styles.dateValue}>{loan?.due_date}</Text>
+            <Text style={styles.dateValue}>{statement.due_date}</Text>
           </View>
-          <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Outstanding Date :</Text>
-            <Text style={styles.dateValue}>{loan?.outstanding_date}</Text>
-          </View>
-          <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Grace Date :</Text>
-            <Text style={styles.dateValue}>{loan?.grace_date}</Text>
-          </View>
+          {statement.outstanding_date && (
+            <View style={styles.dateRow}>
+              <Text style={styles.dateLabel}>Outstanding Date :</Text>
+              <Text style={styles.dateValue}>{statement.outstanding_date}</Text>
+            </View>
+          )}
+          {statement.paid_date && (
+            <View style={styles.dateRow}>
+              <Text style={styles.dateLabel}>Paid Date :</Text>
+              <Text style={[styles.dateValue, styles.greenText]}>{statement.paid_date}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.instructions}>
@@ -375,12 +456,18 @@ export default function StatementScreen() {
         </View>
 
         <View style={styles.bankDetails}>
-          <Text style={styles.bankText}>Acc Name: <Text style={styles.bankValue}>Destiny Group Pty LTD</Text></Text>
-          <Text style={styles.bankText}>Bank: <Text style={styles.bankValue}>Nedbank Namibia</Text></Text>
-          <Text style={styles.bankText}>Acc no: <Text style={styles.bankValue}>6000238099</Text></Text>
-          <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>Cheque</Text></Text>
-          <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>Corporate Branch</Text></Text>
-          <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>280173</Text></Text>
+          <Text style={styles.bankText}>Acc Name: <Text style={styles.bankValue}>{statement.lending_society?.name}</Text></Text>
+          <Text style={styles.bankText}>Bank: <Text style={styles.bankValue}>{statement.lending_society?.bank}</Text></Text>
+          <Text style={styles.bankText}>Acc no: <Text style={styles.bankValue}>{statement.lending_society?.account_number}</Text></Text>
+          {statement.lending_society?.account_type && (
+            <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>{statement.lending_society.account_type}</Text></Text>
+          )}
+          {statement.lending_society?.branch && (
+            <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>{statement.lending_society.branch}</Text></Text>
+          )}
+          {statement.lending_society?.branch_code && (
+            <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>{statement.lending_society.branch_code}</Text></Text>
+          )}
         </View>
 
         <View style={styles.footerButtons}>
@@ -475,6 +562,10 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontWeight: '500',
   },
+  active: {
+    color: '#2563eb',
+    fontWeight: '500',
+  },
   paidUp: {
     color: '#22c55e',
     fontWeight: '500',
@@ -515,6 +606,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
+  redText: {
+    color: '#dc2626',
+  },
+  greenText: {
+    color: '#22c55e',
+  },
   datesSection: {
     marginBottom: 20,
   },
@@ -548,8 +645,22 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
   },
+  button: {
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   tealButton: {
     backgroundColor: '#00736e',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navyButton: {
+    backgroundColor: '#0B0B3B',
     height: 48,
     borderRadius: 8,
     justifyContent: 'center',
@@ -564,19 +675,6 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 0.3,
-  },
-  yellowButton: {
-    backgroundColor: '#facc15',
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  yellowButtonText: {
-    color: '#000000',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,
@@ -620,5 +718,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyIconText: {
+    fontSize: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
   },
 });

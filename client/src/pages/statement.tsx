@@ -5,86 +5,122 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { api, type UserProfile } from "@/lib/api";
 
-interface ActiveLoan {
-  id: string;
-  reference: string;
-  type: 'nano' | 'term';
+interface LoanStatement {
+  loan_id: string;
+  loan_type: 'NANO' | 'TERM';
   status: string;
-  received: number;
-  interest_percent: number;
-  interest_amount: number;
+  borrowed_amount: number;
+  interest_rate: number;
+  interest_fee: number;
   processing_fee: number;
   total_repayable: number;
-  instalment_amount?: number;
+  outstanding_amount: number;
+  amount_paid: number;
   due_date: string;
-  outstanding_date: string;
-  grace_date: string;
+  outstanding_date: string | null;
+  paid_date: string | null;
+  principal?: number;
+  outstanding_balance?: number;
+  total_installments?: number;
+  paid_installments?: number;
+  remaining_installments?: number;
+  next_due_date?: string;
+  installment_amount?: number;
+  lending_society: {
+    name: string;
+    bank: string;
+    account_number: string;
+    account_type?: string;
+    branch?: string;
+    branch_code?: string;
+  };
 }
 
 export default function Statement() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeLoan, setActiveLoan] = useState<ActiveLoan | null>(null);
+  const [statement, setStatement] = useState<LoanStatement | null>(null);
   const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
+  const [hasLoans, setHasLoans] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userProfile = await api.getProfile();
         setProfile(userProfile);
+        const profileData = userProfile as any;
         
-        console.log('📥 Fetching active loans for user:', userProfile.id);
+        console.log('📥 Loading statement for user:', userProfile.id);
         
-        // Fetch active loans from API for the current user
-        const activeLoans = await api.loans.getActiveLoans(userProfile.id);
-        console.log('📡 Active loans response:', activeLoans);
+        // Priority logic from API guidelines:
+        // 1. Check for ACTIVE term loan (status = 'A')
+        // 2. Check for ACTIVE nano loan (status = 'A')
+        // 3. Check for PAID-UP term loan (status = 'PU')
+        // 4. Check for PAID-UP nano loan (status = 'PU')
+        // 5. No loans at all
         
-        // Check if user has term loans first, then nano loans
-        const termLoans = activeLoans.term_loans || [];
-        const nanoLoans = activeLoans.nano_loans || [];
+        const termLoan = profileData.term_loan;
+        const nanoLoan = profileData.nano_loan;
         
-        if (termLoans.length > 0) {
-          const loan = termLoans[0];
-          setLoanType('term');
-          setActiveLoan({
-            id: loan.id || '',
-            reference: loan.reference || loan.loan_id || '',
-            type: 'term',
-            status: loan.status || 'Due',
-            received: loan.received || loan.amount || 0,
-            interest_percent: loan.interest_percent || loan.interest_rate || 0,
-            interest_amount: loan.interest_amount || loan.interest || 0,
-            processing_fee: loan.processing_fee || 0,
-            total_repayable: loan.total_repayable || loan.total || 0,
-            instalment_amount: loan.instalment_amount || loan.installment_amount,
-            due_date: loan.due_date || '',
-            outstanding_date: loan.outstanding_date || '',
-            grace_date: loan.grace_date || '',
-          });
-        } else if (nanoLoans.length > 0) {
-          const loan = nanoLoans[0];
-          setLoanType('nano');
-          setActiveLoan({
-            id: loan.id || '',
-            reference: loan.reference || loan.loan_id || '',
-            type: 'nano',
-            status: loan.status || 'Due',
-            received: loan.received || loan.amount || 0,
-            interest_percent: loan.interest_percent || loan.interest_rate || 0,
-            interest_amount: loan.interest_amount || loan.interest || 0,
-            processing_fee: loan.processing_fee || 0,
-            total_repayable: loan.total_repayable || loan.total || 0,
-            due_date: loan.due_date || '',
-            outstanding_date: loan.outstanding_date || '',
-            grace_date: loan.grace_date || '',
-          });
-        } else {
-          // No active loans - show empty state
-          setActiveLoan(null);
+        // Check for active term loan first
+        if (termLoan && termLoan.status === 'A') {
+          console.log('📊 Found active TERM loan');
+          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+          if (termStatement.success && termStatement.statement) {
+            setStatement(termStatement.statement);
+            setLoanType('term');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
         }
+        
+        // Check for active nano loan
+        if (nanoLoan && nanoLoan.status === 'A') {
+          console.log('📊 Found active NANO loan');
+          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+          if (nanoStatement.success && nanoStatement.statement) {
+            setStatement(nanoStatement.statement);
+            setLoanType('nano');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Check for paid-up term loan
+        if (termLoan && termLoan.status === 'PU') {
+          console.log('📊 Found paid-up TERM loan');
+          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+          if (termStatement.success && termStatement.statement) {
+            setStatement(termStatement.statement);
+            setLoanType('term');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Check for paid-up nano loan
+        if (nanoLoan && nanoLoan.status === 'PU') {
+          console.log('📊 Found paid-up NANO loan');
+          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+          if (nanoStatement.success && nanoStatement.statement) {
+            setStatement(nanoStatement.statement);
+            setLoanType('nano');
+            setHasLoans(true);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // No loans found - show empty state
+        console.log('📊 No loans found for user');
+        setHasLoans(false);
+        
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching statement:", error);
       } finally {
         setLoading(false);
       }
@@ -103,16 +139,13 @@ export default function Statement() {
     );
   }
 
-  const loan = activeLoan;
-  const isPaidUp = loan?.status?.toLowerCase() === 'paid' || loan?.status?.toLowerCase() === 'paid up';
-
-  // Show empty state when no active loans
-  if (!activeLoan) {
+  // Show empty state when no loans at all
+  if (!hasLoans || !statement) {
     return (
       <Layout>
         <div className="flex-1 flex flex-col font-sans">
           <h1 className="text-center font-bold uppercase mb-2 tracking-tight text-[20px]">
-            ACTIVE STATEMENT
+            STATEMENTS
           </h1>
           
           <div className="flex flex-col items-center justify-center py-12">
@@ -121,9 +154,9 @@ export default function Statement() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">No Active Loans</h2>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">No Loans Yet</h2>
             <p className="text-sm text-gray-500 text-center px-8 mb-6">
-              You don't have any active loans at the moment. Apply for a loan to get started.
+              You haven't taken any loans yet. Apply for a loan to get started.
             </p>
             <div className="space-y-3 w-full px-4">
               <Button 
@@ -152,7 +185,13 @@ export default function Statement() {
     );
   }
 
-  if (loanType === 'term') {
+  const isPaidUp = statement.status === 'PU';
+  const isActive = statement.status === 'A';
+  const statusLabel = isPaidUp ? 'Paid Up' : isActive ? 'Active' : 'Due';
+  const statusColor = isPaidUp ? 'text-green-500' : isActive ? 'text-blue-500' : 'text-red-500';
+
+  // Term Loan Statement
+  if (loanType === 'term' || statement.loan_type === 'TERM') {
     return (
       <Layout>
         <div className="flex-1 flex flex-col font-sans">
@@ -163,38 +202,50 @@ export default function Statement() {
             LOAN TYPE: <span className="text-[#00736e] font-bold">TERM LOAN</span>
           </p>
           <p className="text-sm mb-6">
-            LOAN REFERENCE: <span className="font-bold">{loan?.reference}</span>{" "}
-            <span className={isPaidUp ? "text-green-500 font-medium" : "text-red-500 font-medium"}>
-              {isPaidUp ? "Paid Up" : "Due"}
+            LOAN REFERENCE: <span className="font-bold">{statement.loan_id}</span>{" "}
+            <span className={`${statusColor} font-medium`}>
+              {statusLabel}
             </span>
           </p>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Received (NAD)</span>
-                <span className="font-bold">{loan?.received?.toFixed(2)}</span>
+                <span className="text-gray-600">Principal (NAD)</span>
+                <span className="font-bold">{(statement.principal || statement.borrowed_amount)?.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Interest (%)</span>
-                <span className="font-bold">{loan?.interest_percent?.toFixed(2)} %</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Interest (NAD)</span>
-                <span className="font-bold">{loan?.interest_amount?.toFixed(2)}</span>
+                <span className="text-gray-600">Interest Rate (%)</span>
+                <span className="font-bold">{statement.interest_rate?.toFixed(2)} %</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Processing Fee (NAD)</span>
-                <span className="font-bold">{loan?.processing_fee?.toFixed(2)}</span>
+                <span className="font-bold">{statement.processing_fee?.toFixed(2)}</span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
                 <span className="font-bold">Total Repayable (NAD)</span>
-                <span className="font-bold">{loan?.total_repayable?.toFixed(2)}</span>
+                <span className="font-bold">{statement.total_repayable?.toFixed(2)}</span>
               </div>
-              {loan?.instalment_amount && (
+              {statement.outstanding_balance !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Outstanding Balance (NAD)</span>
+                  <span className="font-bold text-red-600">{statement.outstanding_balance?.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount Paid (NAD)</span>
+                <span className="font-bold text-green-600">{statement.amount_paid?.toFixed(2)}</span>
+              </div>
+              {statement.installment_amount && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Instalment Amount (NAD)</span>
-                  <span className="font-bold">{loan?.instalment_amount?.toFixed(2)}</span>
+                  <span className="font-bold">{statement.installment_amount?.toFixed(2)}</span>
+                </div>
+              )}
+              {statement.total_installments && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Instalments</span>
+                  <span className="font-bold">{statement.paid_installments || 0} of {statement.total_installments} paid</span>
                 </div>
               )}
             </div>
@@ -203,16 +254,26 @@ export default function Statement() {
           <div className="space-y-2 text-sm mb-6">
             <div className="flex justify-between">
               <span className="text-gray-600">Due Date :</span>
-              <span>{loan?.due_date}</span>
+              <span>{statement.due_date}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Outstanding Date :</span>
-              <span>{loan?.outstanding_date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Grace Date :</span>
-              <span>{loan?.grace_date}</span>
-            </div>
+            {statement.next_due_date && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Next Due Date :</span>
+                <span>{statement.next_due_date}</span>
+              </div>
+            )}
+            {statement.outstanding_date && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Outstanding Date :</span>
+                <span>{statement.outstanding_date}</span>
+              </div>
+            )}
+            {statement.paid_date && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Paid Date :</span>
+                <span className="text-green-600 font-medium">{statement.paid_date}</span>
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-gray-500 mb-4">
@@ -237,12 +298,18 @@ export default function Statement() {
           </div>
 
           <div className="text-center text-xs text-gray-600 space-y-1 mb-8">
-            <p>Acc Name: <span className="font-medium">Destiny Group Pty LTD</span></p>
-            <p>Bank: <span className="font-medium">Nedbank Namibia</span></p>
-            <p>Acc no: <span className="font-medium">6000238099</span></p>
-            <p>Account type: <span className="font-medium">Cheque</span></p>
-            <p>Branch: <span className="font-medium">Corporate Branch</span></p>
-            <p>Branch Code: <span className="font-medium">280173</span></p>
+            <p>Acc Name: <span className="font-medium">{statement.lending_society?.name}</span></p>
+            <p>Bank: <span className="font-medium">{statement.lending_society?.bank}</span></p>
+            <p>Acc no: <span className="font-medium">{statement.lending_society?.account_number}</span></p>
+            {statement.lending_society?.account_type && (
+              <p>Account type: <span className="font-medium">{statement.lending_society.account_type}</span></p>
+            )}
+            {statement.lending_society?.branch && (
+              <p>Branch: <span className="font-medium">{statement.lending_society.branch}</span></p>
+            )}
+            {statement.lending_society?.branch_code && (
+              <p>Branch Code: <span className="font-medium">{statement.lending_society.branch_code}</span></p>
+            )}
           </div>
 
           <div className="flex gap-4 pb-6">
@@ -275,33 +342,43 @@ export default function Statement() {
           LOAN TYPE: <span className="text-[#00736e] font-bold">NANO LOAN</span>
         </p>
         <p className="text-sm mb-6">
-          LOAN REFERENCE: <span className="font-bold">{loan?.reference}</span>{" "}
-          <span className={isPaidUp ? "text-green-500 font-medium" : "text-red-500 font-medium"}>
-            {isPaidUp ? "Paid Up" : "Due"}
+          LOAN REFERENCE: <span className="font-bold">{statement.loan_id}</span>{" "}
+          <span className={`${statusColor} font-medium`}>
+            {statusLabel}
           </span>
         </p>
 
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Received (NAD)</span>
-              <span className="font-bold">{loan?.received?.toFixed(2)}</span>
+              <span className="text-gray-600">Borrowed (NAD)</span>
+              <span className="font-bold">{statement.borrowed_amount?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Interest (%)</span>
-              <span className="font-bold">{loan?.interest_percent?.toFixed(2)} %</span>
+              <span className="font-bold">{statement.interest_rate?.toFixed(2)} %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Interest (NAD)</span>
-              <span className="font-bold">{loan?.interest_amount?.toFixed(2)}</span>
+              <span className="font-bold">{statement.interest_fee?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Processing Fee (NAD)</span>
-              <span className="font-bold">{loan?.processing_fee?.toFixed(2)}</span>
+              <span className="font-bold">{statement.processing_fee?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
               <span className="font-bold">Total Repayable (NAD)</span>
-              <span className="font-bold">{loan?.total_repayable?.toFixed(2)}</span>
+              <span className="font-bold">{statement.total_repayable?.toFixed(2)}</span>
+            </div>
+            {statement.outstanding_amount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Outstanding Amount (NAD)</span>
+                <span className="font-bold text-red-600">{statement.outstanding_amount?.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">Amount Paid (NAD)</span>
+              <span className="font-bold text-green-600">{statement.amount_paid?.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -309,16 +386,20 @@ export default function Statement() {
         <div className="space-y-2 text-sm mb-6">
           <div className="flex justify-between">
             <span className="text-gray-600">Due Date :</span>
-            <span>{loan?.due_date}</span>
+            <span>{statement.due_date}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Outstanding Date :</span>
-            <span>{loan?.outstanding_date}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Grace Date :</span>
-            <span>{loan?.grace_date}</span>
-          </div>
+          {statement.outstanding_date && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Outstanding Date :</span>
+              <span>{statement.outstanding_date}</span>
+            </div>
+          )}
+          {statement.paid_date && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Paid Date :</span>
+              <span className="text-green-600 font-medium">{statement.paid_date}</span>
+            </div>
+          )}
         </div>
 
         <p className="text-xs text-gray-500 mb-4">
@@ -343,12 +424,18 @@ export default function Statement() {
         </div>
 
         <div className="text-center text-xs text-gray-600 space-y-1 mb-8">
-          <p>Acc Name: <span className="font-medium">Destiny Group Pty LTD</span></p>
-          <p>Bank: <span className="font-medium">Nedbank Namibia</span></p>
-          <p>Acc no: <span className="font-medium">6000238099</span></p>
-          <p>Account type: <span className="font-medium">Cheque</span></p>
-          <p>Branch: <span className="font-medium">Corporate Branch</span></p>
-          <p>Branch Code: <span className="font-medium">280173</span></p>
+          <p>Acc Name: <span className="font-medium">{statement.lending_society?.name}</span></p>
+          <p>Bank: <span className="font-medium">{statement.lending_society?.bank}</span></p>
+          <p>Acc no: <span className="font-medium">{statement.lending_society?.account_number}</span></p>
+          {statement.lending_society?.account_type && (
+            <p>Account type: <span className="font-medium">{statement.lending_society.account_type}</span></p>
+          )}
+          {statement.lending_society?.branch && (
+            <p>Branch: <span className="font-medium">{statement.lending_society.branch}</span></p>
+          )}
+          {statement.lending_society?.branch_code && (
+            <p>Branch Code: <span className="font-medium">{statement.lending_society.branch_code}</span></p>
+          )}
         </div>
 
         <div className="flex gap-4 pb-6">

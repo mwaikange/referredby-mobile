@@ -1,0 +1,736 @@
+# 📱 MOBILE APP - STATEMENTS, HISTORY & PAYMENT RECORDS IMPLEMENTATION GUIDE
+
+**Version**: 1.0  
+**Last Updated**: January 26, 2026  
+**Target**: Replit Mobile Developer (APK)
+
+---
+
+## 🎯 CRITICAL REQUIREMENTS
+
+### Statement Display Logic
+
+**RULE 1**: Always show a loan statement when user clicks "Statements" button
+**RULE 2**: Priority order for statement display:
+
+```
+1. IF active loan exists (status = 'A') → Show ACTIVE loan statement
+2. ELSE IF no active loan → Show LAST PAID-UP loan (status = 'PU', most recent)
+3. ELSE IF no loans at all → Show "No Loans Yet" with apply buttons
+```
+
+**NEVER** show "No Active Loans" if user has any paid-up loans.
+
+---
+
+## 📊 API ENDPOINTS
+
+### 1. GET USER'S LOANS (ALL TYPES)
+
+**Endpoint**: `GET /api/users/me`
+
+**Headers**:
+```json
+{
+  "Authorization": "Bearer {access_token}"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "user": {
+    "id": "user-uuid",
+    "first_name": "John",
+    "last_name": "Doe",
+    "membership_status": "AA",
+    "borrower_rating": 5.5,
+    "lending_society_id": "society-uuid",
+    // Nano loan data
+    "nano_loan": {
+      "loan_id": "NL94819167",
+      "status": "PU",
+      "borrowed_amount": 500.00,
+      "total_repayable": 800.00,
+      "interest_rate": 28.00,
+      "due_date": "2025-03-25",
+      "settled_at": "2025-03-28"
+    },
+    // Term loan data (if exists)
+    "term_loan": {
+      "loan_id": "TL12345678",
+      "status": "A",
+      "principal": 10000.00,
+      "total_repayable": 12500.00,
+      // ... term loan details
+    }
+  }
+}
+```
+
+---
+
+### 2. GET NANO LOAN STATEMENT
+
+**Endpoint**: `GET /api/mobile/nano-loan-statement?user_id={user_id}`
+
+**Headers**:
+```json
+{
+  "Authorization": "Bearer {access_token}"
+}
+```
+
+**Query Parameters**:
+- `user_id` (required): The logged-in user's UUID
+
+**Response for ACTIVE nano loan**:
+```json
+{
+  "success": true,
+  "statement": {
+    "loan_id": "NL94819167",
+    "loan_type": "NANO",
+    "status": "A",
+    "borrowed_amount": 500.00,
+    "interest_rate": 28.00,
+    "interest_fee": 168.00,
+    "processing_fee": 32.00,
+    "total_repayable": 800.00,
+    "outstanding_amount": 300.00,
+    "amount_paid": 500.00,
+    "due_date": "2025-03-25",
+    "outstanding_date": "2025-04-26",
+    "paid_date": null,
+    "lending_society": {
+      "name": "Destiny Group Pty LTD",
+      "bank": "Nedbank Namibia",
+      "account_number": "1234567890",
+      "account_type": "Cheque",
+      "branch": "Corporate Branch",
+      "branch_code": "280173"
+    }
+  }
+}
+```
+
+**Response for PAID-UP nano loan**:
+```json
+{
+  "success": true,
+  "statement": {
+    "loan_id": "NL94819167",
+    "loan_type": "NANO",
+    "status": "PU",
+    "borrowed_amount": 500.00,
+    "interest_rate": 28.00,
+    "interest_fee": 168.00,
+    "processing_fee": 32.00,
+    "total_repayable": 800.00,
+    "outstanding_amount": 0.00,
+    "amount_paid": 800.00,
+    "due_date": "2025-03-25",
+    "outstanding_date": null,
+    "paid_date": "2025-03-28",
+    "lending_society": {
+      "name": "Destiny Group Pty LTD",
+      "bank": "Nedbank Namibia",
+      "account_number": "1234567890",
+      "account_type": "Cheque",
+      "branch": "Corporate Branch",
+      "branch_code": "280173"
+    }
+  }
+}
+```
+
+**Response when NO nano loans exist**:
+```json
+{
+  "success": false,
+  "error": "No nano loans found"
+}
+```
+
+---
+
+### 3. GET TERM LOAN STATEMENT
+
+**Endpoint**: `GET /api/mobile/term-loan-statement?user_id={user_id}`
+
+**Headers**:
+```json
+{
+  "Authorization": "Bearer {access_token}"
+}
+```
+
+**Query Parameters**:
+- `user_id` (required): The logged-in user's UUID
+
+**Response for ACTIVE term loan**:
+```json
+{
+  "success": true,
+  "statement": {
+    "loan_id": "TL12345678",
+    "loan_type": "TERM",
+    "status": "A",
+    "principal": 10000.00,
+    "total_repayable": 12500.00,
+    "outstanding_balance": 8000.00,
+    "amount_paid": 4500.00,
+    "interest_rate": 18.60,
+    "total_installments": 12,
+    "paid_installments": 4,
+    "remaining_installments": 8,
+    "next_due_date": "2025-02-28",
+    "installment_amount": 1041.67,
+    "installments": [
+      {
+        "installment_number": 1,
+        "due_date": "2024-11-28",
+        "amount": 1041.67,
+        "status": "paid",
+        "paid_date": "2024-11-25"
+      },
+      {
+        "installment_number": 2,
+        "due_date": "2024-12-28",
+        "amount": 1041.67,
+        "status": "paid",
+        "paid_date": "2024-12-28"
+      },
+      // ... more installments
+    ],
+    "lending_society": {
+      "name": "Destiny Group Pty LTD",
+      "bank": "Nedbank Namibia",
+      "account_number": "1234567890"
+    }
+  }
+}
+```
+
+---
+
+### 4. GET PAYMENT HISTORY
+
+**Endpoint**: `GET /api/mobile/payment-history?user_id={user_id}&loan_type={nano|term}`
+
+**Headers**:
+```json
+{
+  "Authorization": "Bearer {access_token}"
+}
+```
+
+**Query Parameters**:
+- `user_id` (required): The logged-in user's UUID
+- `loan_type` (required): Either "nano" or "term"
+
+**Response**:
+```json
+{
+  "success": true,
+  "payments": [
+    {
+      "id": "payment-uuid-1",
+      "loan_id": "NL94819167",
+      "amount": 500.00,
+      "payment_date": "2025-03-28",
+      "payment_method": "Bank Transfer",
+      "reference": "REF123456",
+      "status": "confirmed"
+    },
+    {
+      "id": "payment-uuid-2",
+      "loan_id": "NL94819167",
+      "amount": 300.00,
+      "payment_date": "2025-03-20",
+      "payment_method": "Bank Transfer",
+      "reference": "REF123455",
+      "status": "confirmed"
+    }
+  ]
+}
+```
+
+---
+
+## 🔄 IMPLEMENTATION FLOW
+
+### STEP 1: When User Clicks "STATEMENTS" Button from Profile
+
+```dart
+// Pseudocode for mobile developer
+
+Future<void> navigateToStatements() async {
+  try {
+    // 1. Call /api/users/me to get user data including loan info
+    final response = await apiClient.get(
+      '/api/users/me',
+      headers: {'Authorization': 'Bearer $accessToken'}
+    );
+    
+    final userData = response.data['user'];
+    
+    // 2. Check for ACTIVE loans first (priority order)
+    bool hasActiveLoan = false;
+    String activeLoanType = '';
+    
+    // Check term loan first (higher priority)
+    if (userData['term_loan'] != null && userData['term_loan']['status'] == 'A') {
+      hasActiveLoan = true;
+      activeLoanType = 'term';
+    }
+    // Then check nano loan
+    else if (userData['nano_loan'] != null && userData['nano_loan']['status'] == 'A') {
+      hasActiveLoan = true;
+      activeLoanType = 'nano';
+    }
+    
+    // 3. Navigate based on active loan status
+    if (hasActiveLoan) {
+      // Show active loan statement
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ActiveStatementScreen(
+            loanType: activeLoanType,
+            userId: userData['id']
+          )
+        )
+      );
+    } else {
+      // 4. No active loan - check for LAST PAID-UP loan
+      String? lastPaidUpLoanType = null;
+      
+      // Check for paid-up term loan
+      if (userData['term_loan'] != null && userData['term_loan']['status'] == 'PU') {
+        lastPaidUpLoanType = 'term';
+      }
+      // Check for paid-up nano loan
+      else if (userData['nano_loan'] != null && userData['nano_loan']['status'] == 'PU') {
+        lastPaidUpLoanType = 'nano';
+      }
+      
+      if (lastPaidUpLoanType != null) {
+        // Show last paid-up loan statement
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaidUpStatementScreen(
+              loanType: lastPaidUpLoanType,
+              userId: userData['id']
+            )
+          )
+        );
+      } else {
+        // No loans at all - show apply screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NoLoansScreen()
+          )
+        );
+      }
+    }
+    
+  } catch (e) {
+    showError('Failed to load statement: $e');
+  }
+}
+```
+
+---
+
+### STEP 2: Active Statement Screen Implementation
+
+```dart
+class ActiveStatementScreen extends StatefulWidget {
+  final String loanType; // 'nano' or 'term'
+  final String userId;
+  
+  @override
+  _ActiveStatementScreenState createState() => _ActiveStatementScreenState();
+}
+
+class _ActiveStatementScreenState extends State<ActiveStatementScreen> {
+  Map<String, dynamic>? statementData;
+  bool isLoading = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    loadStatement();
+  }
+  
+  Future<void> loadStatement() async {
+    try {
+      final endpoint = widget.loanType == 'nano' 
+        ? '/api/mobile/nano-loan-statement?user_id=${widget.userId}'
+        : '/api/mobile/term-loan-statement?user_id=${widget.userId}';
+      
+      final response = await apiClient.get(
+        endpoint,
+        headers: {'Authorization': 'Bearer $accessToken'}
+      );
+      
+      setState(() {
+        statementData = response.data['statement'];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      showError('Failed to load statement: $e');
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    
+    if (statementData == null) {
+      return Center(child: Text('No statement data available'));
+    }
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${statementData!['loan_type']} LOAN STATEMENT'),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Loan Reference
+            Text('LOAN REFERENCE: ${statementData!['loan_id']}'),
+            Text('LOAN TYPE: ${statementData!['loan_type']}'),
+            
+            SizedBox(height: 20),
+            
+            // Financial Details
+            _buildRow('Borrowed (NAD)', '${statementData!['borrowed_amount']}'),
+            _buildRow('Interest (%)', '${statementData!['interest_rate']}%'),
+            _buildRow('Interest (NAD)', '${statementData!['interest_fee']}'),
+            _buildRow('Processing Fee (NAD)', '${statementData!['processing_fee']}'),
+            _buildRow('Total Repayable (NAD)', '${statementData!['total_repayable']}', bold: true),
+            
+            SizedBox(height: 20),
+            
+            // Dates
+            _buildRow('Due Date:', '${statementData!['due_date']}'),
+            _buildRow('Outstanding Date:', '${statementData!['outstanding_date']}'),
+            if (statementData!['paid_date'] != null)
+              _buildRow('Paid Date:', '${statementData!['paid_date']}'),
+            
+            SizedBox(height: 30),
+            
+            // Payment Record Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentHistoryScreen(
+                      loanType: widget.loanType,
+                      userId: widget.userId,
+                      loanId: statementData!['loan_id']
+                    )
+                  )
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: Size(double.infinity, 50),
+              ),
+              child: Text('PAYMENT RECORD', style: TextStyle(color: Colors.white)),
+            ),
+            
+            SizedBox(height: 10),
+            
+            // New Payment Method (Coming Soon)
+            ElevatedButton(
+              onPressed: null, // Disabled
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[300],
+                minimumSize: Size(double.infinity, 50),
+              ),
+              child: Text('NEW PAYMENT METHOD COMING SOON'),
+            ),
+            
+            SizedBox(height: 30),
+            
+            // Society Banking Details
+            Text('Acc Name: ${statementData!['lending_society']['name']}'),
+            Text('Bank: ${statementData!['lending_society']['bank']}'),
+            Text('Acc Number: ${statementData!['lending_society']['account_number']}'),
+            Text('Account type: ${statementData!['lending_society']['account_type']}'),
+            Text('Branch: ${statementData!['lending_society']['branch']}'),
+            Text('Branch Code: ${statementData!['lending_society']['branch_code']}'),
+            
+            SizedBox(height: 30),
+            
+            // Bottom Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PaymentHistoryScreen(
+                            loanType: widget.loanType,
+                            userId: widget.userId,
+                            loanId: statementData!['loan_id']
+                          )
+                        )
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF1a1a40),
+                    ),
+                    child: Text('HISTORY', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: Text('BACK', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildRow(String label, String value, {bool bold = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
+  }
+}
+```
+
+---
+
+### STEP 3: Payment History Screen
+
+```dart
+class PaymentHistoryScreen extends StatefulWidget {
+  final String loanType; // 'nano' or 'term'
+  final String userId;
+  final String loanId;
+  
+  @override
+  _PaymentHistoryScreenState createState() => _PaymentHistoryScreenState();
+}
+
+class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
+  List<dynamic> payments = [];
+  bool isLoading = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    loadPaymentHistory();
+  }
+  
+  Future<void> loadPaymentHistory() async {
+    try {
+      final response = await apiClient.get(
+        '/api/mobile/payment-history?user_id=${widget.userId}&loan_type=${widget.loanType}',
+        headers: {'Authorization': 'Bearer $accessToken'}
+      );
+      
+      setState(() {
+        payments = response.data['payments'] ?? [];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      showError('Failed to load payment history: $e');
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('PAYMENT HISTORY'),
+      ),
+      body: isLoading
+        ? Center(child: CircularProgressIndicator())
+        : payments.isEmpty
+          ? Center(child: Text('No payment records found'))
+          : ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: payments.length,
+              itemBuilder: (context, index) {
+                final payment = payments[index];
+                return Card(
+                  margin: EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    title: Text('Amount: NAD ${payment['amount']}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Date: ${payment['payment_date']}'),
+                        Text('Reference: ${payment['reference']}'),
+                        Text('Method: ${payment['payment_method']}'),
+                        Text('Status: ${payment['status']}'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+```
+
+---
+
+## 🚨 COMMON ERRORS & FIXES
+
+### Error 1: "No Active Loans" shown when user has paid-up loans
+
+**Problem**: App only checks for active loans and doesn't fall back to paid-up loans
+
+**Fix**: Implement the priority logic:
+```dart
+if (hasActiveLoan) {
+  showActiveLoanStatement();
+} else if (hasPaidUpLoan) {
+  showPaidUpLoanStatement(); // This is the missing piece
+} else {
+  showNoLoansScreen();
+}
+```
+
+### Error 2: Statement shows wrong user's data
+
+**Problem**: Not using logged-in user's ID correctly
+
+**Fix**: Always pass the authenticated user's ID:
+```dart
+final userId = await getUserIdFromSession();
+final response = await apiClient.get(
+  '/api/mobile/nano-loan-statement?user_id=$userId',
+  headers: {'Authorization': 'Bearer $accessToken'}
+);
+```
+
+### Error 3: Payment history is empty
+
+**Problem**: Querying wrong loan type or missing user_id
+
+**Fix**: Ensure both parameters are correct:
+```dart
+'/api/mobile/payment-history?user_id=$userId&loan_type=nano'
+```
+
+---
+
+## ✅ TESTING CHECKLIST
+
+### Test Case 1: Active Nano Loan
+- [ ] Click "Statements" button from profile
+- [ ] Verify statement shows ACTIVE nano loan details
+- [ ] Verify "PAYMENT RECORD" button works
+- [ ] Verify banking details are correct
+
+### Test Case 2: Active Term Loan
+- [ ] Click "Statements" button from profile
+- [ ] Verify statement shows ACTIVE term loan details
+- [ ] Verify installment schedule is visible
+- [ ] Verify next due date is correct
+
+### Test Case 3: No Active Loan, Has Paid-Up Nano Loan
+- [ ] User has NO active loans
+- [ ] User has a PAID-UP (PU) nano loan
+- [ ] Click "Statements" button
+- [ ] **VERIFY**: Statement shows the PAID-UP nano loan (NOT "No Active Loans")
+- [ ] Verify paid_date is displayed
+- [ ] Verify outstanding_amount is 0.00
+
+### Test Case 4: No Active Loan, Has Paid-Up Term Loan
+- [ ] User has NO active loans
+- [ ] User has a PAID-UP (PU) term loan
+- [ ] Click "Statements" button
+- [ ] **VERIFY**: Statement shows the PAID-UP term loan (NOT "No Active Loans")
+- [ ] Verify all installments show "paid" status
+
+### Test Case 5: No Loans At All
+- [ ] User has NEVER taken any loans
+- [ ] Click "Statements" button
+- [ ] Verify "No Loans Yet" screen appears
+- [ ] Verify "APPLY FOR NANO LOAN" button works
+- [ ] Verify "APPLY FOR TERM LOAN" button works
+
+### Test Case 6: Payment History
+- [ ] From statement screen, click "PAYMENT RECORD"
+- [ ] Verify all payments are listed
+- [ ] Verify payment amounts match
+- [ ] Verify payment dates are correct
+- [ ] Verify reference numbers are shown
+
+---
+
+## 📋 SUMMARY FOR MOBILE DEV
+
+### Key Points:
+
+1. **ALWAYS check for paid-up loans** if no active loans exist - don't show "No Active Loans" screen
+2. **Use the logged-in user's ID** from session/token for all API calls
+3. **Priority order**: Active loans → Paid-up loans → No loans screen
+4. **Term loans have priority** over nano loans when both are active
+5. **Payment history** is separate from statement - requires its own API call
+
+### API Endpoints to Use:
+
+| Screen | Endpoint | Purpose |
+|--------|----------|---------|
+| Profile → Statements | `GET /api/users/me` | Get user data and check loan status |
+| Nano Statement | `GET /api/mobile/nano-loan-statement?user_id={id}` | Get nano loan details |
+| Term Statement | `GET /api/mobile/term-loan-statement?user_id={id}` | Get term loan details |
+| Payment History | `GET /api/mobile/payment-history?user_id={id}&loan_type={type}` | Get payment records |
+
+### Authentication:
+
+All API calls require:
+```
+Authorization: Bearer {access_token}
+```
+
+Get access token from login response and store securely.
+
+---
+
+**END OF GUIDE**

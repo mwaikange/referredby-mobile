@@ -474,6 +474,45 @@ export const api = {
       const data = await response.json();
       return data;
     },
+
+    getNanoLoanStatement: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/nano-loan-statement?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { success: false, error: 'No nano loans found' };
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    getTermLoanStatement: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/term-loan-statement?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { success: false, error: 'No term loans found' };
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    getPaymentHistoryByType: async (userId: string, loanType: 'nano' | 'term'): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/payment-history?user_id=${userId}&loan_type=${loanType}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { payments: [] };
+      }
+      const data = await response.json();
+      return data;
+    },
   },
 
   // Get Logged-in User Profile
