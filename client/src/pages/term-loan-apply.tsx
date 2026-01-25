@@ -43,21 +43,22 @@ export default function TermLoanApplyPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await api.getProfile();
+        const profile = await api.getProfile();
+        const loanInfo = await api.loans.getTermLoanDetails(profile.id);
         const details: TermLoanDetails = {
-          account_level: "TL1",
-          installment_max: 13000,
-          min_amount: 5000,
-          max_amount: 13000,
-          min_months: 6,
-          max_months: 12,
-          interest_percent: 27.90,
-          processing_fee: 32,
-          first_deduction_date: "2026-03-24",
-          final_deduction_date: "2026-08-24",
-          due_date: "2026-08-24",
-          outstanding_date: "2026-09-24",
-          block_date: "2026-10-25",
+          account_level: loanInfo.account_level || "TL1",
+          installment_max: loanInfo.installment_max || 13000,
+          min_amount: loanInfo.min_amount || 5000,
+          max_amount: loanInfo.max_amount || 13000,
+          min_months: loanInfo.min_months || 6,
+          max_months: loanInfo.max_months || 12,
+          interest_percent: loanInfo.interest_percent || 27.90,
+          processing_fee: loanInfo.processing_fee || 32,
+          first_deduction_date: loanInfo.first_deduction_date || "2026-03-24",
+          final_deduction_date: loanInfo.final_deduction_date || "2026-08-24",
+          due_date: loanInfo.due_date || "2026-08-24",
+          outstanding_date: loanInfo.outstanding_date || "2026-09-24",
+          block_date: loanInfo.block_date || "2026-10-25",
         };
         setLoanDetails(details);
         setAmountStr(details.min_amount.toString());
@@ -121,16 +122,22 @@ export default function TermLoanApplyPage() {
     setOtpError("");
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const profile = await api.getProfile();
+      await api.auth.verifyOtp(profile.mobile, otp, 'loan_signature');
       
-      if (otp === "123456") {
-        setShowOtpModal(false);
-        setShowSuccess(true);
-      } else {
-        setOtpError("Invalid or expired OTP");
-      }
+      await api.loans.applyTermLoan({
+        amount: Number(amountStr),
+        months: months,
+        interest: interest,
+        processing_fee: fee,
+        total_repayable: total,
+        installment_amount: installment,
+      });
+      
+      setShowOtpModal(false);
+      setShowSuccess(true);
     } catch (error: any) {
-      setOtpError("Verification failed. Please try again.");
+      setOtpError(error.message || "Verification failed. Please try again.");
     } finally {
       setVerifyingOtp(false);
     }

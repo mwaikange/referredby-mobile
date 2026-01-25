@@ -368,6 +368,75 @@ export const api = {
     },
   },
 
+  // ============== LOANS ==============
+  loans: {
+    getNanoLoanDetails: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/loans/nano/details`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return {
+          account_level: 'NL1',
+          loan_max: 1800,
+          min_amount: 300,
+          max_amount: 1800,
+          interest_percent: 28.00,
+          processing_fee: 32,
+        };
+      }
+      const data = await response.json();
+      return data.details || data;
+    },
+
+    applyNanoLoan: async (params: { amount: number; interest: number; processing_fee: number; total_repayable: number }): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/loans/nano/apply`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(params),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Loan application failed');
+      return data;
+    },
+
+    getTermLoanDetails: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/loans/term/details`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return {
+          account_level: 'TL1',
+          installment_max: 13000,
+          min_amount: 5000,
+          max_amount: 13000,
+          min_months: 6,
+          max_months: 12,
+          interest_percent: 27.90,
+          processing_fee: 32,
+        };
+      }
+      const data = await response.json();
+      return data.details || data;
+    },
+
+    applyTermLoan: async (params: { amount: number; months: number; interest: number; processing_fee: number; total_repayable: number; installment_amount: number }): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/loans/term/apply`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(params),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Loan application failed');
+      return data;
+    },
+  },
+
   // Get Logged-in User Profile
   getProfile: async (): Promise<UserProfile> => {
     // Check local session first

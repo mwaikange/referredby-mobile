@@ -16,6 +16,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import type { RootStackParamList } from '../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -35,15 +36,26 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: pin,
       });
 
       if (error) {
         Alert.alert('Login Failed', error.message);
-      } else {
+        return;
+      }
+
+      if (!data.session) {
+        Alert.alert('Login Failed', 'No session returned');
+        return;
+      }
+
+      try {
+        await api.getProfile();
         navigation.replace('Profile');
+      } catch (profileErr: any) {
+        Alert.alert('Profile Load Failed', 'Could not load profile data. Please try again.');
       }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Login failed');

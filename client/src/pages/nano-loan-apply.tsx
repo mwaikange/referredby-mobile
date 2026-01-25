@@ -38,17 +38,18 @@ export default function NanoLoanApplyPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await api.getProfile();
+        const profile = await api.getProfile();
+        const loanInfo = await api.loans.getNanoLoanDetails(profile.id);
         const details = {
-          account_level: "NL1",
-          loan_max: 1800,
-          min_amount: 300,
-          max_amount: 1800,
-          interest_percent: 28.00,
-          processing_fee: 32,
-          due_date: "2026-03-26",
-          outstanding_date: "2026-04-26",
-          block_date: "2026-05-27",
+          account_level: loanInfo.account_level || "NL1",
+          loan_max: loanInfo.loan_max || 1800,
+          min_amount: loanInfo.min_amount || 300,
+          max_amount: loanInfo.max_amount || 1800,
+          interest_percent: loanInfo.interest_percent || 28.00,
+          processing_fee: loanInfo.processing_fee || 32,
+          due_date: loanInfo.due_date || "2026-03-26",
+          outstanding_date: loanInfo.outstanding_date || "2026-04-26",
+          block_date: loanInfo.block_date || "2026-05-27",
         };
         setLoanDetails(details);
         setAmountStr(details.min_amount.toString());
@@ -110,16 +111,20 @@ export default function NanoLoanApplyPage() {
     setOtpError("");
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const profile = await api.getProfile();
+      await api.auth.verifyOtp(profile.mobile, otp, 'loan_signature');
       
-      if (otp === "123456") {
-        setShowOtpModal(false);
-        setShowSuccess(true);
-      } else {
-        setOtpError("Invalid or expired OTP");
-      }
+      await api.loans.applyNanoLoan({
+        amount: Number(amountStr),
+        interest: interest,
+        processing_fee: fee,
+        total_repayable: total,
+      });
+      
+      setShowOtpModal(false);
+      setShowSuccess(true);
     } catch (error: any) {
-      setOtpError("Verification failed. Please try again.");
+      setOtpError(error.message || "Verification failed. Please try again.");
     } finally {
       setVerifyingOtp(false);
     }
