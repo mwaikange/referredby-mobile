@@ -435,6 +435,45 @@ export const api = {
       if (!response.ok) throw new Error(data.error || 'Loan application failed');
       return data;
     },
+
+    getActiveLoans: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/active-loans?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { nano_loans: [], term_loans: [] };
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    getPaymentHistory: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/payment-history?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { payments: [] };
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    getLoanHistory: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/loan-history?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { loans: [] };
+      }
+      const data = await response.json();
+      return data;
+    },
   },
 
   // Get Logged-in User Profile

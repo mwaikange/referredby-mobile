@@ -34,72 +34,54 @@ export default function Statement() {
         const userProfile = await api.getProfile();
         setProfile(userProfile);
         
-        // Check for active loan from profile data
-        // The API should return active_loan or similar field
-        const profileData = userProfile as any;
+        console.log('📥 Fetching active loans for user:', userProfile.id);
         
-        // Determine loan type based on available data
-        // Priority: active_loan > loan_type > membership_status prefix
-        if (profileData.active_loan) {
-          const loan = profileData.active_loan;
+        // Fetch active loans from API for the current user
+        const activeLoans = await api.loans.getActiveLoans(userProfile.id);
+        console.log('📡 Active loans response:', activeLoans);
+        
+        // Check if user has term loans first, then nano loans
+        const termLoans = activeLoans.term_loans || [];
+        const nanoLoans = activeLoans.nano_loans || [];
+        
+        if (termLoans.length > 0) {
+          const loan = termLoans[0];
+          setLoanType('term');
           setActiveLoan({
             id: loan.id || '',
             reference: loan.reference || loan.loan_id || '',
-            type: loan.type || (loan.reference?.startsWith('TL') ? 'term' : 'nano'),
+            type: 'term',
             status: loan.status || 'Due',
             received: loan.received || loan.amount || 0,
             interest_percent: loan.interest_percent || loan.interest_rate || 0,
             interest_amount: loan.interest_amount || loan.interest || 0,
             processing_fee: loan.processing_fee || 0,
             total_repayable: loan.total_repayable || loan.total || 0,
-            instalment_amount: loan.instalment_amount,
+            instalment_amount: loan.instalment_amount || loan.installment_amount,
             due_date: loan.due_date || '',
             outstanding_date: loan.outstanding_date || '',
             grace_date: loan.grace_date || '',
           });
-          setLoanType(loan.type || (loan.reference?.startsWith('TL') ? 'term' : 'nano'));
+        } else if (nanoLoans.length > 0) {
+          const loan = nanoLoans[0];
+          setLoanType('nano');
+          setActiveLoan({
+            id: loan.id || '',
+            reference: loan.reference || loan.loan_id || '',
+            type: 'nano',
+            status: loan.status || 'Due',
+            received: loan.received || loan.amount || 0,
+            interest_percent: loan.interest_percent || loan.interest_rate || 0,
+            interest_amount: loan.interest_amount || loan.interest || 0,
+            processing_fee: loan.processing_fee || 0,
+            total_repayable: loan.total_repayable || loan.total || 0,
+            due_date: loan.due_date || '',
+            outstanding_date: loan.outstanding_date || '',
+            grace_date: loan.grace_date || '',
+          });
         } else {
-          // Fallback: determine from membership_status or other fields
-          const status = userProfile.membership_status || '';
-          const hasTermLoan = status.includes('TL') || status.startsWith('AT') || profileData.active_term_loan;
-          const hasNanoLoan = status.includes('NL') || status.startsWith('AN') || profileData.active_nano_loan;
-          
-          if (hasTermLoan) {
-            setLoanType('term');
-            // Mock term loan data - will be replaced by API
-            setActiveLoan({
-              id: '1',
-              reference: 'TL86127543',
-              type: 'term',
-              status: 'Due',
-              received: 8200.00,
-              interest_percent: 15.90,
-              interest_amount: 1303.80,
-              processing_fee: 0.00,
-              total_repayable: 9586.80,
-              instalment_amount: 958.68,
-              due_date: '31 October 2026',
-              outstanding_date: '01 December 2026',
-              grace_date: '02 November 2026',
-            });
-          } else {
-            setLoanType('nano');
-            // Mock nano loan data - will be replaced by API
-            setActiveLoan({
-              id: '2',
-              reference: 'NL95726406',
-              type: 'nano',
-              status: 'Due',
-              received: 780.00,
-              interest_percent: 25.74,
-              interest_amount: 200.77,
-              processing_fee: 32.00,
-              total_repayable: 1012.77,
-              due_date: '24 March 2026',
-              outstanding_date: '24 April 2026',
-              grace_date: '26 March 2026',
-            });
-          }
+          // No active loans - show empty state
+          setActiveLoan(null);
         }
       } catch (error) {
         console.error("Error fetching data:", error);

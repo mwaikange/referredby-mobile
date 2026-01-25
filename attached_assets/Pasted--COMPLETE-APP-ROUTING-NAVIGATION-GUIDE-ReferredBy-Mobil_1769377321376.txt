@@ -1,0 +1,1264 @@
+# 🗺️ COMPLETE APP ROUTING & NAVIGATION GUIDE
+**ReferredBy Mobile App - Full Navigation Flow Documentation**
+
+Version: 3.0  
+Last Updated: January 26, 2026  
+Platform: Next.js 16 (App Router)
+
+---
+
+## 📋 TABLE OF CONTENTS
+
+1. [Master Navigation Overview](#master-navigation-overview)
+2. [Authentication Flow](#authentication-flow)
+3. [User Onboarding Flow](#user-onboarding-flow)
+4. [Main App Navigation](#main-app-navigation)
+5. [Loan Application Flows](#loan-application-flows)
+6. [Profile & Settings Flow](#profile--settings-flow)
+7. [Statements & History Flow](#statements--history-flow)
+8. [Conditional Routing Logic](#conditional-routing-logic)
+9. [Route Configuration](#route-configuration)
+
+---
+
+## 1. MASTER NAVIGATION OVERVIEW
+
+### Complete App Structure
+
+```text
+/
+├── [Unauthenticated Routes]
+│   ├── /auth/login
+│   ├── /auth/signup
+│   ├── /auth/forgot-password
+│   └── /auth/verify-otp
+│
+├── [Onboarding Routes - No Auth Required]
+│   ├── /auth/personal-info
+│   ├── /auth/employer-info
+│   ├── /auth/community
+│   ├── /auth/upload-selfie
+│   ├── /auth/upload-documents
+│   └── /auth/signup-success
+│
+├── [Authenticated Main App Routes]
+│   ├── / (Home/Dashboard)
+│   ├── /profile
+│   ├── /profile/credit-score-history
+│   ├── /profile/update-documents
+│   │
+│   ├── /loans/apply
+│   ├── /loans/interest-confirmation
+│   ├── /loans/active-statement
+│   ├── /loans/payment-record
+│   ├── /loans/history
+│   │
+│   └── /loans/term-loan/*
+│       ├── /loans/term-loan
+│       ├── /loans/term-loan/net-disposable-income
+│       ├── /loans/term-loan/bank-details
+│       └── /loans/term-loan/bank-authorization
+```
+
+---
+
+## 2. AUTHENTICATION FLOW
+
+### A. Login & Registration Flow
+
+```text
+[App Launch]
+    |
+    v
+[/auth/login] 
+    |
+    +--> Enter Mobile Number
+    |
+    +--> [Forgot Password?] --> [/auth/forgot-password]
+    |                               |
+    |                               +--> Enter Mobile
+    |                               |
+    |                               +--> Send OTP
+    |                               |
+    |                               v
+    |                           [/auth/verify-otp] (type=password_reset)
+    |                               |
+    |                               +--> Enter OTP
+    |                               |
+    |                               +--> Enter New Password
+    |                               |
+    |                               v
+    |                           [Password Reset Success] --> [/auth/login]
+    |
+    +--> Enter Password
+    |
+    +--> [LOGIN SUCCESS]
+    |        |
+    |        v
+    |   [Store Session Token]
+    |        |
+    |        v
+    |   [Redirect to / (Dashboard)]
+    |
+    |
+    +--> [Not Yet Registered?] --> [/auth/signup]
+            |
+            v
+        [SIGNUP FLOW - See Below]
+```
+
+### B. Signup Flow (NEW USER)
+
+```text
+[/auth/signup]
+    |
+    +--> Enter Mobile Number
+    |
+    +--> Select Referring Party Type:
+    |    - Employee
+    |    - Community Group
+    |    - Business Partner
+    |
+    +--> Enter Referring Party ID
+    |
+    +--> [Send OTP]
+    |
+    v
+[/auth/verify-otp] (type=registration)
+    |
+    +--> Enter OTP Code
+    |
+    +--> API Call: POST /api/auth/verify-otp
+    |        |
+    |        +--> Creates User Account (membership_status: "AA")
+    |        +--> Returns user_id
+    |        +--> Stores user_id in sessionStorage
+    |
+    v
+[/auth/personal-info]
+    |
+    +--> Enter: First Name, Last Name, Email, ID Number, Date of Birth
+    |
+    +--> Set Password
+    |
+    +--> API Call: POST /api/auth/signup
+    |        |
+    |        +--> Updates user record
+    |
+    v
+[/auth/employer-info]
+    |
+    +--> Enter: Employer Name, Employee Number, Monthly Salary, Work Email
+    |
+    +--> API Call: PATCH /api/users/[user_id]
+    |
+    v
+[/auth/community]
+    |
+    +--> Select Community Group (Dropdown)
+    |
+    +--> API Call: PATCH /api/users/[user_id]
+    |
+    v
+[/auth/upload-selfie]
+    |
+    +--> Capture/Upload Selfie Photo
+    |
+    +--> API Call: POST /api/upload/selfie
+    |        |
+    |        +--> Uploads to Vercel Blob
+    |        +--> Saves URL to users.selfie_photo_url
+    |
+    v
+[/auth/upload-documents]
+    |
+    +--> Upload National ID (PDF/Image)
+    |
+    +--> Upload Proof of Income/Payslip (PDF/Image)
+    |
+    +--> API Call: POST /api/upload/documents
+    |        |
+    |        +--> Uploads both files to Vercel Blob
+    |        +--> Creates records in user_documents table
+    |
+    v
+[/auth/signup-success]
+    |
+    +--> "Registration Complete! Awaiting Approval"
+    |
+    +--> [Continue to Login] --> [/auth/login]
+```
+
+**CRITICAL NOTES:**
+- User is created with `membership_status: "AA"` after OTP verification
+- No session is created during onboarding
+- User must log in after completing registration
+- All onboarding routes use `user_id` from sessionStorage (no auth required)
+
+---
+
+## 3. USER ONBOARDING FLOW
+
+### Onboarding Route Sequence
+
+```text
+[After OTP Verification - User Created]
+    |
+    v
+[/auth/personal-info] (Step 1 of 5)
+    |
+    +--> Status: AA (Awaiting Approval)
+    +--> sessionStorage.user_id: {uuid}
+    |
+    v
+[/auth/employer-info] (Step 2 of 5)
+    |
+    +--> Updates employer details
+    |
+    v
+[/auth/community] (Step 3 of 5)
+    |
+    +--> Assigns lending society
+    |
+    v
+[/auth/upload-selfie] (Step 4 of 5)
+    |
+    +--> KYC: Selfie verification
+    +--> NO AUTH REQUIRED (uses user_id)
+    |
+    v
+[/auth/upload-documents] (Step 5 of 5)
+    |
+    +--> KYC: National ID + Payslip
+    +--> NO AUTH REQUIRED (uses user_id)
+    |
+    v
+[/auth/signup-success]
+    |
+    +--> Onboarding Complete
+    +--> User must now LOGIN
+    +--> Admin will approve (AA → AP1 → AP2)
+```
+
+**KEY ONBOARDING RULES:**
+1. All routes from `/auth/personal-info` to `/auth/signup-success` do NOT require authentication
+2. They use `user_id` stored in sessionStorage
+3. User account exists but session does not
+4. User MUST login after signup-success
+
+---
+
+## 4. MAIN APP NAVIGATION
+
+### Dashboard (Home Page)
+
+```text
+[/ (Dashboard)]
+    |
+    +--> Requires: Authentication
+    +--> Shows: User profile summary, loan status, quick actions
+    |
+    +---[PROFILE SECTION]---+
+    |   |
+    |   +--> Account Name
+    |   +--> Client ID
+    |   +--> Account UID
+    |   +--> Credit Rating (stars)
+    |   +--> Account Level (NL1-NL9 / TL0-TL10)
+    |   |
+    |   +--> [UPDATE DOCUMENTS] --> [/profile/update-documents]
+    |   |
+    |   +--> [VIEW PROFILE] --> [/profile]
+    |
+    +---[LOAN ACTIONS]---+
+    |   |
+    |   +--> [REQUEST NANO LOAN] --> [/loans/apply?type=nano]
+    |   |        |
+    |   |        +--> (if membership_status ≠ AP2) --> BLOCKED
+    |   |        +--> (if nano_loans_enabled = FALSE) --> BLOCKED
+    |   |
+    |   +--> [APPLY FOR TERM LOAN] --> [/loans/term-loan]
+    |            |
+    |            +--> (if membership_status ≠ AP2) --> BLOCKED
+    |            +--> (if term_loans_enabled = FALSE) --> BLOCKED
+    |
+    +---[STATEMENTS]---+
+    |   |
+    |   +--> [VIEW STATEMENTS] --> [/loans/active-statement]
+    |   |
+    |   +--> [PAYMENT RECORD] --> [/loans/payment-record]
+    |   |
+    |   +--> [LOAN HISTORY] --> [/loans/history]
+    |
+    +---[CREDIT SCORE]---+
+        |
+        +--> [CREDIT SCORE HISTORY] --> [/profile/credit-score-history]
+```
+
+---
+
+## 5. LOAN APPLICATION FLOWS
+
+### A. Nano Loan Application Flow
+
+```text
+[/loans/apply?type=nano]
+    |
+    +--> API Call: GET /api/mobile/loan-request?loan_type=nano
+    |        |
+    |        +--> Checks: membership_status = AP2
+    |        +--> Checks: lending_societies.nano_loans_enabled = TRUE
+    |        +--> Fetches: nano_progression limits (current_max_nano)
+    |        +--> Returns: loan limits and eligibility
+    |
+    +--> (if NOT eligible) --> [Error Message: "Nano loans not available"]
+    |                              |
+    |                              +--> [Back to Dashboard]
+    |
+    v
+[Display Nano Loan Request Form]
+    |
+    +--> Shows: Min/Max loan amounts
+    +--> Account Level: NL1-NL9
+    +--> Max Amount: Based on progression.current_max_nano
+    |
+    +--> User enters loan amount
+    |
+    +--> [Read Terms & Conditions] (checkbox)
+    |
+    +--> [Read Digital Contract] (checkbox)
+    |
+    +--> [CONTINUE] (disabled until both checked)
+    |
+    v
+[/loans/interest-confirmation]
+    |
+    +--> Shows: Loan amount, interest rate, repayment date
+    |
+    +--> User confirms interest acknowledgment
+    |
+    +--> [SUBMIT LOAN REQUEST]
+    |
+    +--> API Call: POST /api/mobile/interest-confirmation
+    |        |
+    |        +--> Creates nano_loans record (status: PA - Pending Approval)
+    |        +--> Sends notification to admin
+    |
+    v
+[Success Message]
+    |
+    +--> "Loan request submitted. Awaiting approval."
+    |
+    +--> [View Statements] --> [/loans/active-statement]
+    |
+    +--> [Back to Dashboard] --> [/]
+```
+
+**Nano Loan States:**
+- **PA**: Pending Approval (awaiting admin)
+- **AP**: Approved (ready for disbursement)
+- **DI**: Disbursed (active loan)
+- **PU**: Paid Up (settled)
+- **DE**: Defaulted
+
+---
+
+### B. Term Loan Application Flow
+
+```text
+[/loans/term-loan]
+    |
+    +--> API Call: GET /api/mobile/loan-request?loan_type=term
+    |        |
+    |        +--> Checks: membership_status = AP2
+    |        +--> Checks: lending_societies.term_loans_enabled = TRUE
+    |        +--> Fetches: term_progression limits (current_max_term)
+    |        +--> Returns: loan limits and eligibility
+    |
+    +--> (if NOT eligible) --> [Error Message: "Term loans not available"]
+    |                              |
+    |                              +--> [Back to Dashboard]
+    |
+    v
+[Display Term Loan Request Form]
+    |
+    +--> Shows: Min/Max loan amounts
+    +--> Account Level: TL0-TL10
+    +--> Max Amount: Based on progression.current_max_term
+    |
+    +--> User selects: Loan amount, repayment period (months)
+    |
+    +--> [Read Terms & Conditions] (checkbox)
+    |
+    +--> [CONTINUE]
+    |
+    v
+[/loans/term-loan/net-disposable-income]
+    |
+    +--> User enters: Monthly income, deductions, expenses
+    |
+    +--> Calculates: Net Disposable Income (NDI)
+    |
+    +--> Validates: Monthly installment ≤ 50% of NDI
+    |
+    +--> [CONTINUE]
+    |
+    v
+[/loans/term-loan/bank-details]
+    |
+    +--> User enters: Bank name, account number, account holder name
+    |
+    +--> [CONTINUE]
+    |
+    v
+[/loans/term-loan/bank-authorization]
+    |
+    +--> User uploads: Bank authorization letter (PDF)
+    |
+    +--> API Call: POST /api/term-loan/upload-documents
+    |        |
+    |        +--> Uploads to Vercel Blob
+    |        +--> Saves to user_documents
+    |
+    +--> [SUBMIT TERM LOAN REQUEST]
+    |
+    +--> API Call: POST /api/term-loan/submit
+    |        |
+    |        +--> Creates term_loans record (status: PA)
+    |        +--> Creates term_loan_installments (all future installments)
+    |        +--> Sends notification to admin
+    |
+    v
+[Success Message]
+    |
+    +--> "Term loan request submitted. Awaiting approval."
+    |
+    +--> [View Statements] --> [/loans/active-statement]
+    |
+    +--> [Back to Dashboard] --> [/]
+```
+
+**Term Loan States:**
+- **PA**: Pending Approval
+- **AP**: Approved
+- **DI**: Disbursed (active)
+- **AC**: Active (same as DI)
+- **SE**: Settled (fully paid)
+- **DE**: Defaulted
+
+---
+
+## 6. PROFILE & SETTINGS FLOW
+
+### Profile Navigation
+
+```text
+[/profile]
+    |
+    +--> API Call: GET /api/users/me
+    |        |
+    |        +--> Returns: user data, rating, progression, graduation status
+    |
+    +--> Displays:
+    |    - Account Name
+    |    - Client ID
+    |    - Account UID
+    |    - Nano Installment Limit
+    |    - Term Installment Limit
+    |    - Account Level (NL/TL tiers)
+    |    - Credit Rating (stars 0-10)
+    |    - ID Verification Status
+    |    - Proof of Income Status
+    |    - KYC Status
+    |
+    +---[ACTIONS]---+
+    |   |
+    |   +--> [UPDATE DOCUMENTS] --> [/profile/update-documents]
+    |   |
+    |   +--> [REQUEST NANO LOAN] --> [/loans/apply?type=nano]
+    |   |
+    |   +--> [CREDIT SCORE HISTORY] --> [/profile/credit-score-history]
+```
+
+---
+
+### Update Documents Flow
+
+```text
+[/profile/update-documents]
+    |
+    +--> Shows current document status:
+    |    - Selfie (approved/pending/missing)
+    |    - National ID (approved/pending/missing)
+    |    - Proof of Income (approved/pending/missing)
+    |
+    +--> [UPLOAD NEW SELFIE]
+    |        |
+    |        +--> API Call: POST /api/users/[user_id]/documents/upload
+    |                |
+    |                +--> type: "selfie"
+    |                +--> Uploads to Vercel Blob
+    |                +--> Updates users.selfie_photo_url
+    |
+    +--> [UPLOAD NEW ID DOCUMENT]
+    |        |
+    |        +--> API Call: POST /api/users/[user_id]/documents/upload
+    |                |
+    |                +--> type: "national_id"
+    |                +--> Uploads to Vercel Blob
+    |                +--> Updates user_documents table
+    |
+    +--> [UPLOAD NEW PROOF OF INCOME]
+    |        |
+    |        +--> API Call: POST /api/users/[user_id]/documents/upload
+    |                |
+    |                +--> type: "proof_of_income"
+    |                +--> Uploads to Vercel Blob
+    |                +--> Updates user_documents table
+    |
+    v
+[Success Message]
+    |
+    +--> "Documents uploaded. Awaiting admin approval."
+    |
+    +--> [Back to Profile] --> [/profile]
+```
+
+---
+
+### Credit Score History Flow
+
+```text
+[/profile/credit-score-history]
+    |
+    +--> API Call: GET /api/users/me
+    |        |
+    |        +--> Returns: borrower_rating, rating events
+    |
+    +--> API Call: GET /api/users/[user_id]/rating-events
+    |        |
+    |        +--> Returns: all rating_events ordered by date
+    |
+    +--> Displays:
+    |    - Current Rating: X.X / 10 (star display)
+    |    - Rating Label: EXCELLENT / GOOD / FAIR / POOR
+    |    - Total Score: XX / 100
+    |
+    +---[SCORE BREAKDOWN]---+
+    |   |
+    |   +--> Early Payments: +XX pts (green)
+    |   +--> On-Time Payments: +XX pts (blue)
+    |   +--> Late Penalties: -XX pts (red)
+    |   +--> Referral Bonus: +XX pts (purple)
+    |
+    +---[RATING HISTORY]---+
+        |
+        +--> [Event 1] settled_early | +5 pts | Date | Loan ID
+        +--> [Event 2] settled | +10 pts | Date | Loan ID
+        +--> [Event 3] late_payment | -5 pts | Date | Loan ID
+        ...
+```
+
+**Rating System (V1 Spec):**
+- **Before Due Settlement**: +5 points
+- **On-Time Payment**: +10 points
+- **Grace Period (1-3 days)**: 0 points
+- **Minor Late (4-7 days)**: -5 points
+- **Major Late (8+ days)**: -10 points
+- **3 Consecutive On-Time Cycles**: +5 bonus
+
+**Rating Scale:**
+- 0.0 - 4.9: POOR
+- 5.0 - 6.9: FAIR
+- 7.0 - 8.9: GOOD
+- 9.0 - 10.0: EXCELLENT
+
+---
+
+## 7. STATEMENTS & HISTORY FLOW
+
+### Active Statement View
+
+```text
+[/loans/active-statement]
+    |
+    +--> API Call: GET /api/mobile/active-loans?user_id={id}
+    |        |
+    |        +--> Returns: All active nano_loans and term_loans
+    |        +--> Status: DI (Disbursed), AC (Active)
+    |
+    +--> Displays TWO TABS:
+    |
+    +---[NANO LOANS TAB]---+
+    |   |
+    |   +--> Shows list of active nano loans
+    |   |
+    |   +--> For each loan:
+    |   |    - Loan ID
+    |   |    - Amount Borrowed
+    |   |    - Interest Amount
+    |   |    - Total Repayment
+    |   |    - Due Date
+    |   |    - Days Until Due / Days Overdue
+    |   |    - Status Badge
+    |   |
+    |   +--> [Search/Filter by Loan ID, Date, Status]
+    |   |
+    |   +--> [Download as PDF]
+    |   |
+    |   +--> [Download as Excel]
+    |
+    +---[TERM LOANS TAB]---+
+        |
+        +--> Shows list of active term loans with installment breakdown
+        |
+        +--> For each loan:
+        |    - Loan ID
+        |    - Total Amount
+        |    - Monthly Installment
+        |    - Installments Paid / Total
+        |    - Next Due Date
+        |    - Status
+        |
+        +--> [View Installment Schedule] --> Modal with all installments
+        |
+        +--> [Search/Filter by Loan ID, Date]
+        |
+        +--> [Download as PDF]
+        |
+        +--> [Download as Excel]
+```
+
+---
+
+### Payment Record Flow
+
+```text
+[/loans/payment-record]
+    |
+    +--> API Call: GET /api/mobile/payment-history?user_id={id}
+    |        |
+    |        +--> Returns: All settled loans (nano + term)
+    |        +--> Status: PU (Paid Up), SE (Settled)
+    |
+    +--> Displays payment history:
+    |
+    +---[COMPLETED NANO LOANS]---+
+    |   |
+    |   +--> For each settled nano loan:
+    |   |    - Loan ID
+    |   |    - Amount
+    |   |    - Settlement Date
+    |   |    - Payment Method
+    |   |    - Rating Impact (+5 early, +10 on-time, -5/-10 late)
+    |
+    +---[COMPLETED TERM LOANS]---+
+        |
+        +--> For each settled term loan:
+        |    - Loan ID
+        |    - Total Amount
+        |    - Final Payment Date
+        |    - Total Installments Paid
+        |    - Rating Impact (cumulative)
+        |
+        +--> [View Installment History]
+        |
+        +--> [Download Receipt as PDF]
+```
+
+---
+
+### Loan History Flow
+
+```text
+[/loans/history]
+    |
+    +--> API Call: GET /api/mobile/loan-history?user_id={id}
+    |        |
+    |        +--> Returns: ALL loans (active, pending, settled, defaulted)
+    |
+    +--> Displays complete loan history:
+    |
+    +---[ALL LOANS]---+
+        |
+        +--> Filters:
+        |    - Loan Type (Nano / Term)
+        |    - Status (All / Pending / Active / Settled / Defaulted)
+        |    - Date Range
+        |
+        +--> For each loan:
+        |    - Loan ID
+        |    - Type (Nano/Term)
+        |    - Amount
+        |    - Application Date
+        |    - Status
+        |    - Due Date (if applicable)
+        |
+        +--> [View Details] --> Loan detail modal
+        |
+        +--> [Download Full History as PDF]
+        |
+        +--> [Download as Excel]
+```
+
+---
+
+## 8. CONDITIONAL ROUTING LOGIC
+
+### Authentication Guards
+
+```text
+PUBLIC ROUTES (No Auth Required):
+    - /auth/login
+    - /auth/signup
+    - /auth/forgot-password
+    - /auth/verify-otp
+
+ONBOARDING ROUTES (User Exists, No Session):
+    - /auth/personal-info
+    - /auth/employer-info
+    - /auth/community
+    - /auth/upload-selfie
+    - /auth/upload-documents
+    - /auth/signup-success
+
+PROTECTED ROUTES (Auth Required):
+    - / (Dashboard)
+    - /profile/*
+    - /loans/*
+
+AUTH CHECK:
+    - Checks for session token in cookies
+    - If missing → Redirect to /auth/login
+    - If present → Allow access
+```
+
+---
+
+### Membership Status Checks
+
+```text
+LOAN REQUEST ELIGIBILITY:
+
+[Request Nano Loan Button]
+    |
+    +--> Check: membership_status
+    |        |
+    |        +--> If "AA" or "AP1" → BLOCKED
+    |        |        |
+    |        |        +--> Show: "Complete your registration and wait for approval"
+    |        |
+    |        +--> If "AP2" → Check nano_loans_enabled
+    |                 |
+    |                 +--> If FALSE → BLOCKED
+    |                 |        |
+    |                 |        +--> Show: "Nano loans not available for your lending society"
+    |                 |
+    |                 +--> If TRUE → ALLOW
+    |                          |
+    |                          v
+    |                      [/loans/apply?type=nano]
+
+[Apply for Term Loan Button]
+    |
+    +--> Check: membership_status
+    |        |
+    |        +--> If "AA" or "AP1" → BLOCKED
+    |        |        |
+    |        |        +--> Show: "Complete your registration and wait for approval"
+    |        |
+    |        +--> If "AP2" → Check term_loans_enabled
+    |                 |
+    |                 +--> If FALSE → BLOCKED
+    |                 |        |
+    |                 |        +--> Show: "Term loans not available for your lending society"
+    |                 |
+    |                 +--> If TRUE → ALLOW
+    |                          |
+    |                          v
+    |                      [/loans/term-loan]
+```
+
+**Membership Status Definitions:**
+- **AA**: Awaiting Approval (newly registered, docs pending)
+- **AP1**: Approved Level 1 (KYC complete, can view profile only)
+- **AP2**: Approved Level 2 (fully approved, can apply for loans)
+
+---
+
+### Lending Society Configuration
+
+```text
+LOAN TYPE AVAILABILITY:
+
+Database: lending_societies table
+    |
+    +--> nano_loans_enabled: BOOLEAN
+    |    - TRUE: Society allows nano loans
+    |    - FALSE: Society does not offer nano loans
+    |
+    +--> term_loans_enabled: BOOLEAN
+         - TRUE: Society allows term loans
+         - FALSE: Society does not offer term loans
+
+API Check:
+    GET /api/mobile/loan-request?loan_type=nano
+        |
+        +--> Queries: lending_societies WHERE id = user.lending_society_id
+        +--> Returns: nano_loans_enabled status
+        +--> If FALSE → 403 Error: "Nano loans not available"
+```
+
+---
+
+### Progression Limits
+
+```text
+NANO LOAN LIMITS:
+
+Database: nano_progression table
+    |
+    +--> user_id: UUID
+    +--> current_level: NL1 - NL9
+    +--> current_max_nano: NAD amount (e.g., 2000.00)
+    +--> eligible_for_next: BOOLEAN
+
+Loan Request Validation:
+    [User requests NAD 2500]
+        |
+        +--> Check: nano_progression.current_max_nano
+        |        |
+        |        +--> If 2500 > 2000 → REJECTED
+        |        |        |
+        |        |        +--> Show: "Maximum allowed: NAD 2000"
+        |        |
+        |        +--> If 2500 ≤ 2000 → ALLOWED
+        |                 |
+        |                 v
+        |             [Proceed to interest confirmation]
+
+TERM LOAN LIMITS:
+
+Database: term_progression table
+    |
+    +--> user_id: UUID
+    +--> current_level: TL0 - TL10
+    +--> current_max_term: NAD amount (e.g., 50000.00)
+    +--> eligible_for_next: BOOLEAN
+
+Same validation logic applies for term loans.
+```
+
+---
+
+## 9. ROUTE CONFIGURATION
+
+### Next.js App Router Structure
+
+```text
+app/
+├── layout.tsx (root layout)
+├── page.tsx (dashboard - /)
+│
+├── auth/
+│   ├── login/page.tsx
+│   ├── signup/page.tsx
+│   ├── forgot-password/page.tsx
+│   ├── verify-otp/page.tsx
+│   ├── personal-info/page.tsx
+│   ├── employer-info/page.tsx
+│   ├── community/page.tsx
+│   ├── upload-selfie/page.tsx
+│   ├── upload-documents/page.tsx
+│   └── signup-success/page.tsx
+│
+├── profile/
+│   ├── page.tsx
+│   ├── credit-score-history/page.tsx
+│   └── update-documents/page.tsx
+│
+└── loans/
+    ├── apply/page.tsx (nano loan request)
+    ├── interest-confirmation/page.tsx
+    ├── active-statement/page.tsx
+    ├── payment-record/page.tsx
+    ├── history/page.tsx
+    │
+    └── term-loan/
+        ├── page.tsx (term loan start)
+        ├── net-disposable-income/page.tsx
+        ├── bank-details/page.tsx
+        └── bank-authorization/page.tsx
+```
+
+---
+
+### API Route Structure
+
+```text
+app/api/
+├── auth/
+│   ├── login/route.ts
+│   ├── signup/route.ts
+│   ├── send-otp/route.ts
+│   ├── verify-otp/route.ts
+│   ├── reset-password/route.ts
+│   └── logout/route.ts
+│
+├── users/
+│   ├── me/route.ts
+│   ├── [user_id]/route.ts
+│   ├── [user_id]/rating-events/route.ts
+│   ├── [user_id]/documents/route.ts
+│   └── [user_id]/documents/upload/route.ts
+│
+├── mobile/
+│   ├── loan-request/route.ts
+│   ├── interest-confirmation/route.ts
+│   ├── active-loans/route.ts
+│   ├── payment-history/route.ts
+│   └── loan-history/route.ts
+│
+├── upload/
+│   ├── selfie/route.ts
+│   └── documents/route.ts
+│
+└── term-loan/
+    ├── submit/route.ts
+    └── upload-documents/route.ts
+```
+
+---
+
+## 10. NAVIGATION HELPERS
+
+### Common Navigation Patterns
+
+```javascript
+// Login redirect after successful authentication
+router.push("/")
+
+// After signup completion
+router.push("/auth/login")
+
+// After loan request submission
+router.push("/loans/active-statement")
+
+// Back to dashboard from any page
+router.push("/")
+
+// To profile from dashboard
+router.push("/profile")
+
+// To credit score history
+router.push("/profile/credit-score-history")
+
+// To nano loan application
+router.push("/loans/apply?type=nano")
+
+// To term loan application
+router.push("/loans/term-loan")
+
+// To update documents
+router.push("/profile/update-documents")
+```
+
+---
+
+### URL Query Parameters
+
+```text
+LOAN APPLICATION:
+    /loans/apply?type=nano       → Nano loan request
+    /loans/apply?type=term       → (redirects to /loans/term-loan)
+
+STATEMENTS FILTERING:
+    /loans/active-statement?tab=nano     → Shows nano loans tab
+    /loans/active-statement?tab=term     → Shows term loans tab
+
+OTP VERIFICATION TYPE:
+    /auth/verify-otp?type=registration    → Signup OTP
+    /auth/verify-otp?type=password_reset  → Forgot password OTP
+```
+
+---
+
+## 11. ERROR HANDLING & REDIRECTS
+
+### Authentication Errors
+
+```text
+[User accesses protected route without auth]
+    |
+    +--> Redirect to: /auth/login
+    +--> Store intended destination
+    +--> After login → Redirect to intended destination
+
+[Session expired]
+    |
+    +--> Clear session
+    +--> Redirect to: /auth/login
+    +--> Show: "Session expired. Please log in again."
+
+[Invalid credentials]
+    |
+    +--> Stay on: /auth/login
+    +--> Show: "Invalid mobile number or password"
+```
+
+---
+
+### Loan Request Errors
+
+```text
+[User not eligible for loan type]
+    |
+    +--> Show error message on current page
+    +--> Button remains disabled
+    +--> No navigation
+
+[Loan amount exceeds limit]
+    |
+    +--> Show validation error inline
+    +--> Prevent form submission
+    +--> No navigation
+
+[Lending society has disabled loan type]
+    |
+    +--> API returns 403
+    +--> Show: "This loan type is not available for your lending society"
+    +--> [Back to Dashboard] button
+```
+
+---
+
+### Document Upload Errors
+
+```text
+[File too large (>10MB)]
+    |
+    +--> Show: "File size exceeds 10MB limit"
+    +--> Clear file input
+    +--> Stay on upload page
+
+[Invalid file type]
+    |
+    +--> Show: "Please upload PDF or image files only"
+    +--> Clear file input
+    +--> Stay on upload page
+
+[Upload fails (network/server error)]
+    |
+    +--> Show: "Upload failed. Please try again."
+    +--> Retry button
+    +--> Stay on upload page
+```
+
+---
+
+## 12. MOBILE APP SPECIFIC CONSIDERATIONS
+
+### Back Button Behavior
+
+```text
+ANDROID/IOS BACK BUTTON:
+
+From Dashboard (/):
+    → Exit app (or show "Press again to exit" confirmation)
+
+From any other page:
+    → Navigate to previous page in history stack
+
+Special Cases:
+    - From /auth/signup-success → Back disabled (must click "Continue to Login")
+    - From /loans/interest-confirmation → Back to /loans/apply
+    - From /loans/active-statement → Back to Dashboard (/)
+```
+
+---
+
+### Deep Linking
+
+```text
+SUPPORTED DEEP LINKS:
+
+referredby://auth/login
+    → Opens login page
+
+referredby://loans/apply?type=nano
+    → Opens nano loan request (if authenticated)
+
+referredby://profile
+    → Opens user profile (if authenticated)
+
+referredby://loans/active-statement
+    → Opens active statements (if authenticated)
+
+If user not authenticated:
+    → Store deep link destination
+    → Navigate to /auth/login
+    → After login → Navigate to stored destination
+```
+
+---
+
+### Offline Behavior
+
+```text
+OFFLINE MODE HANDLING:
+
+[App opened while offline]
+    |
+    +--> Show: "No internet connection"
+    +--> Cache last loaded profile data (read-only)
+    +--> Disable all buttons requiring API calls
+    +--> Show retry/refresh button
+
+[Connection lost during form submission]
+    |
+    +--> Show: "Connection lost. Please try again."
+    +--> Preserve form data (localStorage)
+    +--> Enable retry when connection restored
+```
+
+---
+
+## 13. TESTING CHECKLIST
+
+### Authentication Flow Testing
+
+```text
+☐ Can user log in with valid credentials?
+☐ Does invalid password show error?
+☐ Does "Forgot Password" flow work end-to-end?
+☐ Does OTP verification work for both registration and password reset?
+☐ Does session persist after app restart?
+☐ Does logout clear session and redirect to login?
+```
+
+---
+
+### Onboarding Flow Testing
+
+```text
+☐ Can new user complete full signup flow?
+☐ Does OTP verification create user account?
+☐ Does personal info form validate all fields?
+☐ Does employer info save correctly?
+☐ Does community selection work?
+☐ Does selfie upload work without authentication?
+☐ Does document upload work without authentication?
+☐ Does signup-success redirect to login?
+☐ Can user log in after completing onboarding?
+```
+
+---
+
+### Loan Application Testing
+
+```text
+☐ Is nano loan button disabled for membership_status ≠ AP2?
+☐ Is nano loan blocked if nano_loans_enabled = FALSE?
+☐ Does nano loan request show correct limits?
+☐ Does interest confirmation display correct calculations?
+☐ Does loan submission create record in database?
+☐ Does term loan multi-step form save progress?
+☐ Does NDI calculation work correctly?
+☐ Does bank authorization upload work?
+☐ Does term loan submission create all installments?
+```
+
+---
+
+### Statements Testing
+
+```text
+☐ Does active-statement show all active loans?
+☐ Does nano loans tab display correctly?
+☐ Does term loans tab show installment breakdown?
+☐ Does search/filter work?
+☐ Does PDF download work?
+☐ Does Excel download work?
+☐ Does payment-record show settled loans?
+☐ Does loan-history show all loan statuses?
+```
+
+---
+
+### Profile Testing
+
+```text
+☐ Does profile page load user data correctly?
+☐ Does credit rating display with correct stars?
+☐ Does account level show progression tier?
+☐ Does credit-score-history show all rating events?
+☐ Does update-documents allow file uploads?
+☐ Do document uploads trigger admin notifications?
+```
+
+---
+
+## 14. SUMMARY FOR REPLIT MOBILE DEV
+
+### Critical Routes to Implement
+
+1. **Authentication**: Login, Signup, Forgot Password, OTP Verification
+2. **Onboarding**: 5-step registration flow with document uploads
+3. **Dashboard**: Main hub with profile summary and loan actions
+4. **Nano Loans**: Request form, interest confirmation
+5. **Term Loans**: 4-step application process
+6. **Statements**: Active loans, payment records, history
+7. **Profile**: User details, credit score, document updates
+
+### Key API Endpoints
+
+```text
+POST /api/auth/login
+POST /api/auth/signup
+POST /api/auth/send-otp
+POST /api/auth/verify-otp
+POST /api/auth/reset-password
+
+GET  /api/users/me
+PATCH /api/users/[user_id]
+
+GET  /api/mobile/loan-request?loan_type={nano|term}
+POST /api/mobile/interest-confirmation
+GET  /api/mobile/active-loans
+GET  /api/mobile/payment-history
+
+POST /api/upload/selfie
+POST /api/upload/documents
+POST /api/term-loan/submit
+```
+
+### Navigation Library Recommendations
+
+For React Native (Replit Mobile):
+- Use `@react-navigation/native` for navigation stack
+- Use `@react-navigation/stack` for screen transitions
+- Use `@react-navigation/bottom-tabs` if adding bottom nav
+
+---
+
+## 15. VERSION HISTORY
+
+**v3.0** (January 26, 2026)
+- Complete routing documentation for all 23 pages
+- Added conditional logic for membership status checks
+- Added lending society configuration routing
+- Added progression limits validation
+- Updated API endpoints with V1 alignment
+
+**v2.0** (January 2026)
+- Added term loan multi-step flow
+- Added statements and history routing
+- Added profile and document update flows
+
+**v1.0** (December 2025)
+- Initial routing documentation
+- Basic authentication and nano loan flows
+
+---
+
+**END OF COMPLETE APP ROUTING & NAVIGATION GUIDE**
