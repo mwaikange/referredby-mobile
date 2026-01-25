@@ -42,6 +42,18 @@ export default function RegisterEmployerKinScreen() {
       return;
     }
 
+    await AsyncStorage.setItem('registration_employer', employerName);
+    await AsyncStorage.setItem('registration_occupation', occupation);
+    await AsyncStorage.setItem('registration_office_number', employerOfficeNumber);
+    await AsyncStorage.setItem('registration_employee_code', employeeCode);
+    await AsyncStorage.setItem('registration_source_income', sourceOfIncome);
+    await AsyncStorage.setItem('registration_source_funds', sourceOfIncome);
+    await AsyncStorage.setItem('registration_nok_name', nextOfKinFullName);
+    await AsyncStorage.setItem('registration_nok_surname', nextOfKinSurname);
+    await AsyncStorage.setItem('registration_nok_relationship', relationship);
+    await AsyncStorage.setItem('registration_nok_mobile', nextOfKinMobile);
+    await AsyncStorage.setItem('registration_po_box', poBox);
+
     const mobileNumber = await AsyncStorage.getItem('registration_mobile') || '+264XXXXXXXXX';
     navigation.navigate('RegisterSetPin', { mobileNumber });
   };

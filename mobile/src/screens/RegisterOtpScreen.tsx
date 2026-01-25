@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api, type ReferralData, type PersonalData, type EmployerData } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterOtp'>;
 type RouteProps = RouteProp<RootStackParamList, 'RegisterOtp'>;
@@ -49,20 +50,69 @@ export default function RegisterOtpScreen() {
     setIsLoading(true);
     setError('');
 
-    setTimeout(async () => {
+    try {
+      await api.auth.verifyOtp(mobileNumber, otp, 'registration');
+      
+      const referral: ReferralData = {
+        code: await AsyncStorage.getItem('registration_referral_code') || '',
+        lending_society_id: await AsyncStorage.getItem('registration_lending_society_id') || '',
+        lending_society_name: await AsyncStorage.getItem('registration_lending_society') || '',
+        partner_id: await AsyncStorage.getItem('registration_partner_id') || '',
+        staff_code: await AsyncStorage.getItem('registration_staff_code') || '',
+        referral_owner_id: await AsyncStorage.getItem('registration_referral_owner_id') || '',
+      };
+
+      const personal: PersonalData = {
+        full_names: await AsyncStorage.getItem('registration_fullnames') || '',
+        surname: await AsyncStorage.getItem('registration_surname') || '',
+        id_number: await AsyncStorage.getItem('registration_id_number') || '',
+        mobile: await AsyncStorage.getItem('registration_mobile') || '',
+        gender: await AsyncStorage.getItem('registration_gender') || 'Male',
+        region: await AsyncStorage.getItem('registration_region') || '',
+        town: await AsyncStorage.getItem('registration_town') || '',
+        street_name: await AsyncStorage.getItem('registration_street') || '',
+        physical_address: await AsyncStorage.getItem('registration_address') || '',
+        email: await AsyncStorage.getItem('registration_email') || '',
+      };
+
+      const employer: EmployerData = {
+        employer_name: await AsyncStorage.getItem('registration_employer') || '',
+        occupation: await AsyncStorage.getItem('registration_occupation') || '',
+        office_number: await AsyncStorage.getItem('registration_office_number') || '',
+        employee_code: await AsyncStorage.getItem('registration_employee_code') || '',
+        nok_name: await AsyncStorage.getItem('registration_nok_name') || '',
+        nok_surname: await AsyncStorage.getItem('registration_nok_surname') || '',
+        nok_relationship: await AsyncStorage.getItem('registration_nok_relationship') || '',
+        nok_mobile: await AsyncStorage.getItem('registration_nok_mobile') || '',
+        po_box: await AsyncStorage.getItem('registration_po_box') || '',
+        source_funds: await AsyncStorage.getItem('registration_source_funds') || '',
+        source_income: await AsyncStorage.getItem('registration_source_income') || '',
+      };
+
+      const pin = await AsyncStorage.getItem('registration_pin') || '';
+      
+      const signupResult = await api.auth.signup({ referral, personal, employer, pin });
+      
+      await AsyncStorage.setItem('registration_user_id', signupResult.user_id);
+      
+      navigation.navigate('RegisterKyc');
+    } catch (err: any) {
+      setError(err.message || 'Invalid OTP. Please try again.');
+    } finally {
       setIsLoading(false);
-      if (otp === '123456') {
-        navigation.navigate('RegisterKyc');
-      } else {
-        setError('Invalid OTP. Please try again.');
-      }
-    }, 1500);
+    }
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (!canResend) return;
-    setResendTimer(60);
-    setCanResend(false);
+    
+    try {
+      await api.auth.sendOtp(mobileNumber, 'registration');
+      setResendTimer(60);
+      setCanResend(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend OTP');
+    }
   };
 
   const handleBack = () => {

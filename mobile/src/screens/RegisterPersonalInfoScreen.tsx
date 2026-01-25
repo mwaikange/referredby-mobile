@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterPersonalInfo'>;
 
@@ -36,7 +37,7 @@ export default function RegisterPersonalInfoScreen() {
   const [town, setTown] = useState('');
   const [streetName, setStreetName] = useState('');
   const [physicalAddress, setPhysicalAddress] = useState('');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [gender, setGender] = useState<'Male' | 'Female'>('Male');
   const [showRegionModal, setShowRegionModal] = useState(false);
   const [regionSearch, setRegionSearch] = useState('');
   const [error, setError] = useState('');
@@ -45,14 +46,53 @@ export default function RegisterPersonalInfoScreen() {
     r.toLowerCase().includes(regionSearch.toLowerCase())
   );
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleProceed = async () => {
     if (!surname || !fullNames || !idNumber || !mobileNumber || !email || !region) {
       setError('Please fill in all required fields');
       return;
     }
 
-    await AsyncStorage.setItem('registration_mobile', mobileNumber);
-    navigation.navigate('RegisterEmployerKin');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const uniqueCheck = await api.auth.checkUniqueness(idNumber, mobileNumber, email);
+      
+      if (uniqueCheck.id_number_exists) {
+        setError('This ID number is already registered');
+        setIsLoading(false);
+        return;
+      }
+      if (uniqueCheck.mobile_exists) {
+        setError('This mobile number is already registered');
+        setIsLoading(false);
+        return;
+      }
+      if (uniqueCheck.email_exists) {
+        setError('This email is already registered');
+        setIsLoading(false);
+        return;
+      }
+
+      await AsyncStorage.setItem('registration_surname', surname);
+      await AsyncStorage.setItem('registration_fullnames', fullNames);
+      await AsyncStorage.setItem('registration_id_number', idNumber);
+      await AsyncStorage.setItem('registration_mobile', mobileNumber);
+      await AsyncStorage.setItem('registration_email', email);
+      await AsyncStorage.setItem('registration_region', region);
+      await AsyncStorage.setItem('registration_town', town);
+      await AsyncStorage.setItem('registration_street', streetName);
+      await AsyncStorage.setItem('registration_address', physicalAddress);
+      await AsyncStorage.setItem('registration_gender', gender);
+
+      navigation.navigate('RegisterEmployerKin');
+    } catch (err: any) {
+      setError(err.message || 'Validation failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -144,19 +184,19 @@ export default function RegisterPersonalInfoScreen() {
               <View style={styles.genderRow}>
                 <TouchableOpacity 
                   style={styles.genderOption} 
-                  onPress={() => setGender('male')}
+                  onPress={() => setGender('Male')}
                 >
-                  <View style={[styles.checkbox, gender === 'male' && styles.checkboxChecked]}>
-                    {gender === 'male' && <Text style={styles.checkmark}>✓</Text>}
+                  <View style={[styles.checkbox, gender === 'Male' && styles.checkboxChecked]}>
+                    {gender === 'Male' && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                   <Text style={styles.genderLabel}>Male</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.genderOption} 
-                  onPress={() => setGender('female')}
+                  onPress={() => setGender('Female')}
                 >
-                  <View style={[styles.checkbox, gender === 'female' && styles.checkboxChecked]}>
-                    {gender === 'female' && <Text style={styles.checkmark}>✓</Text>}
+                  <View style={[styles.checkbox, gender === 'Female' && styles.checkboxChecked]}>
+                    {gender === 'Female' && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                   <Text style={styles.genderLabel}>Female</Text>
                 </TouchableOpacity>
@@ -165,8 +205,14 @@ export default function RegisterPersonalInfoScreen() {
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <TouchableOpacity style={styles.proceedButton} onPress={handleProceed}>
-              <Text style={styles.proceedButtonText}>PROCEED</Text>
+            <TouchableOpacity 
+              style={[styles.proceedButton, isLoading && styles.buttonDisabled]} 
+              onPress={handleProceed}
+              disabled={isLoading}
+            >
+              <Text style={styles.proceedButtonText}>
+                {isLoading ? 'CHECKING...' : 'PROCEED'}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -242,6 +288,7 @@ const styles = StyleSheet.create({
   genderLabel: { fontSize: 14 },
   errorText: { color: '#ef4444', fontSize: 14, textAlign: 'center', marginBottom: 12 },
   proceedButton: { backgroundColor: '#0B0B3B', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 16 },
+  buttonDisabled: { opacity: 0.7 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
   modalContent: { backgroundColor: '#ffffff', borderRadius: 8, maxHeight: 400, padding: 16 },

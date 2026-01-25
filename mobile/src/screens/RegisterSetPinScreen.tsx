@@ -13,7 +13,9 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterSetPin'>;
 type RouteProps = RouteProp<RootStackParamList, 'RegisterSetPin'>;
@@ -28,7 +30,7 @@ export default function RegisterSetPinScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!pin || pin.length < 4) {
       setError('PIN must be 4-6 digits');
       return;
@@ -47,10 +49,15 @@ export default function RegisterSetPinScreen() {
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await AsyncStorage.setItem('registration_pin', pin);
+      await api.auth.sendOtp(mobileNumber, 'registration');
       navigation.navigate('RegisterOtp', { mobileNumber });
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

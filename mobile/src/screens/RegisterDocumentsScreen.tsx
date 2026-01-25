@@ -10,7 +10,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterDocuments'>;
 
@@ -35,8 +37,14 @@ export default function RegisterDocumentsScreen() {
               });
               if (!result.canceled && result.assets[0]) {
                 const name = result.assets[0].name;
-                if (type === 'id') setIdFileName(name);
-                else setIncomeFileName(name);
+                const uri = result.assets[0].uri;
+                if (type === 'id') {
+                  setIdFileName(name);
+                  setIdFileUri(uri);
+                } else {
+                  setIncomeFileName(name);
+                  setIncomeFileUri(uri);
+                }
               }
             } catch (error) {
               Alert.alert('Error', 'Could not pick document');
@@ -60,8 +68,13 @@ export default function RegisterDocumentsScreen() {
               if (!result.canceled && result.assets[0]) {
                 const uri = result.assets[0].uri;
                 const name = uri.split('/').pop() || 'document.jpg';
-                if (type === 'id') setIdFileName(name);
-                else setIncomeFileName(name);
+                if (type === 'id') {
+                  setIdFileName(name);
+                  setIdFileUri(uri);
+                } else {
+                  setIncomeFileName(name);
+                  setIncomeFileUri(uri);
+                }
               }
             } catch (error) {
               Alert.alert('Error', 'Could not pick image');
@@ -73,16 +86,37 @@ export default function RegisterDocumentsScreen() {
     );
   };
 
-  const handleProceed = () => {
+  const [idFileUri, setIdFileUri] = useState<string | null>(null);
+  const [incomeFileUri, setIncomeFileUri] = useState<string | null>(null);
+  const [error, setError] = useState('');
+
+  const handleProceed = async () => {
     if (!idFileName || !incomeFileName) {
       Alert.alert('Required', 'Please upload all required documents.');
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setError('');
+
+    try {
+      const userId = await AsyncStorage.getItem('registration_user_id');
+      if (userId && idFileUri && incomeFileUri) {
+        const uploadResult = await api.upload.documents(userId, idFileUri, incomeFileUri);
+        
+        if (uploadResult.national_id_url && uploadResult.payslip_url) {
+          await api.users.updateDocuments(userId, {
+            national_id_url: uploadResult.national_id_url,
+            payslip_url: uploadResult.payslip_url,
+          });
+        }
+      }
       navigation.navigate('RegisterSuccess');
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || 'Upload failed. Please try again.');
+      Alert.alert('Error', err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -124,6 +158,8 @@ export default function RegisterDocumentsScreen() {
           All these form will be valid for 6 months only, afterwhich they must be renewed and re-uploaded.
         </Text>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <TouchableOpacity
           style={[styles.proceedButton, (!idFileName || !incomeFileName || isLoading) && styles.buttonDisabled]}
           onPress={handleProceed}
@@ -164,6 +200,7 @@ const styles = StyleSheet.create({
   chooseButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '600' },
   fileName: { fontSize: 14, color: '#6b7280', flex: 1 },
   validityNote: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginBottom: 20, paddingHorizontal: 16 },
+  errorText: { color: '#ef4444', fontSize: 14, textAlign: 'center', marginBottom: 12 },
   proceedButton: { backgroundColor: '#0B0B3B', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   buttonDisabled: { opacity: 0.5 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },

@@ -10,7 +10,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterKyc'>;
 
@@ -82,16 +84,28 @@ export default function RegisterKycScreen() {
     );
   };
 
-  const handleProceed = () => {
+  const [error, setError] = useState('');
+
+  const handleProceed = async () => {
     if (!selfieUri) {
       Alert.alert('Required', 'Please upload a selfie with your ID.');
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setError('');
+
+    try {
+      const userId = await AsyncStorage.getItem('registration_user_id');
+      if (userId && selfieUri) {
+        await api.upload.selfie(userId, selfieUri, fileName || 'selfie.jpg');
+      }
       navigation.navigate('RegisterDocuments');
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || 'Upload failed. Please try again.');
+      Alert.alert('Error', err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -134,6 +148,8 @@ export default function RegisterKycScreen() {
           </View>
         </View>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <TouchableOpacity
           style={[styles.proceedButton, (!selfieUri || isLoading) && styles.buttonDisabled]}
           onPress={handleProceed}
@@ -175,6 +191,7 @@ const styles = StyleSheet.create({
   chooseButton: { backgroundColor: '#16a34a', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 },
   chooseButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '600' },
   fileName: { fontSize: 14, color: '#6b7280', flex: 1 },
+  errorText: { color: '#ef4444', fontSize: 14, textAlign: 'center', marginBottom: 12 },
   proceedButton: { backgroundColor: '#6B7280', height: 48, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 'auto' },
   buttonDisabled: { opacity: 0.5 },
   proceedButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },

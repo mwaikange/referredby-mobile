@@ -16,6 +16,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
 
@@ -32,11 +33,14 @@ export default function ForgotPasswordScreen() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await api.auth.sendOtp(mobileNumber, 'password_reset');
       navigation.navigate('ForgotPasswordOtp', { mobileNumber });
-    }, 1000);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

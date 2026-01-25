@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordNewPin'>;
 type RouteProps = RouteProp<RootStackParamList, 'ForgotPasswordNewPin'>;
@@ -43,9 +45,11 @@ export default function ForgotPasswordNewPinScreen() {
     setIsLoading(true);
     setError('');
 
-    // Simulate API call to reset PIN
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const otp = await AsyncStorage.getItem('password_reset_otp') || '';
+      await api.auth.resetPin(mobileNumber, otp, newPin);
+      await AsyncStorage.removeItem('password_reset_otp');
+      
       Alert.alert('Success', 'Your PIN has been reset successfully', [
         {
           text: 'OK',
@@ -57,7 +61,11 @@ export default function ForgotPasswordNewPinScreen() {
           },
         },
       ]);
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset PIN. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

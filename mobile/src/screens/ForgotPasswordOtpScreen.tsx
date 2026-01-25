@@ -15,7 +15,9 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordOtp'>;
 type RouteProps = RouteProp<RootStackParamList, 'ForgotPasswordOtp'>;
@@ -38,15 +40,15 @@ export default function ForgotPasswordOtpScreen() {
     setIsLoading(true);
     setError('');
 
-    // Simulate API validation - test OTP is "123456"
-    setTimeout(() => {
+    try {
+      await api.auth.verifyOtp(mobileNumber, otp, 'password_reset');
+      await AsyncStorage.setItem('password_reset_otp', otp);
+      navigation.navigate('ForgotPasswordNewPin', { mobileNumber });
+    } catch (err: any) {
+      setError(err.message || 'Invalid or expired OTP');
+    } finally {
       setIsLoading(false);
-      if (otp === '123456') {
-        navigation.navigate('ForgotPasswordNewPin', { mobileNumber });
-      } else {
-        setError('Invalid or expired OTP');
-      }
-    }, 1000);
+    }
   };
 
   return (

@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { RootStackParamList } from '../navigation/types';
+import { api } from '../lib/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterReferral'>;
 
@@ -31,14 +33,26 @@ export default function RegisterReferralScreen() {
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const data = await api.referrals.validate(referralCode.trim());
+      
+      await AsyncStorage.setItem('registration_referral_code', data.code || referralCode);
+      await AsyncStorage.setItem('registration_lending_society_id', data.lending_society_id);
+      await AsyncStorage.setItem('registration_lending_society', data.lending_society_name);
+      await AsyncStorage.setItem('registration_partner_id', data.partner_id);
+      await AsyncStorage.setItem('registration_staff_code', data.staff_code);
+      await AsyncStorage.setItem('registration_referral_owner_id', data.referral_owner_id);
+      
       navigation.navigate('RegisterLinkCommunity', {
-        referralPartner: 'Niksman Groot',
-        lendingSociety: 'kayla Industries',
-        portfolioHolder: 'Destiny Group Pty LTD',
+        referralPartner: data.staff_code || '',
+        lendingSociety: data.lending_society_name,
+        portfolioHolder: data.partner_id,
       });
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Invalid or expired referral code');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
