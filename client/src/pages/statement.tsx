@@ -54,68 +54,72 @@ export default function Statement() {
         console.log('📥 Loading statement for user:', userProfile.id);
         
         // Priority logic from API guidelines:
-        // 1. Check for ACTIVE term loan (status = 'A')
-        // 2. Check for ACTIVE nano loan (status = 'A')
-        // 3. Check for PAID-UP term loan (status = 'PU')
-        // 4. Check for PAID-UP nano loan (status = 'PU')
-        // 5. No loans at all
+        // 1. Check for ANY ACTIVE loan first (nano or term) - show the first found
+        // 2. Check for ANY PAID-UP loan (nano or term) - show the first found
+        // 3. No loans at all
         
         const termLoan = profileData.term_loan;
         const nanoLoan = profileData.nano_loan;
         
-        // Check for active term loan first
-        if (termLoan && termLoan.status === 'A') {
-          console.log('📊 Found active TERM loan');
-          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
-          if (termStatement.success && termStatement.statement) {
-            setStatement(termStatement.statement);
-            setLoanType('term');
-            setHasLoans(true);
-            setLoading(false);
-            return;
+        const nanoActive = nanoLoan && nanoLoan.status === 'A';
+        const termActive = termLoan && termLoan.status === 'A';
+        const nanoPaidUp = nanoLoan && nanoLoan.status === 'PU';
+        const termPaidUp = termLoan && termLoan.status === 'PU';
+        
+        // STEP 1: Check for any ACTIVE loan first
+        if (nanoActive || termActive) {
+          // Prefer nano if both are active, otherwise take the active one
+          if (nanoActive) {
+            console.log('📊 Found active NANO loan');
+            const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+            if (nanoStatement.success !== false && (nanoStatement.statement || nanoStatement.loan_id)) {
+              setStatement(nanoStatement.statement || nanoStatement);
+              setLoanType('nano');
+              setHasLoans(true);
+              setLoading(false);
+              return;
+            }
+          }
+          if (termActive) {
+            console.log('📊 Found active TERM loan');
+            const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+            if (termStatement.success !== false && (termStatement.statement || termStatement.loan_id)) {
+              setStatement(termStatement.statement || termStatement);
+              setLoanType('term');
+              setHasLoans(true);
+              setLoading(false);
+              return;
+            }
           }
         }
         
-        // Check for active nano loan
-        if (nanoLoan && nanoLoan.status === 'A') {
-          console.log('📊 Found active NANO loan');
-          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
-          if (nanoStatement.success && nanoStatement.statement) {
-            setStatement(nanoStatement.statement);
-            setLoanType('nano');
-            setHasLoans(true);
-            setLoading(false);
-            return;
+        // STEP 2: Check for any PAID-UP loan
+        if (nanoPaidUp || termPaidUp) {
+          if (nanoPaidUp) {
+            console.log('📊 Found paid-up NANO loan');
+            const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+            if (nanoStatement.success !== false && (nanoStatement.statement || nanoStatement.loan_id)) {
+              setStatement(nanoStatement.statement || nanoStatement);
+              setLoanType('nano');
+              setHasLoans(true);
+              setLoading(false);
+              return;
+            }
+          }
+          if (termPaidUp) {
+            console.log('📊 Found paid-up TERM loan');
+            const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+            if (termStatement.success !== false && (termStatement.statement || termStatement.loan_id)) {
+              setStatement(termStatement.statement || termStatement);
+              setLoanType('term');
+              setHasLoans(true);
+              setLoading(false);
+              return;
+            }
           }
         }
         
-        // Check for paid-up term loan
-        if (termLoan && termLoan.status === 'PU') {
-          console.log('📊 Found paid-up TERM loan');
-          const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
-          if (termStatement.success && termStatement.statement) {
-            setStatement(termStatement.statement);
-            setLoanType('term');
-            setHasLoans(true);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        // Check for paid-up nano loan
-        if (nanoLoan && nanoLoan.status === 'PU') {
-          console.log('📊 Found paid-up NANO loan');
-          const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
-          if (nanoStatement.success && nanoStatement.statement) {
-            setStatement(nanoStatement.statement);
-            setLoanType('nano');
-            setHasLoans(true);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        // No loans found - show empty state
+        // STEP 3: No loans found - show empty state
         console.log('📊 No loans found for user');
         setHasLoans(false);
         
@@ -226,10 +230,10 @@ export default function Statement() {
                 <span className="font-bold">Total Repayable (NAD)</span>
                 <span className="font-bold">{statement.total_repayable?.toFixed(2)}</span>
               </div>
-              {statement.outstanding_balance !== undefined && (
+              {(statement.outstanding_balance !== undefined || statement.outstanding_amount > 0) && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Outstanding Balance (NAD)</span>
-                  <span className="font-bold text-red-600">{statement.outstanding_balance?.toFixed(2)}</span>
+                  <span className="font-bold text-red-600">{(statement.outstanding_balance ?? statement.outstanding_amount)?.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between">
