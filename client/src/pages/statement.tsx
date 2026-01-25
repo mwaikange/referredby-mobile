@@ -53,73 +53,70 @@ export default function Statement() {
         
         console.log('📥 Loading statement for user:', userProfile.id);
         
-        // Priority logic from API guidelines:
-        // 1. Check for ANY ACTIVE loan first (nano or term) - show the first found
-        // 2. Check for ANY PAID-UP loan (nano or term) - show the first found
-        // 3. No loans at all
+        // Fetch both statement endpoints directly - the API will return the latest loan
+        // Priority: Active loans first, then Paid-Up loans
+        // Try nano first, then term
         
-        const termLoan = profileData.term_loan;
-        const nanoLoan = profileData.nano_loan;
+        console.log('📊 Fetching nano loan statement...');
+        const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
+        console.log('📊 Nano statement response:', nanoStatement);
         
-        const nanoActive = nanoLoan && nanoLoan.status === 'A';
-        const termActive = termLoan && termLoan.status === 'A';
-        const nanoPaidUp = nanoLoan && nanoLoan.status === 'PU';
-        const termPaidUp = termLoan && termLoan.status === 'PU';
-        
-        // STEP 1: Check for any ACTIVE loan first
-        if (nanoActive || termActive) {
-          // Prefer nano if both are active, otherwise take the active one
-          if (nanoActive) {
+        // Check if nano statement has data (active or paid-up)
+        const nanoData = nanoStatement.statement || (nanoStatement.loan_id ? nanoStatement : null);
+        if (nanoData && nanoData.loan_id) {
+          const nanoStatus = nanoData.status;
+          const isNanoActive = nanoStatus === 'A' || nanoStatus === 'DU' || nanoStatus === 'OT';
+          
+          if (isNanoActive) {
             console.log('📊 Found active NANO loan');
-            const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
-            if (nanoStatement.success !== false && (nanoStatement.statement || nanoStatement.loan_id)) {
-              setStatement(nanoStatement.statement || nanoStatement);
-              setLoanType('nano');
-              setHasLoans(true);
-              setLoading(false);
-              return;
-            }
+            setStatement(nanoData);
+            setLoanType('nano');
+            setHasLoans(true);
+            setLoading(false);
+            return;
           }
-          if (termActive) {
+        }
+        
+        console.log('📊 Fetching term loan statement...');
+        const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
+        console.log('📊 Term statement response:', termStatement);
+        
+        // Check if term statement has data (active or paid-up)
+        const termData = termStatement.statement || (termStatement.loan_id ? termStatement : null);
+        if (termData && termData.loan_id) {
+          const termStatus = termData.status;
+          const isTermActive = termStatus === 'A' || termStatus === 'DU' || termStatus === 'OT';
+          
+          if (isTermActive) {
             console.log('📊 Found active TERM loan');
-            const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
-            if (termStatement.success !== false && (termStatement.statement || termStatement.loan_id)) {
-              setStatement(termStatement.statement || termStatement);
-              setLoanType('term');
-              setHasLoans(true);
-              setLoading(false);
-              return;
-            }
+            setStatement(termData);
+            setLoanType('term');
+            setHasLoans(true);
+            setLoading(false);
+            return;
           }
         }
         
-        // STEP 2: Check for any PAID-UP loan
-        if (nanoPaidUp || termPaidUp) {
-          if (nanoPaidUp) {
-            console.log('📊 Found paid-up NANO loan');
-            const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
-            if (nanoStatement.success !== false && (nanoStatement.statement || nanoStatement.loan_id)) {
-              setStatement(nanoStatement.statement || nanoStatement);
-              setLoanType('nano');
-              setHasLoans(true);
-              setLoading(false);
-              return;
-            }
-          }
-          if (termPaidUp) {
-            console.log('📊 Found paid-up TERM loan');
-            const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
-            if (termStatement.success !== false && (termStatement.statement || termStatement.loan_id)) {
-              setStatement(termStatement.statement || termStatement);
-              setLoanType('term');
-              setHasLoans(true);
-              setLoading(false);
-              return;
-            }
-          }
+        // No active loans - check for paid-up loans
+        if (nanoData && nanoData.loan_id && nanoData.status === 'PU') {
+          console.log('📊 Found paid-up NANO loan');
+          setStatement(nanoData);
+          setLoanType('nano');
+          setHasLoans(true);
+          setLoading(false);
+          return;
         }
         
-        // STEP 3: No loans found - show empty state
+        if (termData && termData.loan_id && termData.status === 'PU') {
+          console.log('📊 Found paid-up TERM loan');
+          setStatement(termData);
+          setLoanType('term');
+          setHasLoans(true);
+          setLoading(false);
+          return;
+        }
+        
+        // No loans found - show empty state
         console.log('📊 No loans found for user');
         setHasLoans(false);
         
