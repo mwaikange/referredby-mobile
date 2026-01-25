@@ -30,7 +30,14 @@ export default function PaymentRecordScreen() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        const historyData = await api.loans.getPaymentHistory(profile.id);
+        // First get statement to determine loan type
+        const statementData = await api.loans.getStatement(profile.id);
+        console.log('📊 Statement response:', statementData);
+        
+        const loanType = statementData?.loan_type || 'nano';
+        
+        // Get payment history with loan type
+        const historyData = await api.loans.getPaymentHistoryByType(profile.id, loanType);
         console.log('📡 Payment history response:', historyData);
         
         const payments = historyData.payments || [];

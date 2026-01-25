@@ -11,9 +11,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { api, UserProfile } from '../lib/api';
 
-interface LoanStatement {
+interface LoanData {
   loan_id: string;
-  loan_type: 'NANO' | 'TERM';
+  loan_type?: 'NANO' | 'TERM';
   status: string;
   borrowed_amount: number;
   interest_rate: number;
@@ -28,11 +28,6 @@ interface LoanStatement {
   grace_date?: string | null;
   principal?: number;
   outstanding_balance?: number;
-  total_installments?: number;
-  paid_installments?: number;
-  remaining_installments?: number;
-  next_due_date?: string;
-  installment_amount?: number;
   lending_society?: {
     name: string;
     bank: string;
@@ -43,12 +38,18 @@ interface LoanStatement {
   };
 }
 
+interface StatementResponse {
+  loan: LoanData;
+  loan_type: 'nano' | 'term';
+  is_active: boolean;
+  is_paid_up: boolean;
+}
+
 export default function StatementScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [statement, setStatement] = useState<LoanStatement | null>(null);
-  const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
+  const [statementData, setStatementData] = useState<StatementResponse | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,56 +59,14 @@ export default function StatementScreen() {
         
         console.log('📥 Loading statement for user:', userProfile.id);
         
-        // Fetch both statement endpoints directly
-        console.log('📊 Fetching nano loan statement...');
-        const nanoStatement = await api.loans.getNanoLoanStatement(userProfile.id);
-        console.log('📊 Nano statement response:', nanoStatement);
+        // Use the unified statement endpoint
+        const response = await api.loans.getStatement(userProfile.id);
+        console.log('📊 Statement response:', response);
         
-        const nanoData = nanoStatement.statement || (nanoStatement.loan_id ? nanoStatement : null);
-        
-        console.log('📊 Fetching term loan statement...');
-        const termStatement = await api.loans.getTermLoanStatement(userProfile.id);
-        console.log('📊 Term statement response:', termStatement);
-        
-        const termData = termStatement.statement || (termStatement.loan_id ? termStatement : null);
-        
-        // Priority: Active Term > Active Nano > Paid-Up Term > Paid-Up Nano
-        const activeStatuses = ['A', 'DU', 'OT'];
-        
-        if (termData && termData.loan_id && activeStatuses.includes(termData.status)) {
-          console.log('📊 Found active TERM loan');
-          setStatement(termData);
-          setLoanType('term');
-        }
-        else if (nanoData && nanoData.loan_id && activeStatuses.includes(nanoData.status)) {
-          console.log('📊 Found active NANO loan');
-          setStatement(nanoData);
-          setLoanType('nano');
-        }
-        else if (termData && termData.loan_id && termData.status === 'PU') {
-          console.log('📊 Found paid-up TERM loan');
-          setStatement(termData);
-          setLoanType('term');
-        }
-        else if (nanoData && nanoData.loan_id && nanoData.status === 'PU') {
-          console.log('📊 Found paid-up NANO loan');
-          setStatement(nanoData);
-          setLoanType('nano');
-        }
-        else if (nanoData && nanoData.loan_id) {
-          console.log('📊 Found NANO loan');
-          setStatement(nanoData);
-          setLoanType('nano');
-        }
-        else if (termData && termData.loan_id) {
-          console.log('📊 Found TERM loan');
-          setStatement(termData);
-          setLoanType('term');
-        }
-        else {
-          console.log('📊 No loans found for user');
-          setStatement(null);
-          setLoanType('nano');
+        if (response && response.loan) {
+          setStatementData(response);
+        } else {
+          setStatementData(null);
         }
         
       } catch (error) {
@@ -126,6 +85,7 @@ export default function StatementScreen() {
       case 'PU': return { label: 'Paid Up', style: styles.statusGreen };
       case 'DU': return { label: 'Due', style: styles.statusOrange };
       case 'OT': return { label: 'Outstanding', style: styles.statusRed };
+      case 'BL': return { label: 'Blocked', style: styles.statusRed };
       default: return { label: status, style: styles.statusGray };
     }
   };
@@ -139,13 +99,15 @@ export default function StatementScreen() {
     );
   }
 
-  const statusInfo = getStatusInfo(statement?.status);
-  const isTermLoan = loanType === 'term' || statement?.loan_type === 'TERM';
+  const loan = statementData?.loan;
+  const loanType = statementData?.loan_type || 'nano';
+  const statusInfo = getStatusInfo(loan?.status);
+  const isTermLoan = loanType === 'term';
   const loanTypeLabel = isTermLoan ? 'TERM LOAN' : 'NANO LOAN';
   const titleLabel = isTermLoan ? 'TERM LOAN STATEMENT' : 'NANO LOAN STATEMENT';
 
-  // Default bank details (fallback)
-  const bankDetails = statement?.lending_society || {
+  // Bank details from API response or fallback
+  const bankDetails = loan?.lending_society || {
     name: 'Destiny Group Pty LTD',
     bank: 'Nedbank Namibia',
     account_number: '6000238099',
@@ -174,45 +136,45 @@ export default function StatementScreen() {
           LOAN TYPE: <Text style={styles.loanTypeValue}>{loanTypeLabel}</Text>
         </Text>
         <Text style={styles.loanRef}>
-          LOAN REFERENCE: <Text style={styles.bold}>{statement?.loan_id || 'N/A'}</Text>{' '}
+          LOAN REFERENCE: <Text style={styles.bold}>{loan?.loan_id || 'N/A'}</Text>{' '}
           <Text style={statusInfo.style}>{statusInfo.label}</Text>
         </Text>
 
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{isTermLoan ? 'Principal' : 'Received'} (NAD)</Text>
-            <Text style={styles.detailValue}>{statement?.borrowed_amount?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{loan?.borrowed_amount?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest ( % )</Text>
-            <Text style={styles.detailValue}>{statement?.interest_rate?.toFixed(2) || '0.00'} %</Text>
+            <Text style={styles.detailValue}>{loan?.interest_rate?.toFixed(2) || '0.00'} %</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (NAD )</Text>
-            <Text style={styles.detailValue}>{statement?.interest_fee?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{loan?.interest_fee?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Processing Fee(NAD)</Text>
-            <Text style={styles.detailValue}>{statement?.processing_fee?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2) || '0.00'}</Text>
           </View>
           <View style={[styles.detailRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Repayable ( NAD )</Text>
-            <Text style={styles.totalValue}>{statement?.total_repayable?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2) || '0.00'}</Text>
           </View>
         </View>
 
         <View style={styles.datesSection}>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Due Date :</Text>
-            <Text style={styles.dateValue}>{statement?.due_date || '-'}</Text>
+            <Text style={styles.dateValue}>{loan?.due_date || '-'}</Text>
           </View>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Outstanding Date :</Text>
-            <Text style={styles.dateValue}>{statement?.outstanding_date || '-'}</Text>
+            <Text style={styles.dateValue}>{loan?.outstanding_date || '-'}</Text>
           </View>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>Grace Date :</Text>
-            <Text style={styles.dateValue}>{statement?.grace_date || statement?.paid_date || '-'}</Text>
+            <Text style={styles.dateValue}>{loan?.grace_date || loan?.paid_date || '-'}</Text>
           </View>
         </View>
 

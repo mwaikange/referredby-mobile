@@ -513,6 +513,19 @@ export const api = {
       const data = await response.json();
       return data;
     },
+
+    getStatement: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/statement?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { success: false, error: 'No statement found' };
+      }
+      const data = await response.json();
+      return data;
+    },
   },
 
   // Get Logged-in User Profile
