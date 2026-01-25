@@ -106,6 +106,52 @@ export default function Statement() {
   const loan = activeLoan;
   const isPaidUp = loan?.status?.toLowerCase() === 'paid' || loan?.status?.toLowerCase() === 'paid up';
 
+  // Show empty state when no active loans
+  if (!activeLoan) {
+    return (
+      <Layout>
+        <div className="flex-1 flex flex-col font-sans">
+          <h1 className="text-center font-bold uppercase mb-2 tracking-tight text-[20px]">
+            ACTIVE STATEMENT
+          </h1>
+          
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">No Active Loans</h2>
+            <p className="text-sm text-gray-500 text-center px-8 mb-6">
+              You don't have any active loans at the moment. Apply for a loan to get started.
+            </p>
+            <div className="space-y-3 w-full px-4">
+              <Button 
+                onClick={() => setLocation("/nano-loan-apply")}
+                className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+              >
+                Apply for Nano Loan
+              </Button>
+              <Button 
+                onClick={() => setLocation("/term-loan-apply")}
+                className="w-full bg-[#0B0B3B] hover:bg-[#0B0B3B]/90 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+              >
+                Apply for Term Loan
+              </Button>
+              <Button 
+                onClick={() => setLocation("/profile")}
+                variant="outline"
+                className="w-full border-gray-300 text-gray-700 font-bold uppercase tracking-wide h-[48px] rounded-lg"
+              >
+                Back to Profile
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (loanType === 'term') {
     return (
       <Layout>

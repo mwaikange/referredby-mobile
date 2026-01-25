@@ -110,6 +110,60 @@ export default function StatementScreen() {
   const loan = activeLoan;
   const isPaidUp = loan?.status?.toLowerCase() === 'paid' || loan?.status?.toLowerCase() === 'paid up';
 
+  // Show empty state when no active loans
+  if (!activeLoan) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerPattern}>
+          <Image 
+            source={require('../../assets/header-pattern.png')} 
+            style={styles.patternImage}
+            resizeMode="cover"
+          />
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.title}>ACTIVE STATEMENT</Text>
+          
+          <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+            <View style={{ width: 80, height: 80, backgroundColor: '#f3f4f6', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 32, color: '#9ca3af' }}>📄</Text>
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 }}>No Active Loans</Text>
+            <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
+              You don't have any active loans at the moment. Apply for a loan to get started.
+            </Text>
+            
+            <TouchableOpacity 
+              style={[styles.button, { marginBottom: 12 }]}
+              onPress={() => navigation.navigate('NanoLoanApply' as never)}
+            >
+              <Text style={styles.buttonText}>Apply for Nano Loan</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#0B0B3B', marginBottom: 12 }]}
+              onPress={() => navigation.navigate('TermLoanApply' as never)}
+            >
+              <Text style={styles.buttonText}>Apply for Term Loan</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#C41E3A' }]}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.buttonText}>Back to Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   if (loanType === 'term') {
     return (
       <View style={styles.container}>
