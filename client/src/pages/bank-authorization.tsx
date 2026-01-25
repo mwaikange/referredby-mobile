@@ -1,9 +1,40 @@
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { api, UserProfile } from "@/lib/api";
 
 export default function BankAuthorization() {
   const [, setLocation] = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userProfile = await api.getProfile();
+        console.log('📥 Loading bank authorization for user:', userProfile.id);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex-1 flex flex-col items-center justify-center font-sans min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#00736e]" />
+          <p className="mt-4 text-sm text-gray-500">Loading authorization form...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -22,21 +53,21 @@ export default function BankAuthorization() {
         <div className="mb-6 border-b border-gray-200 pb-4">
           <h3 className="text-xs font-bold uppercase mb-3">CLIENT DETAILS</h3>
           <div className="space-y-2 text-xs">
-            <div className="flex justify-between"><span className="text-gray-500">Full Name</span><span>OAKAFOR JOHN</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Surname</span><span>JOHN</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">ID Number</span><span>8629360009</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Mobile Number</span><span>+264857384666</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Full Name</span><span>{profile?.first_name} {profile?.last_name}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Surname</span><span>{profile?.last_name}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">ID Number</span><span>{profile?.id_number}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Mobile Number</span><span>{profile?.mobile}</span></div>
           </div>
         </div>
 
         <div className="mb-6 border-b border-gray-200 pb-4">
           <h3 className="text-xs font-bold uppercase mb-3">BANKING DETAILS</h3>
           <div className="space-y-2 text-xs">
-            <div className="flex justify-between"><span className="text-gray-500">Bank Name</span><span>Standard Bank Namibia</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Branch Code</span><span>70098</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Branch Town</span><span>Katutura Branch</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Account Number</span><span>60008292656</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">UPI/PP Address</span><span>@264857384666</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Bank Name</span><span>{(profile as any)?.bank_name}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Branch Code</span><span>{(profile as any)?.branch_code}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Branch Town</span><span>{(profile as any)?.branch}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Account Number</span><span>{(profile as any)?.account_number}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">UPI/PP Address</span><span>@{profile?.mobile?.replace('+', '')}</span></div>
           </div>
         </div>
 

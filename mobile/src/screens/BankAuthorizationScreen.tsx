@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,41 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { api, UserProfile } from '../lib/api';
 
 export default function BankAuthorizationScreen() {
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userProfile = await api.getProfile();
+        console.log('📥 Loading bank authorization for user:', userProfile.id);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00736e" />
+        <Text style={styles.loadingText}>Loading authorization form...</Text>
+      </View>
+    );
+  }
+
+  const profileData = profile as any;
 
   return (
     <View style={styles.container}>
@@ -42,19 +72,19 @@ export default function BankAuthorizationScreen() {
           <Text style={styles.sectionTitle}>CLIENT DETAILS</Text>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Full Name</Text>
-            <Text style={styles.detailValue}>OAKAFOR JOHN</Text>
+            <Text style={styles.detailValue}>{profile?.first_name} {profile?.last_name}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Surname</Text>
-            <Text style={styles.detailValue}>JOHN</Text>
+            <Text style={styles.detailValue}>{profile?.last_name}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>ID Number</Text>
-            <Text style={styles.detailValue}>8629360009</Text>
+            <Text style={styles.detailValue}>{profile?.id_number}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Mobile Number</Text>
-            <Text style={styles.detailValue}>+264857384666</Text>
+            <Text style={styles.detailValue}>{profile?.mobile}</Text>
           </View>
         </View>
 
@@ -62,19 +92,19 @@ export default function BankAuthorizationScreen() {
           <Text style={styles.sectionTitle}>BANKING DETAILS</Text>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Bank Name</Text>
-            <Text style={styles.detailValue}>Standard Bank Namibia</Text>
+            <Text style={styles.detailValue}>{profileData?.bank_name}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Branch Code</Text>
-            <Text style={styles.detailValue}>70098</Text>
+            <Text style={styles.detailValue}>{profileData?.branch_code}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Branch Town</Text>
-            <Text style={styles.detailValue}>Katutura Branch</Text>
+            <Text style={styles.detailValue}>{profileData?.branch}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Account Number</Text>
-            <Text style={styles.detailValue}>60008292656</Text>
+            <Text style={styles.detailValue}>{profileData?.account_number}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>UPI/PP Address</Text>
@@ -151,6 +181,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280',
   },
   headerPattern: {
     height: 60,

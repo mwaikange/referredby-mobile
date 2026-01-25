@@ -7,17 +7,42 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { api } from '../lib/api';
 
 export default function NetDisposableIncomeScreen() {
   const navigation = useNavigation();
-  const [netSalary, setNetSalary] = useState('19800');
-  const [rentBond, setRentBond] = useState('3800');
-  const [food, setFood] = useState('1200');
-  const [transport, setTransport] = useState('120');
-  const [loans, setLoans] = useState('2500');
-  const [otherExpenses, setOtherExpenses] = useState('4500');
+  const [loading, setLoading] = useState(true);
+  const [netSalary, setNetSalary] = useState('');
+  const [rentBond, setRentBond] = useState('');
+  const [food, setFood] = useState('');
+  const [transport, setTransport] = useState('');
+  const [loans, setLoans] = useState('');
+  const [otherExpenses, setOtherExpenses] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const profile = await api.getProfile();
+        const profileData = profile as any;
+        console.log('📥 Loading NDI data for user:', profile.id);
+        
+        // Prefill net salary from profile if available
+        if (profileData?.net_salary) {
+          setNetSalary(profileData.net_salary.toString());
+        } else if (profileData?.monthly_salary) {
+          setNetSalary(profileData.monthly_salary.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const totalExpenses = 
     (parseFloat(rentBond) || 0) + 

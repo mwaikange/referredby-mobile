@@ -26,12 +26,24 @@ export default function LoanHistoryScreen() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await api.getProfile();
-        setRecords([
-          { date: '31/12/25', loan_id: 'TL86127543', status: 'DUE', type: 'TERM' },
-        ]);
+        const profile = await api.getProfile();
+        console.log('📥 Fetching loan history for user:', profile.id);
+        
+        const historyData = await api.loans.getLoanHistory(profile.id);
+        console.log('📡 Loan history response:', historyData);
+        
+        const loans = historyData.loans || [];
+        const mappedRecords = loans.map((loan: any) => ({
+          date: loan.date || loan.created_at || '',
+          loan_id: loan.loan_id || loan.reference || loan.id || '',
+          status: loan.status || 'PENDING',
+          type: loan.type || (loan.loan_id?.startsWith('TL') ? 'TERM' : 'NANO'),
+        }));
+        
+        setRecords(mappedRecords);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setRecords([]);
       } finally {
         setLoading(false);
       }

@@ -1,16 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function BankingDetails() {
   const [, setLocation] = useLocation();
-  const [accountName, setAccountName] = useState("OAKAFOR JOHN");
-  const [bank, setBank] = useState("Standard Bank Namibia");
-  const [branch, setBranch] = useState("Katutura Branch");
-  const [branchCode, setBranchCode] = useState("70098");
-  const [accountNumber, setAccountNumber] = useState("60008292656");
+  const [loading, setLoading] = useState(true);
+  const [accountName, setAccountName] = useState("");
+  const [bank, setBank] = useState("");
+  const [branch, setBranch] = useState("");
+  const [branchCode, setBranchCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const profile = await api.getProfile();
+        const profileData = profile as any;
+        console.log('📥 Loading banking details for user:', profile.id);
+        
+        setAccountName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim());
+        setBank(profileData.bank_name || '');
+        setBranch(profileData.branch || '');
+        setBranchCode(profileData.branch_code || '');
+        setAccountNumber(profileData.account_number || '');
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex-1 flex flex-col items-center justify-center font-sans min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#00736e]" />
+          <p className="mt-4 text-sm text-gray-500">Loading banking details...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

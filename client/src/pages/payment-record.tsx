@@ -21,14 +21,26 @@ export default function PaymentRecordPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await api.getProfile();
-        setRecords([
-          { date: "21/01/26", loan_id: "TL86127543", type: "payment", received: "N$1200.00", balance: "N$7428.12" },
-          { date: "01/01/26", loan_id: "TL86127543", type: "payment", received: "N$958.68", balance: "N$8628.12" },
-          { date: "31/12/25", loan_id: "TL86127543", type: "disbursed", received: "paid to Nampost", balance: "N$0.00" },
-        ]);
+        const profile = await api.getProfile();
+        console.log('📥 Fetching payment history for user:', profile.id);
+        
+        const historyData = await api.loans.getPaymentHistory(profile.id);
+        console.log('📡 Payment history response:', historyData);
+        
+        // Map API response to our interface
+        const payments = historyData.payments || [];
+        const mappedRecords = payments.map((payment: any) => ({
+          date: payment.date || payment.payment_date || '',
+          loan_id: payment.loan_id || payment.reference || '',
+          type: payment.type || 'payment',
+          received: payment.received || `N$${payment.amount?.toFixed(2) || '0.00'}`,
+          balance: payment.balance || `N$${payment.remaining_balance?.toFixed(2) || '0.00'}`,
+        }));
+        
+        setRecords(mappedRecords);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setRecords([]);
       } finally {
         setLoading(false);
       }

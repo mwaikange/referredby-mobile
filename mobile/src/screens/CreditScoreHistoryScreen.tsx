@@ -15,8 +15,8 @@ export default function CreditScoreHistoryScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0.5);
-  const [scoreBreakdown] = useState({
-    earlyPayments: 5,
+  const [scoreBreakdown, setScoreBreakdown] = useState({
+    earlyPayments: 0,
     onTimePayments: 0,
     latePenalties: 0,
   });
@@ -25,8 +25,27 @@ export default function CreditScoreHistoryScreen() {
     const fetchData = async () => {
       try {
         const profile = await api.getProfile();
-        if (profile?.star_rating) {
+        console.log('📥 Fetching credit score for user:', profile.id);
+        
+        if (profile?.star_rating !== undefined) {
           setRating(profile.star_rating);
+        }
+        
+        // Try to fetch rating events/breakdown from profile data
+        const profileData = profile as any;
+        if (profileData?.score_breakdown) {
+          setScoreBreakdown({
+            earlyPayments: profileData.score_breakdown.early_payments || 0,
+            onTimePayments: profileData.score_breakdown.on_time_payments || 0,
+            latePenalties: profileData.score_breakdown.late_penalties || 0,
+          });
+        } else if (profileData?.borrower_rating !== undefined) {
+          const ratingValue = profileData.borrower_rating || profile.star_rating || 0;
+          setScoreBreakdown({
+            earlyPayments: Math.round(ratingValue * 2),
+            onTimePayments: Math.round(ratingValue * 3),
+            latePenalties: 0,
+          });
         }
       } catch (error) {
         console.error('Error fetching profile:', error);

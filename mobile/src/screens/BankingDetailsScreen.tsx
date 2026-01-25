@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,49 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { api } from '../lib/api';
 
 export default function BankingDetailsScreen() {
   const navigation = useNavigation();
-  const [accountName, setAccountName] = useState('OAKAFOR JOHN');
-  const [bank, setBank] = useState('Standard Bank Namibia');
-  const [branch, setBranch] = useState('Katutura Branch');
-  const [branchCode, setBranchCode] = useState('70098');
-  const [accountNumber, setAccountNumber] = useState('60008292656');
+  const [loading, setLoading] = useState(true);
+  const [accountName, setAccountName] = useState('');
+  const [bank, setBank] = useState('');
+  const [branch, setBranch] = useState('');
+  const [branchCode, setBranchCode] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const profile = await api.getProfile();
+        const profileData = profile as any;
+        console.log('📥 Loading banking details for user:', profile.id);
+        
+        setAccountName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim());
+        setBank(profileData.bank_name || '');
+        setBranch(profileData.branch || '');
+        setBranchCode(profileData.branch_code || '');
+        setAccountNumber(profileData.account_number || '');
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00736e" />
+        <Text style={styles.loadingText}>Loading banking details...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -114,6 +147,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280',
   },
   headerPattern: {
     height: 60,

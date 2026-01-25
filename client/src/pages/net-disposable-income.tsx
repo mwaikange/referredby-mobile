@@ -1,12 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function NetDisposableIncome() {
   const [, setLocation] = useLocation();
-  const [netSalary, setNetSalary] = useState("19800");
+  const [loading, setLoading] = useState(true);
+  const [netSalary, setNetSalary] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const profile = await api.getProfile();
+        console.log('📥 Loading NDI data for user:', profile.id);
+        
+        // Prefill net salary from profile if available
+        const profileData = profile as any;
+        if (profileData?.net_salary) {
+          setNetSalary(profileData.net_salary.toString());
+        } else if (profileData?.monthly_salary) {
+          setNetSalary(profileData.monthly_salary.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   const [rentBond, setRentBond] = useState("3800");
   const [food, setFood] = useState("1200");
   const [transport, setTransport] = useState("120");

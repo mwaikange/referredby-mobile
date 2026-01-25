@@ -19,8 +19,28 @@ export default function CreditScoreHistory() {
     const fetchData = async () => {
       try {
         const profile = await api.getProfile();
-        if (profile?.star_rating) {
+        console.log('📥 Fetching credit score for user:', profile.id);
+        
+        if (profile?.star_rating !== undefined) {
           setRating(profile.star_rating);
+        }
+        
+        // Try to fetch rating events/breakdown from profile data
+        const profileData = profile as any;
+        if (profileData?.score_breakdown) {
+          setScoreBreakdown({
+            earlyPayments: profileData.score_breakdown.early_payments || 0,
+            onTimePayments: profileData.score_breakdown.on_time_payments || 0,
+            latePenalties: profileData.score_breakdown.late_penalties || 0,
+          });
+        } else if (profileData?.borrower_rating !== undefined) {
+          // Calculate approximate breakdown from rating
+          const ratingValue = profile.borrower_rating || profile.star_rating || 0;
+          setScoreBreakdown({
+            earlyPayments: Math.round(ratingValue * 2),
+            onTimePayments: Math.round(ratingValue * 3),
+            latePenalties: 0,
+          });
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
