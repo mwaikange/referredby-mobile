@@ -202,10 +202,10 @@ export default function StatementScreen() {
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.goldButton} disabled>
-            <Text style={styles.buttonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
+            <Text style={styles.goldButtonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.coralButton} disabled>
-            <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+            <Text style={styles.buttonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
@@ -393,26 +393,34 @@ const styles = StyleSheet.create({
   tealButton: {
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   goldButton: {
-    backgroundColor: '#D4A574',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#D4A574',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  goldButtonText: {
+    color: '#D4A574',
+    fontSize: 14,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
   coralButton: {
-    backgroundColor: '#E8C9A0',
+    backgroundColor: '#D4A574',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   coralButtonText: {
-    color: '#8B4513',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,
@@ -445,7 +453,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -453,7 +461,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#C41E3A',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -188,18 +188,19 @@ export default function Statement() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation(`/payment-record?loan_type=${loanType}`)}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             PAYMENT RECORD
           </Button>
           <Button 
-            className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            variant="outline"
+            className="w-full border-2 border-[#D4A574] bg-transparent text-[#D4A574] font-bold uppercase tracking-wide h-[48px] hover:bg-[#D4A574]/10"
             disabled
           >
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
           <Button 
-            className="w-full bg-[#E8C9A0] hover:bg-[#d8b990] text-[#8B4513] font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px]"
             disabled
           >
             NEW PAYMENT METHOD COMING SOON
@@ -218,13 +219,13 @@ export default function Statement() {
         <div className="flex gap-4 pb-6">
           <Button 
             onClick={() => setLocation("/loan-history")}
-            className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             HISTORY
           </Button>
           <Button 
             onClick={() => setLocation("/profile")}
-            className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             BACK
           </Button>
