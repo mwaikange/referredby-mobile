@@ -143,11 +143,11 @@ export default function LoanHistoryScreen() {
           >
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.goldButton} disabled>
-            <Text style={styles.goldButtonText}>PAY VIA PAYPULSE APP</Text>
+          <TouchableOpacity style={styles.lightTealButton} disabled>
+            <Text style={styles.lightTealButtonText}>PAY VIA PAYPULSE APP</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.coralButton} disabled>
-            <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+          <TouchableOpacity style={styles.lightTealButton} disabled>
+            <Text style={styles.lightTealButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
@@ -296,35 +296,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  goldButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#D4A574',
+  lightTealButton: {
+    backgroundColor: '#7dd3c4',
     height: 48,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  goldButtonText: {
-    color: '#D4A574',
+  lightTealButtonText: {
+    color: '#0f766e',
     fontSize: 14,
     fontWeight: 'bold',
     letterSpacing: 0.5,
-  },
-  coralButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#E8C9A0',
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  coralButtonText: {
-    color: '#9ca3af',
-    fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 0.3,
   },
   buttonText: {
     color: '#ffffff',

@@ -193,14 +193,13 @@ export default function Statement() {
             PAYMENT RECORD
           </Button>
           <Button 
-            variant="outline"
-            className="w-full border-2 border-[#D4A574] bg-transparent text-[#D4A574] font-bold uppercase tracking-wide h-[48px] hover:bg-[#D4A574]/10"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
             disabled
           >
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
           <Button 
-            className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px]"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
             disabled
           >
             NEW PAYMENT METHOD COMING SOON
