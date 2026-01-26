@@ -1,0 +1,107 @@
+# IMMEDIATE TEST - Statement API Fix
+
+## THE ISSUE
+DOBSON ANDRE (user_id: `77a3adee-5734-4bb1-b0bc-d0d6166af205`) has 2 PAID-UP nano loans:
+- **NL95726406** (most recent, created 2026-01-21)
+- **NL52886717** (older, created 2025-12-11)
+
+The app should display the most recent paid-up loan (NL95726406) when there are no active loans.
+
+## TEST THIS RIGHT NOW
+
+**1. Call the statement API:**
+```
+GET /api/mobile/statement?user_id=77a3adee-5734-4bb1-b0bc-d0d6166af205
+```
+
+**2. You SHOULD get this response:**
+```json
+{
+  "success": true,
+  "loan": {
+    "loan_id": "NL95726406",
+    "user_id": "77a3adee-5734-4bb1-b0bc-d0d6166af205",
+    "loan_amount": 500,
+    "interest_rate": 28,
+    "interest_amount": 168,
+    "total_repayable": 800,
+    "status": "PU",
+    "due_date": "2026-03-25",
+    "outstanding_date": "2026-04-25",
+    "processing_fee_amount": 32,
+    ... (more fields)
+  },
+  "loan_type": "nano",
+  "is_active": false,
+  "is_paid_up": true
+}
+```
+
+## IF YOU GET THIS RESPONSE, THEN:
+
+**Display the loan statement with these values:**
+- Loan Reference: `response.loan.loan_id` → **NL95726406**
+- Loan Type: `response.loan_type` → **NANO LOAN**
+- Received (NAD): `response.loan.loan_amount` → **500.00**
+- Interest (%): `response.loan.interest_rate` → **28.00 %**
+- Interest (NAD): `response.loan.interest_amount` → **168.00**
+- Processing Fee (NAD): `response.loan.processing_fee_amount` → **32.00**
+- Total Repayable (NAD): `response.loan.total_repayable` → **800.00**
+- Due Date: `response.loan.due_date` → **25 March 2026**
+- Outstanding Date: `response.loan.outstanding_date` → **25 April 2026**
+- Grace Date: (calculate from outstanding_date + 30 days) → **25 May 2026**
+
+## IF YOU GET A DIFFERENT RESPONSE
+
+**Copy and paste the EXACT response you received and send it back immediately.**
+
+## MOBILE APP CODE CHANGES NEEDED
+
+```dart
+// Example Flutter/Dart code
+Future<void> fetchStatement() async {
+  final userId = await getUserId(); // Get from secure storage/session
+  
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/mobile/statement?user_id=$userId'),
+  );
+  
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    
+    if (data['success'] == true && data['loan'] != null) {
+      // Display the loan
+      setState(() {
+        loanId = data['loan']['loan_id'];
+        loanType = data['loan_type']; // 'nano' or 'term'
+        loanAmount = data['loan']['loan_amount'];
+        interestRate = data['loan']['interest_rate'];
+        interestAmount = data['loan']['interest_amount'];
+        processingFee = data['loan']['processing_fee_amount'];
+        totalRepayable = data['loan']['total_repayable'];
+        dueDate = data['loan']['due_date'];
+        outstandingDate = data['loan']['outstanding_date'];
+        isActive = data['is_active'];
+        isPaidUp = data['is_paid_up'];
+      });
+    } else {
+      // No loans found - show "Apply for loan" screen
+      showNoLoansScreen();
+    }
+  }
+}
+```
+
+## CRITICAL CHECKLIST
+
+- [ ] Are you calling `/api/mobile/statement?user_id=USER_ID` with the correct user_id?
+- [ ] Are you checking `response.loan` is not null before displaying?
+- [ ] Are you using the correct field names from the response (e.g., `loan_amount` not `borrowed_amount`)?
+- [ ] Are you handling both nano and term loans (check `loan_type` field)?
+- [ ] Are you showing the statement even when `is_active: false` and `is_paid_up: true`?
+
+## WHAT TO SEND BACK
+
+1. Screenshot of the API response in your HTTP debugging tool (Postman/Insomnia/browser)
+2. Screenshot of what the mobile app displays after calling this API
+3. Any error messages from the console/logs

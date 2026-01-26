@@ -8,17 +8,20 @@ import { api, type UserProfile } from "@/lib/api";
 interface LoanData {
   loan_id: string;
   status: string;
-  borrowed_amount: number;
+  loan_amount: number;
+  borrowed_amount?: number;
   interest_rate: number;
-  interest_fee: number;
-  processing_fee: number;
+  interest_amount: number;
+  interest_fee?: number;
+  processing_fee_amount: number;
+  processing_fee?: number;
   total_repayable: number;
-  outstanding_amount: number;
-  amount_paid: number;
+  outstanding_amount?: number;
+  amount_paid?: number;
   due_date: string;
   outstanding_date: string | null;
-  grace_date: string | null;
-  paid_date: string | null;
+  grace_date?: string | null;
+  paid_date?: string | null;
   lending_society_id?: string;
   user_id?: string;
   created_at?: string;
@@ -87,6 +90,13 @@ export default function Statement() {
   const isActive = statementData?.is_active || false;
   const isPaidUp = statementData?.is_paid_up || false;
 
+  // Use correct field names with fallbacks
+  const loanAmount = loan?.loan_amount ?? loan?.borrowed_amount ?? 0;
+  const interestAmount = loan?.interest_amount ?? loan?.interest_fee ?? 0;
+  const processingFee = loan?.processing_fee_amount ?? loan?.processing_fee ?? 0;
+  const interestRate = loan?.interest_rate ?? 0;
+  const totalRepayable = loan?.total_repayable ?? 0;
+
   // Determine status label and color
   const getStatusInfo = (status: string | undefined) => {
     if (!status) return { label: 'No Record', color: 'text-gray-500' };
@@ -105,7 +115,7 @@ export default function Statement() {
   const loanTypeLabel = isTermLoan ? 'TERM LOAN' : 'NANO LOAN';
   const titleLabel = isTermLoan ? 'TERM LOAN STATEMENT' : 'NANO LOAN STATEMENT';
 
-  // Default bank details (fallback - would come from lending_society lookup)
+  // Default bank details
   const bankDetails = {
     name: 'Destiny Group Pty LTD',
     bank: 'Nedbank Namibia',
@@ -135,23 +145,23 @@ export default function Statement() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">{isTermLoan ? 'Principal' : 'Received'} (NAD)</span>
-              <span className="font-bold">{loan?.borrowed_amount?.toFixed(2) || '0.00'}</span>
+              <span className="font-bold">{loanAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Interest ( % )</span>
-              <span className="font-bold">{loan?.interest_rate?.toFixed(2) || '0.00'} %</span>
+              <span className="font-bold">{interestRate.toFixed(2)} %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Interest (NAD )</span>
-              <span className="font-bold">{loan?.interest_fee?.toFixed(2) || '0.00'}</span>
+              <span className="font-bold">{interestAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Processing Fee(NAD)</span>
-              <span className="font-bold">{loan?.processing_fee?.toFixed(2) || '0.00'}</span>
+              <span className="font-bold">{processingFee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold border-t border-gray-300 pt-2 mt-2">
               <span>Total Repayable ( NAD )</span>
-              <span>{loan?.total_repayable?.toFixed(2) || '0.00'}</span>
+              <span>{totalRepayable.toFixed(2)}</span>
             </div>
           </div>
         </div>

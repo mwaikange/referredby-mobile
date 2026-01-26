@@ -14,17 +14,20 @@ import { api, UserProfile } from '../lib/api';
 interface LoanData {
   loan_id: string;
   status: string;
-  borrowed_amount: number;
+  loan_amount: number;
+  borrowed_amount?: number;
   interest_rate: number;
-  interest_fee: number;
-  processing_fee: number;
+  interest_amount: number;
+  interest_fee?: number;
+  processing_fee_amount: number;
+  processing_fee?: number;
   total_repayable: number;
-  outstanding_amount: number;
-  amount_paid: number;
+  outstanding_amount?: number;
+  amount_paid?: number;
   due_date: string;
   outstanding_date: string | null;
-  grace_date: string | null;
-  paid_date: string | null;
+  grace_date?: string | null;
+  paid_date?: string | null;
   lending_society_id?: string;
   user_id?: string;
   created_at?: string;
@@ -103,6 +106,13 @@ export default function StatementScreen() {
   const isActive = statementData?.is_active || false;
   const isPaidUp = statementData?.is_paid_up || false;
   
+  // Use correct field names with fallbacks
+  const loanAmount = loan?.loan_amount ?? loan?.borrowed_amount ?? 0;
+  const interestAmount = loan?.interest_amount ?? loan?.interest_fee ?? 0;
+  const processingFee = loan?.processing_fee_amount ?? loan?.processing_fee ?? 0;
+  const interestRate = loan?.interest_rate ?? 0;
+  const totalRepayable = loan?.total_repayable ?? 0;
+  
   const statusInfo = getStatusInfo(loan?.status);
   const isTermLoan = loanType === 'term';
   const loanTypeLabel = isTermLoan ? 'TERM LOAN' : 'NANO LOAN';
@@ -145,23 +155,23 @@ export default function StatementScreen() {
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{isTermLoan ? 'Principal' : 'Received'} (NAD)</Text>
-            <Text style={styles.detailValue}>{loan?.borrowed_amount?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{loanAmount.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest ( % )</Text>
-            <Text style={styles.detailValue}>{loan?.interest_rate?.toFixed(2) || '0.00'} %</Text>
+            <Text style={styles.detailValue}>{interestRate.toFixed(2)} %</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Interest (NAD )</Text>
-            <Text style={styles.detailValue}>{loan?.interest_fee?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{interestAmount.toFixed(2)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Processing Fee(NAD)</Text>
-            <Text style={styles.detailValue}>{loan?.processing_fee?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.detailValue}>{processingFee.toFixed(2)}</Text>
           </View>
           <View style={[styles.detailRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Repayable ( NAD )</Text>
-            <Text style={styles.totalValue}>{loan?.total_repayable?.toFixed(2) || '0.00'}</Text>
+            <Text style={styles.totalValue}>{totalRepayable.toFixed(2)}</Text>
           </View>
         </View>
 
