@@ -1,0 +1,302 @@
+# Replit API Update Instructions
+
+## Issue Summary
+The Replit app is showing "No payment records found" while the Vercel mobile app correctly displays payment records. Additionally, the statement API needs to replace `grace_date` with `block_date`.
+
+---
+
+## Fix 1: Payment History API Update
+
+### Problem
+The current payment history API requires `loan_type` parameter and uses complex joins that may not work correctly in Replit environment.
+
+### Solution
+Update the payment history endpoint to work with either `loan_id` (for specific loan) or `user_id` (for all user payments).
+
+### Updated API Endpoint
+**GET** `/api/mobile/payment-history?user_id={user_id}&loan_id={loan_id}`
+
+**Query Parameters:**
+- `user_id` (required): The user's UUID
+- `loan_id` (optional): Specific loan ID to filter payments
+
+### New Response Structure
+
+**When loan_id is provided:**
+```json
+{
+  "success": true,
+  "payments": [
+    {
+      "payment_id": "uuid",
+      "loan_id": "NL12345",
+      "amount": 600.00,
+      "payment_date": "2026-01-15",
+      "payment_method": "PAYPULSE",
+      "status": "VERIFIED",
+      "created_at": "2026-01-15T10:00:00Z"
+    }
+  ],
+  "loan_type": "nano"
+}
+```
+
+**When only user_id is provided:**
+```json
+{
+  "success": true,
+  "payments": [
+    {
+      "payment_id": "uuid",
+      "loan_id": "NL12345",
+      "amount": 600.00,
+      "payment_date": "2026-01-15",
+      "payment_method": "PAYPULSE",
+      "status": "VERIFIED",
+      "created_at": "2026-01-15T10:00:00Z",
+      "loan_type": "nano"
+    }
+  ]
+}
+```
+
+### Implementation Steps
+
+1. **Update your payment history route handler** with this logic:
+
+```javascript
+// If loan_id provided, search specifically for that loan
+if (loanId) {
+  // Try nano_loan_payments table first
+  const nanoPayments = await supabase
+    .from('nano_loan_payments')
+    .select('payment_id, loan_id, amount, payment_date, payment_method, status, created_at')
+    .eq('loan_id', loanId)
+    .order('payment_date', { ascending: false });
+
+  if (nanoPayments.data && nanoPayments.data.length > 0) {
+    return { success: true, payments: nanoPayments.data, loan_type: 'nano' };
+  }
+
+  // Try term_loan_payments table
+  const termPayments = await supabase
+    .from('term_loan_payments')
+    .select('payment_id, loan_id, amount, payment_date, payment_method, status, created_at')
+    .eq('loan_id', loanId)
+    .order('payment_date', { ascending: false });
+
+  if (termPayments.data && termPayments.data.length > 0) {
+    return { success: true, payments: termPayments.data, loan_type: 'term' };
+  }
+
+  return { success: true, payments: [], message: 'No payments found for this loan' };
+}
+
+// If no loan_id, fetch all payments for the user
+// Step 1: Get all loan IDs for this user
+const { data: nanoLoans } = await supabase
+  .from('nano_loans')
+  .select('loan_id')
+  .eq('user_id', userId);
+
+const { data: termLoans } = await supabase
+  .from('term_loans')
+  .select('loan_id')
+  .eq('user_id', userId);
+
+const nanoLoanIds = nanoLoans?.map(loan => loan.loan_id) || [];
+const termLoanIds = termLoans?.map(loan => loan.loan_id) || [];
+
+let allPayments = [];
+
+// Step 2: Fetch payments for all nano loans
+if (nanoLoanIds.length > 0) {
+  const { data: nanoPayments } = await supabase
+    .from('nano_loan_payments')
+    .select('payment_id, loan_id, amount, payment_date, payment_method, status, created_at')
+    .in('loan_id', nanoLoanIds)
+    .order('payment_date', { ascending: false });
+
+  if (nanoPayments) {
+    allPayments.push(...nanoPayments.map(p => ({ ...p, loan_type: 'nano' })));
+  }
+}
+
+// Step 3: Fetch payments for all term loans
+if (termLoanIds.length > 0) {
+  const { data: termPayments } = await supabase
+    .from('term_loan_payments')
+    .select('payment_id, loan_id, amount, payment_date, payment_method, status, created_at')
+    .in('loan_id', termLoanIds)
+    .order('payment_date', { ascending: false });
+
+  if (termPayments) {
+    allPayments.push(...termPayments.map(p => ({ ...p, loan_type: 'term' })));
+  }
+}
+
+// Step 4: Sort all payments by date
+allPayments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+
+return { success: true, payments: allPayments };
+```
+
+2. **Key Changes:**
+   - Removed the `loan_type` required parameter
+   - Added optional `loan_id` parameter for specific loan queries
+   - Removed complex joins - now queries tables directly
+   - Fetches payments across ALL user loans when no loan_id specified
+   - Returns empty array instead of error when no payments found
+
+3. **Testing:**
+   ```
+   # Test with specific loan
+   GET /api/mobile/payment-history?user_id={uuid}&loan_id=NL12345
+   
+   # Test with all user payments
+   GET /api/mobile/payment-history?user_id={uuid}
+   ```
+
+---
+
+## Fix 2: Statement API - Replace grace_date with block_date
+
+### Problem
+The statement API currently returns `grace_date` but the field should be `block_date` to match the database schema.
+
+### Solution
+Replace all references to `grace_date` with `block_date` in the response.
+
+### Updated API Response
+
+**GET** `/api/mobile/statement?user_id={user_id}`
+
+**Updated Response Structure:**
+```json
+{
+  "success": true,
+  "loan": {
+    "loan_id": "NL12345",
+    "status": "PU",
+    "borrowed_amount": 2000.00,
+    "interest_rate": 28.00,
+    "interest_fee": 560.00,
+    "processing_fee": 32.00,
+    "total_repayable": 2592.00,
+    "outstanding_amount": 0.00,
+    "amount_paid": 2592.00,
+    "due_date": "2025-12-15",
+    "outstanding_date": null,
+    "block_date": null,
+    "paid_date": "2025-12-10",
+    "lending_society_id": "uuid",
+    "user_id": "uuid",
+    "created_at": "2025-11-15T10:00:00Z"
+  },
+  "loan_type": "nano",
+  "is_active": false,
+  "is_paid_up": true
+}
+```
+
+### Implementation Steps
+
+1. **The database already has `block_date` column** - no database changes needed
+
+2. **Update your statement API response:**
+   - The Supabase query already returns the correct field name from the database
+   - Simply ensure you're using `block_date` instead of `grace_date` in any response mapping
+
+3. **No code changes needed if you're using direct Supabase queries** - the field comes correctly from the database
+
+4. **If you have any response mapping/transformation**, update it:
+   ```javascript
+   // OLD - DON'T USE THIS
+   grace_date: loan.grace_date
+   
+   // NEW - USE THIS
+   block_date: loan.block_date
+   ```
+
+---
+
+## Frontend Updates Required
+
+### Payment Record Page
+Update your payment record frontend to call the API correctly:
+
+**OLD (incorrect):**
+```javascript
+fetch(`/api/mobile/payment-history?user_id=${userId}&loan_type=nano`)
+```
+
+**NEW (correct):**
+```javascript
+// For specific loan's payments
+fetch(`/api/mobile/payment-history?user_id=${userId}&loan_id=${loanId}`)
+
+// OR for all user payments
+fetch(`/api/mobile/payment-history?user_id=${userId}`)
+```
+
+### Statement Display
+Update references from `grace_date` to `block_date`:
+
+**OLD:**
+```javascript
+<div>Grace Date: {loan.grace_date}</div>
+```
+
+**NEW:**
+```javascript
+<div>Block Date: {loan.block_date}</div>
+```
+
+---
+
+## Verification Steps
+
+1. **Test Payment History:**
+   - Open the payment record page for a user with existing payments
+   - Verify payments are displayed (not empty)
+   - Check that payment details (amount, date, method) are correct
+
+2. **Test Statement:**
+   - Open the statement page
+   - Verify "Block Date" is shown instead of "Grace Date"
+   - Check that the date value is correct
+
+3. **Check Console Logs:**
+   - Look for any errors in browser console
+   - Look for any errors in server logs
+   - Verify API responses match expected structure
+
+---
+
+## Troubleshooting
+
+### If payments still don't show:
+1. Check the user actually has loans in the database
+2. Check the loans have associated payments in `nano_loan_payments` or `term_loan_payments`
+3. Verify the `user_id` being passed is correct (UUID format)
+4. Check your Supabase RLS policies allow reading from these tables
+
+### If you get "user_id required" error:
+- Ensure the query parameter is being passed correctly
+- Check the parameter name is exactly `user_id` (with underscore)
+
+### If block_date shows as undefined:
+- Verify your database has the `block_date` column
+- Check that you're not accidentally mapping to `grace_date` anywhere in your code
+
+---
+
+## Summary
+
+✅ **Payment History API**: Now works without `loan_type` parameter, supports both specific loan and all-user-payments queries
+
+✅ **Statement API**: Returns `block_date` instead of `grace_date`
+
+✅ **Better Error Handling**: Returns empty arrays instead of errors when no data found
+
+✅ **Simpler Queries**: No complex joins, direct table queries for better compatibility
