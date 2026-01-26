@@ -1,0 +1,130 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { getServiceRoleClient } from "@/lib/supabase/service-role"
+
+export async function GET(request: NextRequest) {
+  try {
+    const userId = request.nextUrl.searchParams.get("user_id")
+
+    console.log("[v0] Payment history request - user_id:", userId)
+
+    if (!userId) {
+      return NextResponse.json({ error: "user_id required" }, { status: 400 })
+    }
+
+    const adminClient = getServiceRoleClient()
+
+    // Step 1: Get all nano loans for this user
+    const { data: nanoLoans, error: nanoError } = await adminClient
+      .from("nano_loans")
+      .select("id, loan_id, total_repayable, status, loan_amount")
+      .eq("user_id", userId)
+
+    console.log("[v0] Found", nanoLoans?.length || 0, "nano loans")
+
+    // Step 2: Get all term loans for this user
+    const { data: termLoans, error: termError } = await adminClient
+      .from("term_loans")
+      .select("id, loan_id, total_repayable, status, loan_amount")
+      .eq("user_id", userId)
+
+    console.log("[v0] Found", termLoans?.length || 0, "term loans")
+
+    // Step 3: Get all loan UUIDs (internal IDs)
+    const allLoanUuids = [
+      ...(nanoLoans || []).map((l) => l.id),
+      ...(termLoans || []).map((l) => l.id),
+    ]
+
+    console.log("[v0] Total loan UUIDs:", allLoanUuids.length)
+
+    if (allLoanUuids.length === 0) {
+      return NextResponse.json({
+        success: true,
+        payments: [],
+        message: "No loans found for this user"
+      })
+    }
+
+    // Step 4: Get activity history for all loans
+    const { data: activities, error: activitiesError } = await adminClient
+      .from("activity_history")
+      .select("*")
+      .in("entity_id", allLoanUuids)
+      .order("created_at", { ascending: false })
+
+    console.log("[v0] Found", activities?.length || 0, "activity records")
+
+    if (activitiesError) {
+      console.error("[v0] Activity history error:", activitiesError)
+      return NextResponse.json({ error: "Failed to fetch activity history" }, { status: 500 })
+    }
+
+    if (!activities || activities.length === 0) {
+      return NextResponse.json({
+        success: true,
+        payments: [],
+        message: "No activity found"
+      })
+    }
+
+    // Step 5: Map entity_id to loan details
+    const entityToLoanDetailsMap = new Map()
+    nanoLoans?.forEach((loan) =>
+      entityToLoanDetailsMap.set(loan.id, {
+        loan_id: loan.loan_id,
+        total_repayable: loan.total_repayable,
+        loan_type: "nano",
+      }),
+    )
+    termLoans?.forEach((loan) =>
+      entityToLoanDetailsMap.set(loan.id, {
+        loan_id: loan.loan_id,
+        total_repayable: loan.total_repayable,
+        loan_type: "term",
+      }),
+    )
+
+    // Step 6: Enrich activities with loan details
+    const enrichedActivities = activities.map((activity) => {
+      const loanDetails = entityToLoanDetailsMap.get(activity.entity_id)
+      return {
+        id: activity.id,
+        entity_id: activity.entity_id,
+        entity_type: activity.entity_type,
+        activity_type: activity.activity_type,
+        new_value: activity.new_value,
+        note: activity.note,
+        created_at: activity.created_at,
+        loan_id: loanDetails?.loan_id || activity.entity_id,
+        total_repayable: loanDetails?.total_repayable || 0,
+        loan_type: loanDetails?.loan_type || "nano",
+      }
+    })
+
+    // Step 7: Filter out unwanted activities
+    const filteredActivities = enrichedActivities.filter((activity) => {
+      if (activity.activity_type === "status_update" && activity.new_value === "0.00") {
+        return false
+      }
+      return true
+    })
+
+    // Step 8: Sort by loan_id, then by date
+    filteredActivities.sort((a, b) => {
+      if (a.loan_id !== b.loan_id) {
+        return a.loan_id.localeCompare(b.loan_id)
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+    console.log("[v0] Returning", filteredActivities.length, "filtered activities")
+
+    return NextResponse.json({
+      success: true,
+      payments: filteredActivities
+    })
+  } catch (error) {
+    console.error("[v0] Payment history error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
