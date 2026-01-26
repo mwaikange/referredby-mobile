@@ -12,6 +12,21 @@ interface LoanHistoryRecord {
   type: string;
 }
 
+// Format date to dd/mm/yy
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}/${month}/${year}`;
+  } catch {
+    return dateString;
+  }
+};
+
 export default function LoanHistoryPage() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
@@ -90,14 +105,14 @@ export default function LoanHistoryPage() {
               key={index} 
               className={`grid grid-cols-5 text-xs py-3 px-2 items-center ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-t border-gray-100`}
             >
-              <div className="text-center text-gray-600">{record.date}</div>
+              <div className="text-center text-gray-600">{formatDate(record.date)}</div>
               <div className="text-center text-[#00736e] font-medium">{record.loan_id}</div>
               <div className="text-center text-red-500 font-medium">{record.status}</div>
               <div className="text-center text-gray-600">{record.type}</div>
               <div className="text-center">
                 <Button 
                   size="sm" 
-                  className="bg-[#0B0B3B] hover:bg-[#151555] text-white text-[10px] px-3 py-1 h-7 rounded"
+                  className="bg-[#22c55e] hover:bg-[#16a34a] text-white text-[10px] px-3 py-1 h-7 rounded"
                 >
                   VIEW
                 </Button>
@@ -113,14 +128,22 @@ export default function LoanHistoryPage() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation("/payment-record")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             PAYMENT RECORD
           </Button>
-          <Button className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px] rounded-full" disabled>
+          <Button 
+            variant="outline"
+            className="w-full border-2 border-[#D4A574] bg-transparent text-[#D4A574] font-bold uppercase tracking-wide h-[48px] hover:bg-[#D4A574]/10"
+            disabled
+          >
             PAY VIA PAYPULSE APP
           </Button>
-          <Button className="w-full bg-[#E8C9A0] hover:bg-[#d8b990] text-[#8B4513] font-bold uppercase tracking-wide h-[48px] rounded-full" disabled>
+          <Button 
+            variant="outline"
+            className="w-full border-2 border-[#E8C9A0] bg-transparent text-[#9ca3af] font-bold uppercase tracking-wide h-[48px]"
+            disabled
+          >
             NEW PAYMENT METHOD COMING SOON
           </Button>
         </div>
@@ -128,7 +151,7 @@ export default function LoanHistoryPage() {
         <div className="pb-6">
           <Button 
             onClick={() => setLocation("/statement")}
-            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             BACK
           </Button>

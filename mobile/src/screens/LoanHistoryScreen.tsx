@@ -18,6 +18,21 @@ interface LoanHistoryRecord {
   type: string;
 }
 
+// Format date to dd/mm/yy
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}/${month}/${year}`;
+  } catch {
+    return dateString;
+  }
+};
+
 export default function LoanHistoryScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
@@ -104,7 +119,7 @@ export default function LoanHistoryScreen() {
               key={index} 
               style={[styles.tableRow, index % 2 === 0 ? styles.rowEven : styles.rowOdd]}
             >
-              <Text style={styles.cell}>{record.date}</Text>
+              <Text style={styles.cell}>{formatDate(record.date)}</Text>
               <Text style={[styles.cell, styles.loanIdCell]}>{record.loan_id}</Text>
               <Text style={[styles.cell, styles.statusCell]}>{record.status}</Text>
               <Text style={styles.cell}>{record.type}</Text>
@@ -129,7 +144,7 @@ export default function LoanHistoryScreen() {
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.goldButton} disabled>
-            <Text style={styles.buttonText}>PAY VIA PAYPULSE APP</Text>
+            <Text style={styles.goldButtonText}>PAY VIA PAYPULSE APP</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.coralButton} disabled>
             <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
@@ -254,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewButton: {
-    backgroundColor: '#0B0B3B',
+    backgroundColor: '#22c55e',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 4,
@@ -277,26 +292,36 @@ const styles = StyleSheet.create({
   tealButton: {
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   goldButton: {
-    backgroundColor: '#D4A574',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#D4A574',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  goldButtonText: {
+    color: '#D4A574',
+    fontSize: 14,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
   coralButton: {
-    backgroundColor: '#E8C9A0',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#E8C9A0',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   coralButtonText: {
-    color: '#8B4513',
+    color: '#9ca3af',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,
@@ -310,7 +335,7 @@ const styles = StyleSheet.create({
   backButton: {
     backgroundColor: '#C41E3A',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
