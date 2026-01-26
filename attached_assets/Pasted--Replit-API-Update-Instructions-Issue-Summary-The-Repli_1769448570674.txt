@@ -1,0 +1,387 @@
+# Replit API Update Instructions
+
+## Issue Summary
+The Replit app is showing "No payment records found" while the Vercel mobile app correctly displays payment records. 
+
+**ROOT CAUSE DISCOVERED:** The working mobile web app uses the `activity_history` table, NOT `nano_loan_payments` or `term_loan_payments` tables!
+
+Additionally, the statement API needs to replace `grace_date` with `block_date`.
+
+---
+
+## Fix 1: Payment History API Update
+
+### Problem
+The payment history API was querying `nano_loan_payments` and `term_loan_payments` tables, but the working mobile app actually uses the `activity_history` table.
+
+### Solution
+Update the payment history endpoint to query `activity_history` table exactly like the working mobile web app does.
+
+### Updated API Endpoint
+**GET** `/api/mobile/payment-history?user_id={user_id}`
+
+**Query Parameters:**
+- `user_id` (required): The user's UUID
+
+### New Response Structure
+
+The API now returns activity records from the `activity_history` table, matching the working mobile app:
+
+```json
+{
+  "success": true,
+  "payments": [
+    {
+      "id": "uuid",
+      "entity_id": "uuid",
+      "entity_type": "nano_loan",
+      "activity_type": "payment",
+      "new_value": "1992.00",
+      "note": "PAYPULSE Received NAD 600.00",
+      "created_at": "2026-01-15T10:00:00Z",
+      "loan_id": "NL12345",
+      "total_repayable": 2592.00,
+      "loan_type": "nano"
+    },
+    {
+      "id": "uuid",
+      "entity_id": "uuid",
+      "entity_type": "nano_loan",
+      "activity_type": "disbursement",
+      "new_value": "2592.00",
+      "note": "Loan disbursed",
+      "created_at": "2026-01-01T10:00:00Z",
+      "loan_id": "NL12345",
+      "total_repayable": 2592.00,
+      "loan_type": "nano"
+    }
+  ]
+}
+```
+
+### Implementation Steps
+
+**REPLACE YOUR ENTIRE payment-history API with this code:**
+
+```javascript
+export async function GET(request) {
+  try {
+    const userId = request.nextUrl.searchParams.get("user_id")
+
+    if (!userId) {
+      return NextResponse.json({ error: "user_id required" }, { status: 400 })
+    }
+
+    const supabase = getServiceRoleClient() // or your admin client
+
+    // STEP 1: Get all nano loans for this user
+    const { data: nanoLoans, error: nanoError } = await supabase
+      .from("nano_loans")
+      .select("id, loan_id, total_repayable, status, loan_amount")
+      .eq("user_id", userId)
+
+    // STEP 2: Get all term loans for this user
+    const { data: termLoans, error: termError } = await supabase
+      .from("term_loans")
+      .select("id, loan_id, total_repayable, status, loan_amount")
+      .eq("user_id", userId)
+
+    // STEP 3: Get all loan UUIDs (internal database IDs)
+    const allLoanUuids = [
+      ...(nanoLoans || []).map((l) => l.id),
+      ...(termLoans || []).map((l) => l.id),
+    ]
+
+    if (allLoanUuids.length === 0) {
+      return NextResponse.json({
+        success: true,
+        payments: [],
+        message: "No loans found for this user"
+      })
+    }
+
+    // STEP 4: Get activity history for all loans
+    const { data: activities, error: activitiesError } = await supabase
+      .from("activity_history")
+      .select("*")
+      .in("entity_id", allLoanUuids)
+      .order("created_at", { ascending: false })
+
+    if (!activities || activities.length === 0) {
+      return NextResponse.json({
+        success: true,
+        payments: []
+      })
+    }
+
+    // STEP 5: Map entity_id to loan details
+    const entityToLoanDetailsMap = new Map()
+    nanoLoans?.forEach((loan) =>
+      entityToLoanDetailsMap.set(loan.id, {
+        loan_id: loan.loan_id,
+        total_repayable: loan.total_repayable,
+        loan_type: "nano",
+      }),
+    )
+    termLoans?.forEach((loan) =>
+      entityToLoanDetailsMap.set(loan.id, {
+        loan_id: loan.loan_id,
+        total_repayable: loan.total_repayable,
+        loan_type: "term",
+      }),
+    )
+
+    // STEP 6: Enrich activities with loan details
+    const enrichedActivities = activities.map((activity) => {
+      const loanDetails = entityToLoanDetailsMap.get(activity.entity_id)
+      return {
+        id: activity.id,
+        entity_id: activity.entity_id,
+        entity_type: activity.entity_type,
+        activity_type: activity.activity_type,
+        new_value: activity.new_value,
+        note: activity.note,
+        created_at: activity.created_at,
+        loan_id: loanDetails?.loan_id || activity.entity_id,
+        total_repayable: loanDetails?.total_repayable || 0,
+        loan_type: loanDetails?.loan_type || "nano",
+      }
+    })
+
+    // STEP 7: Filter out unwanted activities
+    const filteredActivities = enrichedActivities.filter((activity) => {
+      // Remove status updates with 0.00 value
+      if (activity.activity_type === "status_update" && activity.new_value === "0.00") {
+        return false
+      }
+      return true
+    })
+
+    // STEP 8: Sort by loan_id, then by date
+    filteredActivities.sort((a, b) => {
+      if (a.loan_id !== b.loan_id) {
+        return a.loan_id.localeCompare(b.loan_id)
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+    return NextResponse.json({
+      success: true,
+      payments: filteredActivities
+    })
+  } catch (error) {
+    console.error("Payment history error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+```
+
+### Key Points:
+1. **Uses `activity_history` table** - This is what the working mobile app uses
+2. **Queries by internal UUID `id`** - The entity_id in activity_history is the loan's UUID, not the loan_id
+3. **Maps UUIDs to readable loan_ids** - Enriches the response with loan_id (NL12345, etc.)
+4. **Returns ALL activity types** - payments, disbursements, status_changes, etc.
+5. **Sorted by loan, then date** - Groups activities by loan for better display
+
+---
+
+## Fix 2: Statement API - Replace grace_date with block_date
+
+### Problem
+The statement API currently returns `grace_date` but the field should be `block_date` to match the database schema.
+
+### Solution
+Replace all references to `grace_date` with `block_date` in the response.
+
+### Updated API Response
+
+**GET** `/api/mobile/statement?user_id={user_id}`
+
+**Updated Response Structure:**
+```json
+{
+  "success": true,
+  "loan": {
+    "loan_id": "NL12345",
+    "status": "PU",
+    "borrowed_amount": 2000.00,
+    "interest_rate": 28.00,
+    "interest_fee": 560.00,
+    "processing_fee": 32.00,
+    "total_repayable": 2592.00,
+    "outstanding_amount": 0.00,
+    "amount_paid": 2592.00,
+    "due_date": "2025-12-15",
+    "outstanding_date": null,
+    "block_date": null,
+    "paid_date": "2025-12-10",
+    "lending_society_id": "uuid",
+    "user_id": "uuid",
+    "created_at": "2025-11-15T10:00:00Z"
+  },
+  "loan_type": "nano",
+  "is_active": false,
+  "is_paid_up": true
+}
+```
+
+### Implementation Steps
+
+1. **The database already has `block_date` column** - no database changes needed
+
+2. **Update your statement API response:**
+   - The Supabase query already returns the correct field name from the database
+   - Simply ensure you're using `block_date` instead of `grace_date` in any response mapping
+
+3. **No code changes needed if you're using direct Supabase queries** - the field comes correctly from the database
+
+4. **If you have any response mapping/transformation**, update it:
+   ```javascript
+   // OLD - DON'T USE THIS
+   grace_date: loan.grace_date
+   
+   // NEW - USE THIS
+   block_date: loan.block_date
+   ```
+
+---
+
+## Frontend Updates Required
+
+### Payment Record Page
+Update your payment record frontend to display activity records:
+
+**API Call:**
+```javascript
+fetch(`/api/mobile/payment-history?user_id=${userId}`)
+```
+
+**Display Logic:**
+The response contains activity records with these important fields:
+- `created_at` - Date of the activity
+- `loan_id` - The loan reference (NL12345, TL12345, etc.)
+- `activity_type` - Type of activity (payment, disbursement, status_change, etc.)
+- `note` - Contains payment details like "PAYPULSE Received NAD 600.00"
+- `new_value` - New balance after activity, or status code
+- `total_repayable` - Total amount that was/is due on the loan
+
+**Extract Amount from Note:**
+```javascript
+function extractReceivedAmount(note) {
+  if (!note) return "-";
+  const match = note.match(/NAD\s*([\d,.]+)/i);
+  if (match) {
+    return `N$${match[1]}`;
+  }
+  return note;
+}
+```
+
+**Display Balance:**
+```javascript
+function getBalanceDisplay(activity) {
+  let balanceDisplay = activity.new_value || "0.00";
+  
+  // For disbursement, show total repayable
+  if (activity.activity_type === "disbursement" && activity.total_repayable) {
+    balanceDisplay = activity.total_repayable.toFixed(2);
+  }
+  // For status changes, show status label instead of number
+  else if (activity.activity_type === "status_change" || activity.activity_type === "status_update") {
+    const statusMatch = activity.note?.match(/\b(AA|AD|DU|OT|BL|PU|DE|DE2)\b/i);
+    if (statusMatch) {
+      const status = statusMatch[1].toUpperCase();
+      balanceDisplay = getStatusLabel(status); // e.g., "Paid Up", "Due", etc.
+    }
+  }
+  
+  return balanceDisplay;
+}
+```
+
+### Statement Display
+Update references from `grace_date` to `block_date`:
+
+**OLD:**
+```javascript
+<div>Grace Date: {loan.grace_date}</div>
+```
+
+**NEW:**
+```javascript
+<div>Block Date: {loan.block_date}</div>
+```
+
+---
+
+## Verification Steps
+
+1. **Test Payment History:**
+   - Open the payment record page for a user with existing payments
+   - Verify payments are displayed (not empty)
+   - Check that payment details (amount, date, method) are correct
+
+2. **Test Statement:**
+   - Open the statement page
+   - Verify "Block Date" is shown instead of "Grace Date"
+   - Check that the date value is correct
+
+3. **Check Console Logs:**
+   - Look for any errors in browser console
+   - Look for any errors in server logs
+   - Verify API responses match expected structure
+
+---
+
+## Troubleshooting
+
+### If payments still don't show:
+1. **Check the user has loans:** Query `nano_loans` and `term_loans` tables with the user_id
+2. **Check activity_history exists:** The `activity_history` table should have records with entity_id matching the loan's internal UUID (the `id` column, not `loan_id`)
+3. **Verify the user_id is correct:** Must be UUID format
+4. **Check RLS policies:** Ensure your service role client can read from `nano_loans`, `term_loans`, and `activity_history` tables
+5. **Check console logs:** The updated API includes console.log statements showing how many loans and activities were found
+
+### If you get "user_id required" error:
+- Ensure the query parameter is being passed correctly
+- Check the parameter name is exactly `user_id` (with underscore)
+
+### If block_date shows as undefined:
+- Verify your database has the `block_date` column (not `grace_date`)
+- Check that you're not accidentally mapping to `grace_date` anywhere in your code
+- The database schema already uses `block_date` - no migration needed
+
+### If activity_history is empty:
+- Check if your database has this table created
+- Verify loan activities are being logged to this table when loans are created/updated
+- The working mobile app relies on this table for payment history
+
+---
+
+## Summary
+
+✅ **Payment History API**: Now uses `activity_history` table just like the working mobile app
+
+✅ **Correct Data Source**: Queries activity records instead of payment tables
+
+✅ **Statement API**: Returns `block_date` instead of `grace_date`
+
+✅ **Better Error Handling**: Returns empty arrays instead of errors when no data found
+
+✅ **Complete Implementation**: Full code provided - just copy and replace your existing endpoint
+
+---
+
+## What Changed in the Vercel Backend
+
+The `/app/api/mobile/payment-history/route.ts` endpoint has been updated to:
+1. Query `activity_history` table instead of payment tables
+2. Map internal loan UUIDs to readable loan_ids
+3. Return enriched activity records with loan details
+4. Sort activities by loan, then by date
+5. Filter out unnecessary status updates
+
+**This endpoint is now live and working.** Your Replit app just needs to call it correctly at:
+```
+GET https://appv2.referredby.com.na/api/mobile/payment-history?user_id={uuid}
+```

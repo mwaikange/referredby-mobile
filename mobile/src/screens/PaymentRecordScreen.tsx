@@ -11,14 +11,17 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { api } from '../lib/api';
 
-interface PaymentRecord {
+interface ActivityRecord {
   id?: string;
+  entity_id?: string;
+  entity_type?: string;
+  activity_type?: string;
+  new_value?: string;
+  note?: string;
+  created_at?: string;
   loan_id: string;
-  amount: number;
-  payment_date: string;
-  payment_method?: string;
-  reference?: string;
-  status?: string;
+  total_repayable?: number;
+  loan_type?: 'nano' | 'term';
 }
 
 type PaymentRecordRouteParams = {
@@ -28,12 +31,61 @@ type PaymentRecordRouteParams = {
   };
 };
 
+function extractReceivedAmount(note: string | undefined): string {
+  if (!note) return "-";
+  const match = note.match(/NAD\s*([\d,.]+)/i);
+  if (match) {
+    return `N$${match[1]}`;
+  }
+  return "-";
+}
+
+function extractPaymentMethod(note: string | undefined): string {
+  if (!note) return "Transfer";
+  if (note.toUpperCase().includes("PAYPULSE")) return "PAYPULSE";
+  if (note.toUpperCase().includes("EFT")) return "EFT";
+  if (note.toUpperCase().includes("CASH")) return "Cash";
+  if (note.toUpperCase().includes("BANK")) return "Bank";
+  return "Transfer";
+}
+
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear().toString().slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
+function getActivityStatus(activity: ActivityRecord): string {
+  if (activity.activity_type === 'payment') return 'Verified';
+  if (activity.activity_type === 'disbursement') return 'Disbursed';
+  if (activity.activity_type === 'status_change' || activity.activity_type === 'status_update') {
+    const statusMatch = activity.note?.match(/\b(AA|AD|DU|OT|BL|PU|DE|DE2)\b/i);
+    if (statusMatch) {
+      const status = statusMatch[1].toUpperCase();
+      const statusLabels: Record<string, string> = {
+        'PU': 'Paid Up',
+        'DU': 'Due',
+        'AD': 'Disbursed',
+        'AA': 'Approved',
+        'OT': 'Outstanding',
+        'BL': 'Blocked',
+        'DE': 'Declined',
+        'DE2': 'Declined'
+      };
+      return statusLabels[status] || status;
+    }
+  }
+  return activity.activity_type || '-';
+}
+
 export default function PaymentRecordScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PaymentRecordRouteParams, 'PaymentRecord'>>();
   const [loading, setLoading] = useState(true);
-  const [records, setRecords] = useState<PaymentRecord[]>([]);
-  const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
+  const [records, setRecords] = useState<ActivityRecord[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,31 +93,23 @@ export default function PaymentRecordScreen() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        // Get loan_id from route params (for specific loan payments)
         const loanId = route.params?.loan_id;
         
         let historyData;
         
         if (loanId) {
-          // Fetch payments for specific loan_id
           console.log('📋 Fetching payments for loan_id:', loanId);
           historyData = await api.loans.getPaymentHistoryByLoanId(profile.id, loanId);
         } else {
-          // Fetch all payments for user (API now supports this without loan_type)
           console.log('📋 Fetching all payments for user');
           historyData = await api.loans.getPaymentHistory(profile.id);
         }
         
         console.log('📡 Payment history response:', JSON.stringify(historyData, null, 2));
         
-        // Handle response - check for payments array
         if (historyData && historyData.payments && historyData.payments.length > 0) {
           setRecords(historyData.payments);
-          if (historyData.loan_type) {
-            setLoanType(historyData.loan_type);
-          }
         } else if (historyData && Array.isArray(historyData) && historyData.length > 0) {
-          // Handle if API returns array directly
           setRecords(historyData);
         } else {
           setRecords([]);
@@ -124,11 +168,11 @@ export default function PaymentRecordScreen() {
                 key={record.id || index} 
                 style={[styles.tableRow, index % 2 === 0 ? styles.rowEven : styles.rowOdd]}
               >
-                <Text style={styles.cell}>{record.payment_date}</Text>
+                <Text style={styles.cell}>{formatDate(record.created_at)}</Text>
                 <Text style={[styles.cell, styles.loanIdCell]}>{record.loan_id}</Text>
-                <Text style={styles.cell}>{record.payment_method || 'Transfer'}</Text>
-                <Text style={[styles.cell, styles.amountCell]}>N${record.amount?.toFixed(2)}</Text>
-                <Text style={styles.cell}>{record.status || 'verified'}</Text>
+                <Text style={styles.cell}>{extractPaymentMethod(record.note)}</Text>
+                <Text style={[styles.cell, styles.amountCell]}>{extractReceivedAmount(record.note)}</Text>
+                <Text style={styles.cell}>{getActivityStatus(record)}</Text>
               </View>
             ))
           )}

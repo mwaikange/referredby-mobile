@@ -5,22 +5,74 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 
-interface PaymentRecord {
+interface ActivityRecord {
   id?: string;
+  entity_id?: string;
+  entity_type?: string;
+  activity_type?: string;
+  new_value?: string;
+  note?: string;
+  created_at?: string;
   loan_id: string;
-  amount: number;
-  payment_date: string;
-  payment_method?: string;
-  reference?: string;
-  status?: string;
+  total_repayable?: number;
+  loan_type?: 'nano' | 'term';
+}
+
+function extractReceivedAmount(note: string | undefined): string {
+  if (!note) return "-";
+  const match = note.match(/NAD\s*([\d,.]+)/i);
+  if (match) {
+    return `N$${match[1]}`;
+  }
+  return "-";
+}
+
+function extractPaymentMethod(note: string | undefined): string {
+  if (!note) return "Transfer";
+  if (note.toUpperCase().includes("PAYPULSE")) return "PAYPULSE";
+  if (note.toUpperCase().includes("EFT")) return "EFT";
+  if (note.toUpperCase().includes("CASH")) return "Cash";
+  if (note.toUpperCase().includes("BANK")) return "Bank";
+  return "Transfer";
+}
+
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear().toString().slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
+function getActivityStatus(activity: ActivityRecord): string {
+  if (activity.activity_type === 'payment') return 'Verified';
+  if (activity.activity_type === 'disbursement') return 'Disbursed';
+  if (activity.activity_type === 'status_change' || activity.activity_type === 'status_update') {
+    const statusMatch = activity.note?.match(/\b(AA|AD|DU|OT|BL|PU|DE|DE2)\b/i);
+    if (statusMatch) {
+      const status = statusMatch[1].toUpperCase();
+      const statusLabels: Record<string, string> = {
+        'PU': 'Paid Up',
+        'DU': 'Due',
+        'AD': 'Disbursed',
+        'AA': 'Approved',
+        'OT': 'Outstanding',
+        'BL': 'Blocked',
+        'DE': 'Declined',
+        'DE2': 'Declined'
+      };
+      return statusLabels[status] || status;
+    }
+  }
+  return activity.activity_type || '-';
 }
 
 export default function PaymentRecordPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const [loading, setLoading] = useState(true);
-  const [records, setRecords] = useState<PaymentRecord[]>([]);
-  const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
+  const [records, setRecords] = useState<ActivityRecord[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,33 +80,24 @@ export default function PaymentRecordPage() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        // Get loan_id or loan_type from URL params
         const params = new URLSearchParams(search);
         const loanId = params.get('loan_id');
-        let currentLoanType = params.get('loan_type') as 'nano' | 'term' || 'nano';
         
         let historyData;
         
         if (loanId) {
-          // Fetch by specific loan_id
           console.log('📋 Fetching payments for loan_id:', loanId);
           historyData = await api.loans.getPaymentHistoryByLoanId(profile.id, loanId);
         } else {
-          // Fetch all payments for user (API now supports this without loan_type)
           console.log('📋 Fetching all payments for user');
           historyData = await api.loans.getPaymentHistory(profile.id);
         }
         
         console.log('📡 Payment history response:', JSON.stringify(historyData, null, 2));
         
-        // Handle response - check for payments array
         if (historyData && historyData.payments && historyData.payments.length > 0) {
           setRecords(historyData.payments);
-          if (historyData.loan_type) {
-            setLoanType(historyData.loan_type);
-          }
         } else if (historyData && Array.isArray(historyData) && historyData.length > 0) {
-          // Handle if API returns array directly
           setRecords(historyData);
         } else {
           setRecords([]);
@@ -104,12 +147,13 @@ export default function PaymentRecordPage() {
               <div 
                 key={record.id || index} 
                 className={`grid grid-cols-5 text-xs py-3 px-2 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-t border-gray-100`}
+                data-testid={`row-payment-${index}`}
               >
-                <div className="text-center text-gray-600">{record.payment_date}</div>
+                <div className="text-center text-gray-600">{formatDate(record.created_at)}</div>
                 <div className="text-center text-[#00736e] font-medium">{record.loan_id}</div>
-                <div className="text-center text-gray-600">{record.payment_method || 'Transfer'}</div>
-                <div className="text-center text-[#00736e]">N${record.amount?.toFixed(2)}</div>
-                <div className="text-center text-gray-800">{record.status || 'verified'}</div>
+                <div className="text-center text-gray-600">{extractPaymentMethod(record.note)}</div>
+                <div className="text-center text-[#00736e]">{extractReceivedAmount(record.note)}</div>
+                <div className="text-center text-gray-800">{getActivityStatus(record)}</div>
               </div>
             ))
           )}
@@ -122,19 +166,22 @@ export default function PaymentRecordPage() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation("/statement")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px]"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            data-testid="button-view-statement"
           >
             VIEW STATEMENT
           </Button>
           <Button 
-            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px] rounded-lg"
             disabled
+            data-testid="button-paypulse"
           >
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
           <Button 
-            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px] rounded-lg"
             disabled
+            data-testid="button-new-payment"
           >
             NEW PAYMENT METHOD COMING SOON
           </Button>
@@ -142,7 +189,8 @@ export default function PaymentRecordPage() {
 
         <Button 
           onClick={() => setLocation("/statement")}
-          className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px]"
+          className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+          data-testid="button-back"
         >
           BACK
         </Button>
