@@ -18,24 +18,6 @@ interface ActivityRecord {
   loan_type?: 'nano' | 'term';
 }
 
-function extractReceivedAmount(note: string | undefined): string {
-  if (!note) return "-";
-  const match = note.match(/NAD\s*([\d,.]+)/i);
-  if (match) {
-    return `N$${match[1]}`;
-  }
-  return "-";
-}
-
-function extractPaymentMethod(note: string | undefined): string {
-  if (!note) return "Transfer";
-  if (note.toUpperCase().includes("PAYPULSE")) return "PAYPULSE";
-  if (note.toUpperCase().includes("EFT")) return "EFT";
-  if (note.toUpperCase().includes("CASH")) return "Cash";
-  if (note.toUpperCase().includes("BANK")) return "Bank";
-  return "Transfer";
-}
-
 function formatDate(dateString: string | undefined): string {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -45,13 +27,60 @@ function formatDate(dateString: string | undefined): string {
   return `${day}/${month}/${year}`;
 }
 
-function getActivityStatus(activity: ActivityRecord): string {
-  if (activity.activity_type === 'payment') return 'Verified';
-  if (activity.activity_type === 'disbursement') return 'Disbursed';
-  if (activity.activity_type === 'status_change' || activity.activity_type === 'status_update') {
-    const statusMatch = activity.note?.match(/\b(AA|AD|DU|OT|BL|PU|DE|DE2)\b/i);
+function getActivityTypeLabel(activity: ActivityRecord): string {
+  const type = activity.activity_type || '';
+  if (type === 'payment') return 'payment';
+  if (type === 'disbursement') return 'disburseme...';
+  if (type === 'status_change' || type === 'status_update') return 'status_cha...';
+  return type.substring(0, 10) + (type.length > 10 ? '...' : '');
+}
+
+function getReceivedDisplay(activity: ActivityRecord): string {
+  const note = activity.note || '';
+  const type = activity.activity_type || '';
+  
+  if (type === 'payment') {
+    const match = note.match(/NAD\s*([\d,.]+)/i);
+    if (match) {
+      return `N$${match[1]}`;
+    }
+  }
+  
+  if (type === 'disbursement') {
+    if (note.toLowerCase().includes('paypulse') || note.toLowerCase().includes('paid via')) {
+      return note.length > 20 ? note.substring(0, 18) + '...' : note;
+    }
+    return 'Loan disbursed';
+  }
+  
+  if (type === 'status_change' || type === 'status_update') {
+    if (note.toLowerCase().includes('settled') || note.toLowerCase().includes('full payment')) {
+      return 'Loan settled - full payment received';
+    }
+    const statusMatch = note.match(/from\s+(\w+)\s+to\s+(\w+)/i);
     if (statusMatch) {
-      const status = statusMatch[1].toUpperCase();
+      return `Loan status changed from ${statusMatch[1]} to ${statusMatch[2]}`;
+    }
+    return note.length > 25 ? note.substring(0, 23) + '...' : note;
+  }
+  
+  return note.length > 20 ? note.substring(0, 18) + '...' : (note || '-');
+}
+
+function getBalanceDisplay(activity: ActivityRecord): string {
+  const type = activity.activity_type || '';
+  const newValue = activity.new_value || '0.00';
+  
+  if (type === 'status_change' || type === 'status_update') {
+    const note = activity.note || '';
+    if (note.toLowerCase().includes('paid up') || note.toLowerCase().includes('pu')) {
+      return 'Paid Up';
+    }
+    if (note.toLowerCase().includes('due') || note.match(/\bDU\b/)) {
+      return 'Due';
+    }
+    const statusMatch = note.match(/to\s+(AA|AD|DU|OT|BL|PU|DE)/i);
+    if (statusMatch) {
       const statusLabels: Record<string, string> = {
         'PU': 'Paid Up',
         'DU': 'Due',
@@ -59,13 +88,13 @@ function getActivityStatus(activity: ActivityRecord): string {
         'AA': 'Approved',
         'OT': 'Outstanding',
         'BL': 'Blocked',
-        'DE': 'Declined',
-        'DE2': 'Declined'
+        'DE': 'Declined'
       };
-      return statusLabels[status] || status;
+      return statusLabels[statusMatch[1].toUpperCase()] || statusMatch[1];
     }
   }
-  return activity.activity_type || '-';
+  
+  return `N$${parseFloat(newValue).toFixed(2)}`;
 }
 
 export default function PaymentRecordPage() {
@@ -134,9 +163,9 @@ export default function PaymentRecordPage() {
           <div className="bg-gray-50 grid grid-cols-5 text-xs font-bold uppercase text-gray-600 py-3 px-2">
             <div className="text-center">Date</div>
             <div className="text-center">Loan_ID</div>
-            <div className="text-center">Method</div>
-            <div className="text-center">Amount</div>
-            <div className="text-center">Status</div>
+            <div className="text-center">Type</div>
+            <div className="text-center">Received</div>
+            <div className="text-center">Balance</div>
           </div>
           {records.length === 0 ? (
             <div className="py-8 text-center text-gray-500 text-sm">
@@ -151,9 +180,9 @@ export default function PaymentRecordPage() {
               >
                 <div className="text-center text-gray-600">{formatDate(record.created_at)}</div>
                 <div className="text-center text-[#00736e] font-medium">{record.loan_id}</div>
-                <div className="text-center text-gray-600">{extractPaymentMethod(record.note)}</div>
-                <div className="text-center text-[#00736e]">{extractReceivedAmount(record.note)}</div>
-                <div className="text-center text-gray-800">{getActivityStatus(record)}</div>
+                <div className="text-center text-gray-600">{getActivityTypeLabel(record)}</div>
+                <div className="text-center text-[#00736e]">{getReceivedDisplay(record)}</div>
+                <div className="text-center text-gray-800">{getBalanceDisplay(record)}</div>
               </div>
             ))
           )}
