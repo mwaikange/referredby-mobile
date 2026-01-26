@@ -26,7 +26,7 @@ interface LoanData {
   amount_paid?: number;
   due_date: string;
   outstanding_date: string | null;
-  grace_date?: string | null;
+  block_date?: string | null;
   paid_date?: string | null;
   lending_society_id?: string;
   user_id?: string;
@@ -185,8 +185,8 @@ export default function StatementScreen() {
             <Text style={styles.dateValue}>{loan?.outstanding_date || '-'}</Text>
           </View>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Grace Date :</Text>
-            <Text style={styles.dateValue}>{loan?.grace_date || loan?.paid_date || '-'}</Text>
+            <Text style={styles.dateLabel}>Block Date :</Text>
+            <Text style={styles.dateValue}>{loan?.block_date || loan?.paid_date || '-'}</Text>
           </View>
         </View>
 

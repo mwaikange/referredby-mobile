@@ -499,9 +499,27 @@ export const api = {
       return data;
     },
 
-    getPaymentHistoryByType: async (userId: string, loanType: 'nano' | 'term'): Promise<any> => {
+    getPaymentHistoryByType: async (userId: string, loanType?: 'nano' | 'term'): Promise<any> => {
       const headers = await getHeaders();
-      const response = await fetch(`${API_BASE_URL}/api/mobile/payment-history?user_id=${userId}&loan_type=${loanType}`, {
+      // loan_type is now optional - API fetches all payments when not provided
+      let url = `${API_BASE_URL}/api/mobile/payment-history?user_id=${userId}`;
+      if (loanType) {
+        url += `&loan_type=${loanType}`;
+      }
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { payments: [] };
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    getPaymentHistoryByLoanId: async (userId: string, loanId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/payment-history?user_id=${userId}&loan_id=${loanId}`, {
         method: 'GET',
         headers,
       });

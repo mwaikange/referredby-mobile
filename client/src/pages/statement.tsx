@@ -20,7 +20,7 @@ interface LoanData {
   amount_paid?: number;
   due_date: string;
   outstanding_date: string | null;
-  grace_date?: string | null;
+  block_date?: string | null;
   paid_date?: string | null;
   lending_society_id?: string;
   user_id?: string;
@@ -176,8 +176,8 @@ export default function Statement() {
             <span>{loan?.outstanding_date || '-'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Grace Date :</span>
-            <span>{loan?.grace_date || loan?.paid_date || '-'}</span>
+            <span className="text-gray-600">Block Date :</span>
+            <span>{loan?.block_date || loan?.paid_date || '-'}</span>
           </div>
         </div>
 

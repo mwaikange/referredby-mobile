@@ -28,28 +28,34 @@ export default function PaymentRecordPage() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        // Get loan_type from URL params or fetch from statement
+        // Get loan_id or loan_type from URL params
         const params = new URLSearchParams(search);
-        let currentLoanType = params.get('loan_type') as 'nano' | 'term' || null;
+        const loanId = params.get('loan_id');
+        let currentLoanType = params.get('loan_type') as 'nano' | 'term' || 'nano';
         
-        if (!currentLoanType) {
-          // Fetch statement to get loan type
-          const statementData = await api.loans.getStatement(profile.id);
-          console.log('📊 Statement response for loan type:', statementData);
-          currentLoanType = statementData?.loan_type || 'nano';
+        let historyData;
+        
+        if (loanId) {
+          // Fetch by specific loan_id
+          console.log('📋 Fetching payments for loan_id:', loanId);
+          historyData = await api.loans.getPaymentHistoryByLoanId(profile.id, loanId);
+        } else {
+          // Fetch all payments for user (API now supports this without loan_type)
+          console.log('📋 Fetching all payments for user');
+          historyData = await api.loans.getPaymentHistory(profile.id);
         }
         
-        setLoanType(currentLoanType);
-        console.log('📋 Using loan type:', currentLoanType);
-        
-        // Get payment history with loan type
-        const historyData = await api.loans.getPaymentHistoryByType(profile.id, currentLoanType);
         console.log('📡 Payment history response:', JSON.stringify(historyData, null, 2));
         
-        // Map API response - expecting { success: true, payments: [...], loan_type: "nano" }
-        if (historyData && historyData.success && historyData.payments) {
-          const payments = historyData.payments || [];
-          setRecords(payments);
+        // Handle response - check for payments array
+        if (historyData && historyData.payments && historyData.payments.length > 0) {
+          setRecords(historyData.payments);
+          if (historyData.loan_type) {
+            setLoanType(historyData.loan_type);
+          }
+        } else if (historyData && Array.isArray(historyData) && historyData.length > 0) {
+          // Handle if API returns array directly
+          setRecords(historyData);
         } else {
           setRecords([]);
         }
