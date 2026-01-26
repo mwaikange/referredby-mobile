@@ -13,7 +13,6 @@ import { api, UserProfile } from '../lib/api';
 
 interface LoanData {
   loan_id: string;
-  loan_type?: 'NANO' | 'TERM';
   status: string;
   borrowed_amount: number;
   interest_rate: number;
@@ -24,29 +23,23 @@ interface LoanData {
   amount_paid: number;
   due_date: string;
   outstanding_date: string | null;
+  grace_date: string | null;
   paid_date: string | null;
-  grace_date?: string | null;
-  principal?: number;
-  outstanding_balance?: number;
-  lending_society?: {
-    name: string;
-    bank: string;
-    account_number: string;
-    account_type?: string;
-    branch?: string;
-    branch_code?: string;
-  };
+  lending_society_id?: string;
+  user_id?: string;
+  created_at?: string;
 }
 
 interface StatementResponse {
-  loan: LoanData;
+  success: boolean;
+  loan: LoanData | null;
   loan_type: 'nano' | 'term';
   is_active: boolean;
   is_paid_up: boolean;
 }
 
 export default function StatementScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statementData, setStatementData] = useState<StatementResponse | null>(null);
@@ -61,11 +54,17 @@ export default function StatementScreen() {
         
         // Use the unified statement endpoint
         const response = await api.loans.getStatement(userProfile.id);
-        console.log('📊 Statement response:', response);
+        console.log('📊 Statement API response:', JSON.stringify(response, null, 2));
         
-        if (response && response.loan) {
+        // Check success and loan exists
+        if (response && response.success === true && response.loan) {
+          console.log('✅ Loan data found:', response.loan);
+          console.log('📋 Loan type:', response.loan_type);
+          console.log('🔥 Is active:', response.is_active);
+          console.log('✅ Is paid up:', response.is_paid_up);
           setStatementData(response);
         } else {
+          console.log('❌ No loan data in response');
           setStatementData(null);
         }
         
@@ -101,13 +100,16 @@ export default function StatementScreen() {
 
   const loan = statementData?.loan;
   const loanType = statementData?.loan_type || 'nano';
+  const isActive = statementData?.is_active || false;
+  const isPaidUp = statementData?.is_paid_up || false;
+  
   const statusInfo = getStatusInfo(loan?.status);
   const isTermLoan = loanType === 'term';
   const loanTypeLabel = isTermLoan ? 'TERM LOAN' : 'NANO LOAN';
   const titleLabel = isTermLoan ? 'TERM LOAN STATEMENT' : 'NANO LOAN STATEMENT';
 
-  // Bank details from API response or fallback
-  const bankDetails = loan?.lending_society || {
+  // Default bank details
+  const bankDetails = {
     name: 'Destiny Group Pty LTD',
     bank: 'Nedbank Namibia',
     account_number: '6000238099',
@@ -185,7 +187,7 @@ export default function StatementScreen() {
         <View style={styles.buttonsSection}>
           <TouchableOpacity 
             style={styles.tealButton}
-            onPress={() => navigation.navigate('PaymentRecord' as never)}
+            onPress={() => navigation.navigate('PaymentRecord', { loanType })}
           >
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
@@ -201,21 +203,15 @@ export default function StatementScreen() {
           <Text style={styles.bankText}>Acc Name: <Text style={styles.bankValue}>{bankDetails.name}</Text></Text>
           <Text style={styles.bankText}>Bank: <Text style={styles.bankValue}>{bankDetails.bank}</Text></Text>
           <Text style={styles.bankText}>Acc no: <Text style={styles.bankValue}>{bankDetails.account_number}</Text></Text>
-          {bankDetails.account_type && (
-            <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>{bankDetails.account_type}</Text></Text>
-          )}
-          {bankDetails.branch && (
-            <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>{bankDetails.branch}</Text></Text>
-          )}
-          {bankDetails.branch_code && (
-            <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>{bankDetails.branch_code}</Text></Text>
-          )}
+          <Text style={styles.bankText}>Account type: <Text style={styles.bankValue}>{bankDetails.account_type}</Text></Text>
+          <Text style={styles.bankText}>Branch: <Text style={styles.bankValue}>{bankDetails.branch}</Text></Text>
+          <Text style={styles.bankText}>Branch Code: <Text style={styles.bankValue}>{bankDetails.branch_code}</Text></Text>
         </View>
 
         <View style={styles.footerButtons}>
           <TouchableOpacity 
             style={styles.historyButton}
-            onPress={() => navigation.navigate('LoanHistory' as never)}
+            onPress={() => navigation.navigate('LoanHistory')}
           >
             <Text style={styles.buttonText}>HISTORY</Text>
           </TouchableOpacity>

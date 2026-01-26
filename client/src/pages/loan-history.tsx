@@ -24,15 +24,28 @@ export default function LoanHistoryPage() {
         console.log('📥 Fetching loan history for user:', profile.id);
         
         const historyData = await api.loans.getLoanHistory(profile.id);
-        console.log('📡 Loan history response:', historyData);
+        console.log('📡 Loan history response:', JSON.stringify(historyData, null, 2));
         
-        // Map API response to our interface
+        // Map API response - expecting { success: true, loans: [...], total_nano, total_term, total_loans }
+        if (historyData && historyData.success && historyData.loans) {
+          const loans = historyData.loans || [];
+          const mappedRecords = loans.map((loan: any) => ({
+            date: loan.created_at || loan.date || '',
+            loan_id: loan.loan_id || '',
+            status: loan.status || 'PENDING',
+            type: loan.loan_type || (loan.loan_id?.startsWith('TL') ? 'TERM' : 'NANO'),
+          }));
+          setRecords(mappedRecords);
+          return;
+        }
+        
+        // Fallback parsing
         const loans = historyData.loans || [];
         const mappedRecords = loans.map((loan: any) => ({
-          date: loan.date || loan.created_at || '',
+          date: loan.created_at || loan.date || '',
           loan_id: loan.loan_id || loan.reference || loan.id || '',
           status: loan.status || 'PENDING',
-          type: loan.type || (loan.loan_id?.startsWith('TL') ? 'TERM' : 'NANO'),
+          type: loan.loan_type || (loan.loan_id?.startsWith('TL') ? 'TERM' : 'NANO'),
         }));
         
         setRecords(mappedRecords);

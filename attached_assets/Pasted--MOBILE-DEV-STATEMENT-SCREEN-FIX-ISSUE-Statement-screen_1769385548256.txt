@@ -1,0 +1,306 @@
+# MOBILE DEV - STATEMENT SCREEN FIX
+
+## ISSUE
+Statement screen showing zeros/no data instead of displaying the last paid-up loan when no active loan exists.
+
+## ROOT CAUSE
+The endpoints now exist. The mobile app needs to handle the response structure correctly.
+
+---
+
+## API ENDPOINTS (ALL READY)
+
+### 1. Statement Endpoint
+```
+GET /api/mobile/statement?user_id={user_id}
+```
+
+**Response Structure:**
+```json
+{
+  "success": true,
+  "loan": {
+    "loan_id": "NL12345",
+    "status": "PU",
+    "borrowed_amount": 2000.00,
+    "interest_rate": 28.00,
+    "interest_fee": 560.00,
+    "processing_fee": 32.00,
+    "total_repayable": 2592.00,
+    "outstanding_amount": 0.00,
+    "amount_paid": 2592.00,
+    "due_date": "2025-12-15",
+    "outstanding_date": null,
+    "grace_date": null,
+    "paid_date": "2025-12-10",
+    "lending_society_id": "uuid",
+    "user_id": "uuid",
+    "created_at": "2025-11-15T10:00:00Z"
+  },
+  "loan_type": "nano",  // or "term"
+  "is_active": false,   // true if DU/OT/BL, false if PU
+  "is_paid_up": true    // true if status is PU
+}
+```
+
+**Logic:**
+1. Checks nano active loans (DU, OT, BL)
+2. Checks term active loans (DU, OT, BL)
+3. Checks nano paid-up loans (PU)
+4. Checks term paid-up loans (PU)
+5. Returns most recent (by created_at)
+
+### 2. Payment History Endpoint
+```
+GET /api/mobile/payment-history?user_id={user_id}&loan_type=nano
+GET /api/mobile/payment-history?user_id={user_id}&loan_type=term
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "payments": [
+    {
+      "id": "uuid",
+      "loan_id": "uuid",
+      "amount": 800.00,
+      "payment_date": "2025-12-10",
+      "payment_method": "Bank Transfer",
+      "reference": "REF123",
+      "status": "verified",
+      "nano_loans": {
+        "loan_id": "NL12345",
+        "status": "PU",
+        "borrowed_amount": 2000.00
+      }
+    }
+  ],
+  "loan_type": "nano"
+}
+```
+
+### 3. Loan History Endpoint
+```
+GET /api/mobile/loan-history?user_id={user_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "loans": [
+    {
+      "loan_id": "NL12345",
+      "status": "PU",
+      "borrowed_amount": 2000.00,
+      "total_repayable": 2592.00,
+      "created_at": "2025-11-15T10:00:00Z",
+      "loan_type": "nano"
+    },
+    {
+      "loan_id": "TL67890",
+      "status": "DU",
+      "borrowed_amount": 5000.00,
+      "total_repayable": 6400.00,
+      "created_at": "2025-10-01T10:00:00Z",
+      "loan_type": "term"
+    }
+  ],
+  "total_nano": 5,
+  "total_term": 2,
+  "total_loans": 7
+}
+```
+
+---
+
+## MOBILE APP IMPLEMENTATION
+
+### Statement Screen
+
+```dart
+// Example implementation
+Future<void> fetchStatement() async {
+  try {
+    final response = await http.get(
+      Uri.parse('https://appv2.referredby.com.na/api/mobile/statement?user_id=$userId'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      
+      // CHECK IF SUCCESS
+      if (data['success'] == true && data['loan'] != null) {
+        final loan = data['loan'];
+        final loanType = data['loan_type']; // "nano" or "term"
+        final isActive = data['is_active']; // true/false
+        final isPaidUp = data['is_paid_up']; // true/false
+        
+        // UPDATE UI WITH LOAN DATA
+        setState(() {
+          loanId = loan['loan_id'];
+          borrowedAmount = loan['borrowed_amount'];
+          interestRate = loan['interest_rate'];
+          interestFee = loan['interest_fee'];
+          processingFee = loan['processing_fee'];
+          totalRepayable = loan['total_repayable'];
+          outstandingAmount = loan['outstanding_amount'];
+          amountPaid = loan['amount_paid'];
+          dueDate = loan['due_date'];
+          paidDate = loan['paid_date'];
+          status = loan['status'];
+          
+          // Show different UI based on status
+          if (isActive) {
+            showPaymentButton = true;
+            statusText = "ACTIVE LOAN";
+          } else if (isPaidUp) {
+            showPaymentButton = false;
+            statusText = "PAID UP LOAN";
+          }
+        });
+      } else {
+        // NO LOANS AT ALL - show "No Active Loans" screen
+        setState(() {
+          showNoLoansScreen = true;
+        });
+      }
+    } else {
+      // Handle error
+      showError('Failed to fetch statement');
+    }
+  } catch (e) {
+    showError('Error: $e');
+  }
+}
+```
+
+### Payment History Button
+
+```dart
+// When user clicks "PAYMENT RECORD" button
+void navigateToPaymentHistory() {
+  // You need to pass the loan_type from the statement response
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PaymentHistoryScreen(
+        userId: userId,
+        loanType: loanType, // "nano" or "term" from statement response
+      ),
+    ),
+  );
+}
+
+// In PaymentHistoryScreen
+Future<void> fetchPaymentHistory() async {
+  final response = await http.get(
+    Uri.parse('https://appv2.referredby.com.na/api/mobile/payment-history?user_id=$userId&loan_type=$loanType'),
+  );
+  
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    final payments = data['payments'] as List;
+    
+    setState(() {
+      paymentList = payments;
+    });
+  }
+}
+```
+
+### History Button
+
+```dart
+void navigateToLoanHistory() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => LoanHistoryScreen(userId: userId),
+    ),
+  );
+}
+
+// In LoanHistoryScreen
+Future<void> fetchLoanHistory() async {
+  final response = await http.get(
+    Uri.parse('https://appv2.referredby.com.na/api/mobile/loan-history?user_id=$userId'),
+  );
+  
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    final loans = data['loans'] as List;
+    
+    setState(() {
+      loansList = loans;
+    });
+  }
+}
+```
+
+---
+
+## TESTING CHECKLIST
+
+Test these scenarios:
+
+1. **User with active nano loan (DU/OT/BL)** → Should show active nano loan
+2. **User with active term loan (DU/OT/BL)** → Should show active term loan
+3. **User with no active loan but has paid-up nano loan** → Should show last paid-up nano loan
+4. **User with no active loan but has paid-up term loan** → Should show last paid-up term loan
+5. **User with multiple paid-up loans (both nano and term)** → Should show the MOST RECENT paid-up loan
+6. **User with NO loans at all** → Should show "No Active Loans" screen with apply buttons
+
+---
+
+## COMMON ERRORS TO AVOID
+
+### ❌ WRONG: Checking only nano_loans table
+```dart
+// This will miss term loans
+final nano = await fetchNanoLoan(userId);
+if (nano == null) showNoLoans();
+```
+
+### ✅ CORRECT: Using the unified statement endpoint
+```dart
+// This checks both nano AND term loans with proper fallback
+final statement = await fetchStatement(userId);
+```
+
+### ❌ WRONG: Not handling paid-up loans
+```dart
+// Only checking active status
+if (status == 'DU' || status == 'OT' || status == 'BL') {
+  showLoan();
+} else {
+  showNoLoans(); // BUG: ignores PU loans
+}
+```
+
+### ✅ CORRECT: Using is_active flag from API
+```dart
+if (data['loan'] != null) {
+  // Show loan regardless of is_active
+  showLoan();
+  
+  // Just adjust UI based on status
+  if (data['is_active']) {
+    showPaymentButton = true;
+  } else {
+    showPaymentButton = false;
+  }
+}
+```
+
+---
+
+## NEED HELP?
+
+If the statement endpoint is still returning empty/null, send me:
+1. The user_id you're testing with
+2. The full JSON response from the API
+3. A screenshot of what Supabase shows for that user in nano_loans and term_loans tables
+
+Then I can debug exactly what's happening.

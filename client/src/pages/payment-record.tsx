@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface PaymentRecord {
-  date: string;
+  id?: string;
   loan_id: string;
-  type: string;
-  received: string;
-  balance: string;
+  amount: number;
+  payment_date: string;
+  payment_method?: string;
+  reference?: string;
+  status?: string;
 }
 
 export default function PaymentRecordPage() {
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<PaymentRecord[]>([]);
+  const [loanType, setLoanType] = useState<'nano' | 'term'>('nano');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,27 +28,31 @@ export default function PaymentRecordPage() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        // First get statement to determine loan type
-        const statementData = await api.loans.getStatement(profile.id);
-        console.log('📊 Statement response:', statementData);
+        // Get loan_type from URL params or fetch from statement
+        const params = new URLSearchParams(search);
+        let currentLoanType = params.get('loan_type') as 'nano' | 'term' || null;
         
-        const loanType = statementData?.loan_type || 'nano';
+        if (!currentLoanType) {
+          // Fetch statement to get loan type
+          const statementData = await api.loans.getStatement(profile.id);
+          console.log('📊 Statement response for loan type:', statementData);
+          currentLoanType = statementData?.loan_type || 'nano';
+        }
+        
+        setLoanType(currentLoanType);
+        console.log('📋 Using loan type:', currentLoanType);
         
         // Get payment history with loan type
-        const historyData = await api.loans.getPaymentHistoryByType(profile.id, loanType);
-        console.log('📡 Payment history response:', historyData);
+        const historyData = await api.loans.getPaymentHistoryByType(profile.id, currentLoanType);
+        console.log('📡 Payment history response:', JSON.stringify(historyData, null, 2));
         
-        // Map API response to our interface
-        const payments = historyData.payments || [];
-        const mappedRecords = payments.map((payment: any) => ({
-          date: payment.date || payment.payment_date || '',
-          loan_id: payment.loan_id || payment.reference || '',
-          type: payment.type || 'payment',
-          received: payment.received || `N$${payment.amount?.toFixed(2) || '0.00'}`,
-          balance: payment.balance || `N$${payment.remaining_balance?.toFixed(2) || '0.00'}`,
-        }));
-        
-        setRecords(mappedRecords);
+        // Map API response - expecting { success: true, payments: [...], loan_type: "nano" }
+        if (historyData && historyData.success && historyData.payments) {
+          const payments = historyData.payments || [];
+          setRecords(payments);
+        } else {
+          setRecords([]);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
         setRecords([]);
@@ -53,7 +61,7 @@ export default function PaymentRecordPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [search]);
 
   if (loading) {
     return (
@@ -77,22 +85,28 @@ export default function PaymentRecordPage() {
           <div className="bg-gray-50 grid grid-cols-5 text-xs font-bold uppercase text-gray-600 py-3 px-2">
             <div className="text-center">Date</div>
             <div className="text-center">Loan_ID</div>
-            <div className="text-center">Type</div>
-            <div className="text-center">Received</div>
-            <div className="text-center">Balance</div>
+            <div className="text-center">Method</div>
+            <div className="text-center">Amount</div>
+            <div className="text-center">Status</div>
           </div>
-          {records.map((record, index) => (
-            <div 
-              key={index} 
-              className={`grid grid-cols-5 text-xs py-3 px-2 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-t border-gray-100`}
-            >
-              <div className="text-center text-gray-600">{record.date}</div>
-              <div className="text-center text-[#00736e] font-medium">{record.loan_id}</div>
-              <div className="text-center text-gray-600">{record.type}</div>
-              <div className="text-center text-[#00736e]">{record.received}</div>
-              <div className="text-center text-gray-800">{record.balance}</div>
+          {records.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 text-sm">
+              No payment records found
             </div>
-          ))}
+          ) : (
+            records.map((record, index) => (
+              <div 
+                key={record.id || index} 
+                className={`grid grid-cols-5 text-xs py-3 px-2 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-t border-gray-100`}
+              >
+                <div className="text-center text-gray-600">{record.payment_date}</div>
+                <div className="text-center text-[#00736e] font-medium">{record.loan_id}</div>
+                <div className="text-center text-gray-600">{record.payment_method || 'Transfer'}</div>
+                <div className="text-center text-[#00736e]">N${record.amount?.toFixed(2)}</div>
+                <div className="text-center text-gray-800">{record.status || 'verified'}</div>
+              </div>
+            ))
+          )}
         </div>
 
         <p className="text-xs text-gray-500 mb-4">
@@ -106,22 +120,20 @@ export default function PaymentRecordPage() {
           >
             View Statement
           </Button>
-          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
+          <Button 
+            className="w-full bg-white border-2 border-[#00736e] text-[#00736e] font-bold uppercase tracking-wide h-[48px] rounded-lg hover:bg-gray-50"
+            disabled
+          >
             PAY VIA PAYPULSE APP (COMING SOON)
-          </Button>
-          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
-            NEW PAYMENT METHOD COMING SOON
           </Button>
         </div>
 
-        <div className="pb-6">
-          <Button 
-            onClick={() => setLocation("/statement")}
-            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
-          >
-            BACK
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setLocation("/statement")}
+          className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+        >
+          BACK
+        </Button>
       </div>
     </Layout>
   );

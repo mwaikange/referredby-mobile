@@ -7,7 +7,6 @@ import { api, type UserProfile } from "@/lib/api";
 
 interface LoanData {
   loan_id: string;
-  loan_type?: 'NANO' | 'TERM';
   status: string;
   borrowed_amount: number;
   interest_rate: number;
@@ -18,22 +17,16 @@ interface LoanData {
   amount_paid: number;
   due_date: string;
   outstanding_date: string | null;
+  grace_date: string | null;
   paid_date: string | null;
-  grace_date?: string | null;
-  principal?: number;
-  outstanding_balance?: number;
-  lending_society?: {
-    name: string;
-    bank: string;
-    account_number: string;
-    account_type?: string;
-    branch?: string;
-    branch_code?: string;
-  };
+  lending_society_id?: string;
+  user_id?: string;
+  created_at?: string;
 }
 
 interface StatementResponse {
-  loan: LoanData;
+  success: boolean;
+  loan: LoanData | null;
   loan_type: 'nano' | 'term';
   is_active: boolean;
   is_paid_up: boolean;
@@ -55,11 +48,17 @@ export default function Statement() {
         
         // Use the unified statement endpoint
         const response = await api.loans.getStatement(userProfile.id);
-        console.log('📊 Statement response:', response);
+        console.log('📊 Statement API response:', JSON.stringify(response, null, 2));
         
-        if (response && response.loan) {
+        // Check success and loan exists
+        if (response && response.success === true && response.loan) {
+          console.log('✅ Loan data found:', response.loan);
+          console.log('📋 Loan type:', response.loan_type);
+          console.log('🔥 Is active:', response.is_active);
+          console.log('✅ Is paid up:', response.is_paid_up);
           setStatementData(response);
         } else {
+          console.log('❌ No loan data in response');
           setStatementData(null);
         }
         
@@ -106,8 +105,8 @@ export default function Statement() {
   const loanTypeLabel = isTermLoan ? 'TERM LOAN' : 'NANO LOAN';
   const titleLabel = isTermLoan ? 'TERM LOAN STATEMENT' : 'NANO LOAN STATEMENT';
 
-  // Bank details from API response or fallback
-  const bankDetails = loan?.lending_society || {
+  // Default bank details (fallback - would come from lending_society lookup)
+  const bankDetails = {
     name: 'Destiny Group Pty LTD',
     bank: 'Nedbank Namibia',
     account_number: '6000238099',
@@ -178,7 +177,7 @@ export default function Statement() {
 
         <div className="space-y-3 mb-6">
           <Button 
-            onClick={() => setLocation("/payment-record")}
+            onClick={() => setLocation(`/payment-record?loan_type=${loanType}`)}
             className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
           >
             Payment Record
@@ -201,15 +200,9 @@ export default function Statement() {
           <p>Acc Name: <span className="font-medium">{bankDetails.name}</span></p>
           <p>Bank: <span className="font-medium">{bankDetails.bank}</span></p>
           <p>Acc no: <span className="font-medium">{bankDetails.account_number}</span></p>
-          {bankDetails.account_type && (
-            <p>Account type: <span className="font-medium">{bankDetails.account_type}</span></p>
-          )}
-          {bankDetails.branch && (
-            <p>Branch: <span className="font-medium">{bankDetails.branch}</span></p>
-          )}
-          {bankDetails.branch_code && (
-            <p>Branch Code: <span className="font-medium">{bankDetails.branch_code}</span></p>
-          )}
+          <p>Account type: <span className="font-medium">{bankDetails.account_type}</span></p>
+          <p>Branch: <span className="font-medium">{bankDetails.branch}</span></p>
+          <p>Branch Code: <span className="font-medium">{bankDetails.branch_code}</span></p>
         </div>
 
         <div className="flex gap-4 pb-6">
