@@ -116,18 +116,18 @@ export default function PaymentRecordPage() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation("/statement")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px]"
           >
             VIEW STATEMENT
           </Button>
           <Button 
-            className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
             disabled
           >
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
           <Button 
-            className="w-full bg-[#E8C9A0] hover:bg-[#d8b990] text-[#8B4513] font-bold uppercase tracking-wide h-[48px] rounded-full"
+            className="w-full bg-[#7dd3c4] hover:bg-[#5eead4] text-[#0f766e] font-bold uppercase tracking-wide h-[48px]"
             disabled
           >
             NEW PAYMENT METHOD COMING SOON
@@ -136,7 +136,7 @@ export default function PaymentRecordPage() {
 
         <Button 
           onClick={() => setLocation("/statement")}
-          className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
+          className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px]"
         >
           BACK
         </Button>

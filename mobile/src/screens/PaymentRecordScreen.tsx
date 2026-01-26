@@ -141,11 +141,11 @@ export default function PaymentRecordScreen() {
           >
             <Text style={styles.buttonText}>VIEW STATEMENT</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.goldButton} disabled>
-            <Text style={styles.buttonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
+          <TouchableOpacity style={styles.lightTealButton} disabled>
+            <Text style={styles.lightTealButtonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.coralButton} disabled>
-            <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+          <TouchableOpacity style={styles.lightTealButton} disabled>
+            <Text style={styles.lightTealButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
@@ -281,34 +281,27 @@ const styles = StyleSheet.create({
   tealButton: {
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  goldButton: {
-    backgroundColor: '#D4A574',
+  lightTealButton: {
+    backgroundColor: '#7dd3c4',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  coralButton: {
-    backgroundColor: '#E8C9A0',
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  coralButtonText: {
-    color: '#8B4513',
-    fontSize: 12,
+  lightTealButtonText: {
+    color: '#0f766e',
+    fontSize: 14,
     fontWeight: 'bold',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   backButton: {
     backgroundColor: '#C41E3A',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
