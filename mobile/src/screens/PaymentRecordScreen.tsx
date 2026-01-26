@@ -24,6 +24,7 @@ interface PaymentRecord {
 type PaymentRecordRouteParams = {
   PaymentRecord: {
     loanType?: 'nano' | 'term';
+    loan_id?: string;
   };
 };
 
@@ -40,29 +41,32 @@ export default function PaymentRecordScreen() {
         const profile = await api.getProfile();
         console.log('📥 Fetching payment history for user:', profile.id);
         
-        // Get loan_type from route params or fetch from statement
-        let currentLoanType = route.params?.loanType || null;
+        // Get loan_id from route params (for specific loan payments)
+        const loanId = route.params?.loan_id;
         
-        if (!currentLoanType) {
-          // Fetch statement to get loan type
-          const statementData = await api.loans.getStatement(profile.id);
-          console.log('📊 Statement response for loan type:', statementData);
-          currentLoanType = statementData?.loan_type || 'nano';
+        let historyData;
+        
+        if (loanId) {
+          // Fetch payments for specific loan_id
+          console.log('📋 Fetching payments for loan_id:', loanId);
+          historyData = await api.loans.getPaymentHistoryByLoanId(profile.id, loanId);
+        } else {
+          // Fetch all payments for user (API now supports this without loan_type)
+          console.log('📋 Fetching all payments for user');
+          historyData = await api.loans.getPaymentHistory(profile.id);
         }
         
-        // Ensure we have a valid loan type
-        const finalLoanType: 'nano' | 'term' = currentLoanType || 'nano';
-        setLoanType(finalLoanType);
-        console.log('📋 Using loan type:', finalLoanType);
-        
-        // Get payment history with loan type
-        const historyData = await api.loans.getPaymentHistoryByType(profile.id, finalLoanType);
         console.log('📡 Payment history response:', JSON.stringify(historyData, null, 2));
         
-        // Map API response - expecting { success: true, payments: [...], loan_type: "nano" }
-        if (historyData && historyData.success && historyData.payments) {
-          const payments = historyData.payments || [];
-          setRecords(payments);
+        // Handle response - check for payments array
+        if (historyData && historyData.payments && historyData.payments.length > 0) {
+          setRecords(historyData.payments);
+          if (historyData.loan_type) {
+            setLoanType(historyData.loan_type);
+          }
+        } else if (historyData && Array.isArray(historyData) && historyData.length > 0) {
+          // Handle if API returns array directly
+          setRecords(historyData);
         } else {
           setRecords([]);
         }
@@ -74,7 +78,7 @@ export default function PaymentRecordScreen() {
       }
     };
     fetchData();
-  }, [route.params?.loanType]);
+  }, [route.params?.loan_id]);
 
   if (loading) {
     return (
