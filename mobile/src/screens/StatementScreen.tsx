@@ -201,11 +201,11 @@ export default function StatementScreen() {
           >
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.outlineButton} disabled>
-            <Text style={styles.outlineButtonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
+          <TouchableOpacity style={styles.goldButton} disabled>
+            <Text style={styles.buttonText}>PAY VIA PAYPULSE APP (COMING SOON)</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.orangeButton} disabled>
-            <Text style={styles.buttonText}>NEW PAYMENT METHOD COMING SOON</Text>
+          <TouchableOpacity style={styles.coralButton} disabled>
+            <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
@@ -393,31 +393,29 @@ const styles = StyleSheet.create({
   tealButton: {
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  outlineButton: {
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#00736e',
+  goldButton: {
+    backgroundColor: '#D4A574',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  outlineButtonText: {
-    color: '#00736e',
+  coralButton: {
+    backgroundColor: '#E8C9A0',
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  coralButtonText: {
+    color: '#8B4513',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,
-  },
-  orangeButton: {
-    backgroundColor: '#FF6B35',
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   buttonText: {
     color: '#ffffff',
@@ -447,7 +445,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -455,7 +453,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#C41E3A',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -526,6 +526,19 @@ export const api = {
       const data = await response.json();
       return data;
     },
+
+    getCreditRating: async (userId: string): Promise<any> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/mobile/credit-rating?user_id=${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!response.ok) {
+        return { success: false, rating: 0, score: 0, label: 'NO RECORD' };
+      }
+      const data = await response.json();
+      return data;
+    },
   },
 
   // Get Logged-in User Profile

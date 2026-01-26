@@ -128,11 +128,11 @@ export default function LoanHistoryScreen() {
           >
             <Text style={styles.buttonText}>PAYMENT RECORD</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.disabledButton} disabled>
-            <Text style={styles.disabledButtonText}>PAY VIA PAYPULSE APP</Text>
+          <TouchableOpacity style={styles.goldButton} disabled>
+            <Text style={styles.buttonText}>PAY VIA PAYPULSE APP</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.disabledButton} disabled>
-            <Text style={styles.disabledButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
+          <TouchableOpacity style={styles.coralButton} disabled>
+            <Text style={styles.coralButtonText}>NEW PAYMENT METHOD COMING SOON</Text>
           </TouchableOpacity>
         </View>
 
@@ -277,19 +277,26 @@ const styles = StyleSheet.create({
   tealButton: {
     backgroundColor: '#00736e',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  disabledButton: {
-    backgroundColor: 'rgba(0, 115, 110, 0.5)',
+  goldButton: {
+    backgroundColor: '#D4A574',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  disabledButtonText: {
-    color: '#ffffff',
+  coralButton: {
+    backgroundColor: '#E8C9A0',
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  coralButtonText: {
+    color: '#8B4513',
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 0.3,
@@ -303,7 +310,7 @@ const styles = StyleSheet.create({
   backButton: {
     backgroundColor: '#C41E3A',
     height: 48,
-    borderRadius: 8,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,

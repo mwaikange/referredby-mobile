@@ -113,14 +113,14 @@ export default function LoanHistoryPage() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation("/payment-record")}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
           >
-            Payment Record
+            PAYMENT RECORD
           </Button>
-          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
+          <Button className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px] rounded-full" disabled>
             PAY VIA PAYPULSE APP
           </Button>
-          <Button className="w-full bg-[#00736e]/50 text-white font-bold uppercase tracking-wide h-[48px] rounded-lg cursor-not-allowed" disabled>
+          <Button className="w-full bg-[#E8C9A0] hover:bg-[#d8b990] text-[#8B4513] font-bold uppercase tracking-wide h-[48px] rounded-full" disabled>
             NEW PAYMENT METHOD COMING SOON
           </Button>
         </div>
@@ -128,7 +128,7 @@ export default function LoanHistoryPage() {
         <div className="pb-6">
           <Button 
             onClick={() => setLocation("/statement")}
-            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="w-full bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
           >
             BACK
           </Button>

@@ -188,18 +188,18 @@ export default function Statement() {
         <div className="space-y-3 mb-6">
           <Button 
             onClick={() => setLocation(`/payment-record?loan_type=${loanType}`)}
-            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="w-full bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
           >
-            Payment Record
+            PAYMENT RECORD
           </Button>
           <Button 
-            className="w-full bg-white border-2 border-[#00736e] text-[#00736e] font-bold uppercase tracking-wide h-[48px] rounded-lg hover:bg-gray-50"
+            className="w-full bg-[#D4A574] hover:bg-[#c49564] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
             disabled
           >
             PAY VIA PAYPULSE APP (COMING SOON)
           </Button>
           <Button 
-            className="w-full bg-[#FF6B35] hover:bg-[#e55a2b] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="w-full bg-[#E8C9A0] hover:bg-[#d8b990] text-[#8B4513] font-bold uppercase tracking-wide h-[48px] rounded-full"
             disabled
           >
             NEW PAYMENT METHOD COMING SOON
@@ -218,13 +218,13 @@ export default function Statement() {
         <div className="flex gap-4 pb-6">
           <Button 
             onClick={() => setLocation("/loan-history")}
-            className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="flex-1 bg-[#00736e] hover:bg-[#005955] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
           >
-            History
+            HISTORY
           </Button>
           <Button 
             onClick={() => setLocation("/profile")}
-            className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-lg"
+            className="flex-1 bg-[#C41E3A] hover:bg-[#a11830] text-white font-bold uppercase tracking-wide h-[48px] rounded-full"
           >
             BACK
           </Button>

@@ -11,12 +11,23 @@ export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [creditRating, setCreditRating] = useState<number>(0);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await api.getProfile();
         console.log("📄 Profile Page - User Data:", data);
         setProfile(data);
+        
+        // Fetch credit rating from dedicated endpoint for consistency
+        const creditData = await api.loans.getCreditRating(data.id);
+        console.log('📊 Credit rating response:', creditData);
+        if (creditData?.success && creditData?.rating !== undefined) {
+          setCreditRating(creditData.rating);
+        } else {
+          setCreditRating(data.star_rating || data.credit_rating || 0);
+        }
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
@@ -66,7 +77,7 @@ export default function Profile() {
     );
   }
 
-  const rating = profile?.star_rating || profile?.credit_rating || 0;
+  const rating = creditRating;
   const nanoInstallment = profile?.nano_installment || `MAX | NAD ${profile?.nano_loan_limit || 0}.00`;
   const termInstallment = profile?.term_installment || `MAX | NAD ${profile?.term_loan_limit || 0}.00`;
   const accountLevel = profile?.account_level || 'NL9 / TL0';
