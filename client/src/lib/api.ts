@@ -663,5 +663,37 @@ export const api = {
     console.log('✅ Interest data received:', data);
     
     return data.confirmation || data;
+  },
+
+  // Submit User Feedback
+  submitFeedback: async (
+    userId: string,
+    feedbackType: 'issue' | 'feature' | 'general',
+    subject: string,
+    message: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    const headers = await getHeaders();
+    console.log('📤 Submitting feedback...', { userId, feedbackType, subject });
+
+    const response = await fetch(`${API_BASE_URL}/api/mobile/feedback`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        user_id: userId,
+        feedback_type: feedbackType,
+        subject,
+        message,
+        submitted_at: new Date().toISOString()
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Feedback submission failed:', response.status);
+      return { success: false, message: 'Failed to submit feedback' };
+    }
+
+    const data = await response.json();
+    console.log('✅ Feedback submitted successfully');
+    return { success: true, message: data.message || 'Feedback submitted successfully' };
   }
 };
