@@ -1,9 +1,8 @@
 {
   "expo": {
-    "extra": {
-      "eas": {
-        "projectId": "9a70940d-d564-4bbf-9f02-9ff1e536f968"
-      }
-    }
+    "owner": "referredby",
+    "name": "referredby-mobile",
+    "slug": "referredby-mobile",
+    ...
   }
 }
